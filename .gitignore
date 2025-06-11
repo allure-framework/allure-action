@@ -1,0 +1,54 @@
+# allure commandline
+.allure
+allure-report
+
+# yarn
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+#IDEA Files
+.idea/*
+!.idea/vcs.xml
+!.idea/icon.png
+*.iml
+*.ipr
+
+#Eclipse files
+*.settings
+*.classpath
+*.project
+*.pydevproject
+
+#Node
+node_modules
+
+#Other
+.repo
+
+#Mac OS stuff
+**/.DS_Store
+
+#Junk
+out
+dist
+dist-tests
+*.tgz
+*.log
+.gradle
+schema
+build
+**/allure-results
+**/.nyc_output
+**/package.tgz
+**/wallaby.js
+
+# Cursor IDE ignore
+.cursor/
+.cursorrules
+.cursorignore
+.cursorindexingignore
