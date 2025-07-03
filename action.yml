@@ -1,0 +1,13 @@
+name: "Allure Report"
+description: "Publish the generated Allure Report"
+author: "Allure Team"
+
+inputs:
+  working-directory:
+    description: "The working directory to scan for files"
+    required: false
+    default: "."
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
