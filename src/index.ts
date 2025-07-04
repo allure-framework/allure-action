@@ -30,8 +30,8 @@ export const generateSummaryMarkdownTable = (
     remoteHref?: string;
   }>,
 ): string => {
-  const header = `|  | Name | Duration | Report |`;
-  const delimiter = `|-|-|-|-|`;
+  const header = `|  | Name | Duration | Stats | Report |`;
+  const delimiter = `|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
     const stats = {
       unknown: summary.stats.unknown ?? 0,
@@ -44,12 +44,19 @@ export const generateSummaryMarkdownTable = (
     const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
     const name = summary.name;
     const duration = formatDuration(summary.duration);
+    const statsLabels = [
+      `<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`,
+      `<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`,
+      `<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`,
+      `<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`,
+      `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
+    ].join("&nbsp;&nbsp;&nbsp;");
     const report = summary.remoteHref ? `[View](${summary.remoteHref})` : "N/A";
 
-    return `| ${img} | ${name} | ${duration} | ${report} |`;
+    return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${report} |`;
   });
 
-  return [header, delimiter, ...rows].join("\n");
+  return ["# Allure Report Summary", header, delimiter, ...rows].join("\n");
 };
 
 const run = async (): Promise<void> => {
