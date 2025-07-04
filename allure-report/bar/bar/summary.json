@@ -1,6 +1,6 @@
 {
   "name": "bar",
-  "stats": { "total": 6, "passed": 3, "skipped": 1, "failed": 1, "broken": 1 },
+  "stats": { "total": 7, "passed": 3, "skipped": 1, "failed": 1, "broken": 1, "unknown": 1 },
   "status": "failed",
   "duration": 9,
   "createdAt": 1751551060890,
