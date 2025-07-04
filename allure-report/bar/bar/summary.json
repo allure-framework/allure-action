@@ -1,0 +1,9 @@
+{
+  "name": "bar",
+  "stats": { "total": 6, "passed": 3, "skipped": 1, "failed": 1, "broken": 1 },
+  "status": "failed",
+  "duration": 9,
+  "createdAt": 1751551060890,
+  "plugin": "Awesome",
+  "remoteHref": "http://localhost:8889/55d172d8-c6a9-4ea7-b7e2-c298d0785f30/awesome1/"
+}
