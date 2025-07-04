@@ -1,6 +1,5 @@
 # allure commandline
 .allure
-allure-report
 
 # yarn
 .yarn/*

@@ -7,6 +7,10 @@ inputs:
     description: "The working directory to scan for files"
     required: false
     default: "."
+  github-token:
+    description: "GitHub token for creating comments"
+    required: false
+    default: "${{ github.token }}"
 
 runs:
   using: "node20"

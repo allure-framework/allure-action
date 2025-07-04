@@ -1,12 +1,14 @@
-name: Test Allure Report Publisher
+name: Test
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  test-allure-report-publisher:
+  test:
     runs-on: ubuntu-latest
     name: Test Allure Report Publisher Action
 
@@ -28,7 +30,8 @@ jobs:
         uses: ./
         with:
           working-directory: "."
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Action Output
         run: |
-          echo "If the action found published reports, their URLs should be listed above."
+          echo "${{ steps.allure-report.outputs.markdown }}"
