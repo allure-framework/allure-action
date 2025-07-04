@@ -79,7 +79,7 @@ export const generateSummaryMarkdownTable = (
     remoteHref?: string;
   }>,
 ): string => {
-  const header = `|  | Name | Duration | Report |\n|-|-|-|-|`;
+  const header = `|  | Name | Duration | Report |`;
   const delimiter = `|-|-|-|-|`;
   const rows = summaries.map((summary) => {
     const stats = {
@@ -91,6 +91,7 @@ export const generateSummaryMarkdownTable = (
       ...summary.stats,
     };
     const svg = generatePieChartSVG(stats, 32);
+    console.log(svg);
     const img = `<img src="data:image/svg+xml;base64,${svgToBase64Url(svg)}" width="16px" height="16px" />`;
     const name = summary.name;
     const duration = formatDuration(summary.duration);
