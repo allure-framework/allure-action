@@ -45,11 +45,11 @@ export const generateSummaryMarkdownTable = (
     const name = summary.name;
     const duration = formatDuration(summary.duration);
     const statsLabels = [
-      `<img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /><span>${stats.passed}</span>`,
-      `<img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /><span>${stats.failed}</span>`,
-      `<img src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" /><span>${stats.broken}</span>`,
-      `<img src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" /><span>${stats.skipped}</span>`,
-      `<img src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" /><span>${stats.unknown}</span>`,
+      `<img style="margin-right: 3px;" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /><span style="display: inline-block; margin-right: 5px;">${stats.passed}</span>`,
+      `<img style="margin-right: 3px;" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /><span style="display: inline-block; margin-right: 5px;">${stats.failed}</span>`,
+      `<img style="margin-right: 3px;" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" /><span style="display: inline-block; margin-right: 5px;">${stats.broken}</span>`,
+      `<img style="margin-right: 3px;" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" /><span style="display: inline-block; margin-right: 5px;">${stats.skipped}</span>`,
+      `<img style="margin-right: 3px;" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" /><span>${stats.unknown}</span>`,
     ].join(" ");
     const report = summary.remoteHref ? `[View](${summary.remoteHref})` : "N/A";
 
