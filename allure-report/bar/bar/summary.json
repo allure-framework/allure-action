@@ -1,9 +1,0 @@
-{
-  "name": "Unit tests",
-  "stats": { "passed": 321, "skipped": 10, "failed": 24, "broken": 3, "unknown": 12 },
-  "status": "failed",
-  "duration": 1209391,
-  "createdAt": 1751551060890,
-  "plugin": "Awesome",
-  "remoteHref": "http://localhost:8889/55d172d8-c6a9-4ea7-b7e2-c298d0785f30/awesome1/"
-}

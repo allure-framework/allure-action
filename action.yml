@@ -1,5 +1,5 @@
 name: "Allure Report"
-description: "Publish the generated Allure Report"
+description: ""
 author: "Allure Team"
 
 inputs:

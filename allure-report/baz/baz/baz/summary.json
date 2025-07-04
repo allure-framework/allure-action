@@ -1,9 +1,0 @@
-{
-  "name": "E2E tests",
-  "stats": { "passed": 581 },
-  "status": "passed",
-  "duration": 1209,
-  "createdAt": 1751551060890,
-  "plugin": "Awesome",
-  "remoteHref": "http://localhost:8889/55d172d8-c6a9-4ea7-b7e2-c298d0785f30/awesome2/"
-}
