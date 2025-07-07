@@ -10,7 +10,28 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Test Allure Report Publisher Action
+    name: Unit tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable --immutable-cache --check-cache
+
+      - name: Build TypeScript
+        run: yarn build
+
+      - name: Run tests
+        run: yarn test
+
+  integration-test:
+    runs-on: ubuntu-latest
+    name: Integration test
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +52,3 @@ jobs:
         with:
           working-directory: "."
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check Action Output
-        run: |
-          echo "${{ steps.allure-report.outputs.markdown }}"

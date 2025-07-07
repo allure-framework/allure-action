@@ -4,6 +4,7 @@ import fg from "fast-glob"
 import * as fs from "node:fs/promises"
 import * as github from "@actions/github"
 import * as core from "@actions/core"
+import { octokitMock } from "../utils.js"
 
 vi.mock("@actions/core", () => ({
   getInput: vi.fn(),
@@ -11,7 +12,7 @@ vi.mock("@actions/core", () => ({
   setOutput: vi.fn(),
 }));
 vi.mock("@actions/github", async () => {
-  const { octokitMock } = await import("../utils.js");
+  const testUtils = await import("../utils.js");
 
   return {
     context: {
@@ -26,7 +27,7 @@ vi.mock("@actions/github", async () => {
         repo: "repo"
       }
     },
-    getOctokit: vi.fn().mockReturnValue(octokitMock),
+    getOctokit: vi.fn().mockReturnValue(testUtils.octokitMock),
   }
 })
 vi.mock("fast-glob", () => ({
@@ -88,8 +89,12 @@ describe("action", () => {
     expect(fs.readFile).toHaveBeenCalledWith(fixtures.summaryFiles[0].path, "utf-8");
     expect(github.getOctokit).toHaveBeenCalledTimes(1);
     expect(github.getOctokit).toHaveBeenCalledWith("token");
-    expect(core.setOutput).toHaveBeenCalledTimes(1);
-    expect((core.setOutput as unknown as Mock).mock.calls[0][0]).toEqual("markdown")
-    expect((core.setOutput as unknown as Mock).mock.calls[0][1]).toMatchSnapshot()
+    expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+    expect(octokitMock.rest.issues.createComment.mock.calls[0][0]).toMatchObject({
+      owner: "owner",
+      repo: "repo",
+      issue_number: 1,
+    })
+    expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
   });
 });

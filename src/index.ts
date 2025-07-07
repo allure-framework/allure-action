@@ -27,9 +27,6 @@ const run = async (): Promise<void> => {
   }
 
   const markdown = generateSummaryMarkdownTable(summaryFilesContent);
-
-  core.setOutput("markdown", markdown);
-
   const token = core.getInput("github-token", { required: false });
 
   if (token && github.context.eventName === "pull_request" && github.context.payload.pull_request) {

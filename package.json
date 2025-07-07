@@ -8,7 +8,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p ./tsconfig.app.json",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint-staged": "lint-staged",
