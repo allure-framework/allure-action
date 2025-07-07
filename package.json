@@ -5,7 +5,6 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "tsc -p ./tsconfig.app.json",

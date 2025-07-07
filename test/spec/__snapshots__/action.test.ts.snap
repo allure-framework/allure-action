@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`action > should generate markdown table from collected summary files and print it to the output 1`] = `
+exports[`action > when the action should be run > should generate markdown table from collected summary files and print it to the output 1`] = `
 "# Allure Report Summary
 |  | Name | Duration | Stats | Report |
 |-|-|-|-|-|

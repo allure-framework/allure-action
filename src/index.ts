@@ -1,13 +1,23 @@
 import * as core from "@actions/core";
-import * as github from "@actions/github";
 import { readConfig } from "@allurereport/core";
 import fg from "fast-glob";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { generateSummaryMarkdownTable } from "./utils.js";
+import { generateSummaryMarkdownTable, getGithubContext, getGithubInput, getOctokit } from "./utils.js";
 
 const run = async (): Promise<void> => {
-  const workingDirectory = core.getInput("working-directory") || process.cwd();
+  const token = getGithubInput("github-token");
+  const { eventName, repo, payload } = getGithubContext();
+
+  if (!token) {
+    return;
+  }
+
+  if (eventName !== "pull_request" || !payload.pull_request) {
+    return;
+  }
+
+  const workingDirectory = getGithubInput("working-directory") || process.cwd();
   const config = await readConfig(workingDirectory);
   const reportDir = config.output ?? path.join(workingDirectory, "allure-report");
   const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
@@ -27,20 +37,15 @@ const run = async (): Promise<void> => {
   }
 
   const markdown = generateSummaryMarkdownTable(summaryFilesContent);
-  const token = core.getInput("github-token", { required: false });
+  const octokit = getOctokit(token);
+  const issue_number = payload.pull_request.number;
 
-  if (token && github.context.eventName === "pull_request" && github.context.payload.pull_request) {
-    const octokit = github.getOctokit(token);
-    const { owner, repo } = github.context.repo;
-    const issue_number = github.context.payload.pull_request.number;
-
-    await octokit.rest.issues.createComment({
-      owner,
-      repo,
-      issue_number,
-      body: markdown,
-    });
-  }
+  await octokit.rest.issues.createComment({
+    owner: repo.owner,
+    repo: repo.repo,
+    issue_number,
+    body: markdown,
+  });
 };
 
 if (require.main === module) {

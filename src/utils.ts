@@ -1,3 +1,12 @@
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+
+export const getGithubInput = (name: string) => core.getInput(name, { required: false });
+
+export const getGithubContext = () => github.context;
+
+export const getOctokit = (token: string) => github.getOctokit(token);
+
 export const formatDuration = (ms: number): string => {
   if (!ms || ms < 0) return "0ms";
 
