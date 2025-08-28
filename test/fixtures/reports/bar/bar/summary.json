@@ -1,0 +1,51 @@
+{
+  "name": "Unit tests",
+  "stats": { "passed": 321, "skipped": 10, "failed": 24, "broken": 3, "unknown": 12 },
+  "status": "failed",
+  "duration": 1209391,
+  "createdAt": 1751551060890,
+  "plugin": "Awesome",
+  "remoteHref": "http://localhost:8889/55d172d8-c6a9-4ea7-b7e2-c298d0785f30/awesome1/",
+  "newTests": [
+    {
+      "id": "55d172d8-c6a9-4ea7-b7e2-c298d0785f30",
+      "name": "should be awesome",
+      "status": "failed",
+      "duration": 120
+    },
+    {
+      "id": "66e283e9-d7ba-5fb8-c3f3-d399e0896f41",
+      "name": "should handle edge cases",
+      "status": "passed",
+      "duration": 85
+    },
+    {
+      "id": "77f394fa-e8cb-6gc9-d4g4-e4aaf1907g52",
+      "name": "should process input correctly",
+      "status": "passed",
+      "duration": 95
+    }
+  ],
+  "flakyTests": [
+    {
+      "id": "88g4a5fb-f9dc-7hd0-e5h5-f5bbg2018h63",
+      "name": "should handle async operations",
+      "status": "failed",
+      "duration": 150
+    },
+    {
+      "id": "99h5b6gc-g0ed-8ie1-f6i6-g6ccf3129i74",
+      "name": "should process network requests",
+      "status": "passed",
+      "duration": 180
+    }
+  ],
+  "retryTests": [
+    {
+      "id": "10i6c7hd-h1fe-9jf2-g7j7-h7ddg4230j85",
+      "name": "should retry database connection",
+      "status": "passed",
+      "duration": 200
+    }
+  ]
+}

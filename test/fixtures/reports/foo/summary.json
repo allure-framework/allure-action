@@ -1,0 +1,11 @@
+{
+  "name": "Smoke tests",
+  "stats": { "passed": 3, "skipped": 1, "failed": 1, "broken": 1 },
+  "status": "failed",
+  "duration": 9929292,
+  "createdAt": 1751551060890,
+  "plugin": "Awesome",
+  "newTests": [],
+  "flakyTests": [],
+  "retryTests": []
+}
