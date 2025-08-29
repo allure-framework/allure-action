@@ -20,8 +20,8 @@ export const formatDuration = (ms?: number): string => {
   if (h) parts.push(`${h}h`);
   if (m) parts.push(`${m}m`);
   if (s) parts.push(`${s}s`);
-  // hide ms when duration includes minutes
-  if (m < 0 && msLeft) parts.push(`${msLeft}ms`);
+  // include ms when present
+  if (msLeft) parts.push(`${msLeft}ms`);
 
   return parts.join(" ");
 };
@@ -52,8 +52,8 @@ export const formatSummaryTests = (params: {
 };
 
 export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string => {
-  const header = `|  | Name | Duration | Stats |`;
-  const delimiter = `|-|-|-|-|`;
+  const header = `|  | Name | Duration | Stats | Report |`;
+  const delimiter = `|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
     const stats = {
       unknown: summary.stats.unknown ?? 0,
@@ -74,7 +74,8 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
     ].join("&nbsp;&nbsp;&nbsp;");
 
-    return `| ${img} | ${name} | ${duration} | ${statsLabels} |`;
+    const report = summary.remoteHref ? `[📊 View Report](${summary.remoteHref})` : '';
+    return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${report} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
 

@@ -45,9 +45,8 @@ const run = async (): Promise<void> => {
     } catch (ignored) {}
   }
 
-  const octokit = getOctokit(token);
-
   if (qualityGateResults) {
+    const octokit = getOctokit(token);
     const summaryLines: string[] = [];
     const qualityGateFailed = qualityGateResults.length > 0;
 
@@ -80,6 +79,7 @@ const run = async (): Promise<void> => {
 
   const markdown = generateSummaryMarkdownTable(summaryFilesContent);
   const issue_number = payload.pull_request.number;
+  const octokit = getOctokit(token);
 
   await octokit.rest.issues.createComment({
     owner: repo.owner,

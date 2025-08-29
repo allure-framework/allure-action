@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatDuration, generateSummaryMarkdownTable } from "../../src/utils.js";
+import {PluginSummary} from "@allurereport/plugin-api";
 
 describe("utils", () => {
   describe("formatDuration", () => {
@@ -50,9 +51,12 @@ describe("utils", () => {
             skipped: 3,
             unknown: 0
           },
-          duration: 5000
+          duration: 5000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
@@ -71,9 +75,12 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report"
+          remoteHref: "https://example.com/report",
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
@@ -91,7 +98,10 @@ describe("utils", () => {
             skipped: 3,
             unknown: 0
           },
-          duration: 5000
+          duration: 5000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         },
         {
           name: "Test Suite 2",
@@ -103,9 +113,12 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report"
+          remoteHref: "https://example.com/report",
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
@@ -120,9 +133,12 @@ describe("utils", () => {
             passed: 7
             // Other stats are missing
           },
-          duration: 2500
+          duration: 2500,
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
@@ -140,9 +156,12 @@ describe("utils", () => {
             skipped: 0,
             unknown: 0
           },
-          duration: 3661001 // 1h 1m 1s 1ms
+          duration: 3661001, // 1h 1m 1s 1ms
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
@@ -160,9 +179,12 @@ describe("utils", () => {
             skipped: 0,
             unknown: 0
           },
-          duration: 0
+          duration: 0,
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
@@ -181,9 +203,12 @@ describe("utils", () => {
             unknown: 0,
             custom: 5 // Custom stat property
           },
-          duration: 1500
+          duration: 1500,
+          newTests: [],
+          flakyTests: [],
+          retryTests: []
         }
-      ];
+      ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
 
