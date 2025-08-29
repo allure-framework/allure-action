@@ -4,5 +4,5 @@
     "composite": true,
     "moduleResolution": "bundler"
   },
-  "include": ["src", "test", "./.eslintrc.cjs", "./allurerc.mjs", "./.prettierrc.js"]
+  "include": ["src/*", "test/*", "./.eslintrc.cjs", "./allurerc.mjs", "./.prettierrc.js"]
 }
