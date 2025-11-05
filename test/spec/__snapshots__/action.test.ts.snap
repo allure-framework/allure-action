@@ -2,7 +2,7 @@
 
 exports[`action > when the action should be run > should generate markdown table from collected summary files and print it to the output 1`] = `
 "# Allure Report Summary
-|  | Name | Duration | Stats | Report |
-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Test Suite 1 | 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>10</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>2</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>0</span>&nbsp;&nbsp;&nbsp;<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>0</span> |  |"
+|  | Name | Duration | Stats | New | Flaky | Retry | Report |
+|-|-|-|-|-|-|-|-|
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Test Suite 1 | 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>10</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>2</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>0</span>&nbsp;&nbsp;&nbsp;<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>0</span> | 0 | 0 | 0 |  |"
 `;

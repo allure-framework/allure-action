@@ -32,28 +32,30 @@ export const formatSummaryTests = (params: {
   remoteHref?: string;
 }): string => {
   const { title, tests, remoteHref } = params;
-  const lines: string[] = [`### ${title}`];
+  const lines: string[] = [
+    `### ${title}`,
+    `| Status | Test Name | Duration |`,
+    `|--------|-----------|----------|`
+  ];
 
   tests.forEach((test) => {
-    const parts = [`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`];
+    const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
 
-    if (remoteHref) {
-      parts.push(`<a href="${remoteHref}/#${test.id}" target="_blank">${test.name}</a>`);
-    } else {
-      parts.push(`<span>${test.name}</span>`);
-    }
+    const testName = remoteHref
+      ? `[${test.name}](${remoteHref}/#${test.id})`
+      : test.name;
 
-    parts.push(`<span>${formatDuration(test.duration)}</span>`);
+    const duration = formatDuration(test.duration);
 
-    lines.push(parts.join("&nbsp;"));
+    lines.push(`| ${statusIcon} | ${testName} | ${duration} |`);
   });
 
   return lines.join("\n");
 };
 
 export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string => {
-  const header = `|  | Name | Duration | Stats | Report |`;
-  const delimiter = `|-|-|-|-|-|`;
+  const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
+  const delimiter = `|-|-|-|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
     const stats = {
       unknown: summary.stats.unknown ?? 0,
@@ -74,8 +76,12 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
     ].join("&nbsp;&nbsp;&nbsp;");
 
+    const newCount = summary.newTests?.length ?? 0;
+    const flakyCount = summary.flakyTests?.length ?? 0;
+    const retryCount = summary.retryTests?.length ?? 0;
+
     const report = summary.remoteHref ? `[📊 View Report](${summary.remoteHref})` : '';
-    return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${report} |`;
+    return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
 
@@ -90,6 +96,8 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     lines.push(`## ${summary.name}\n`)
 
     if (summary.newTests?.length) {
+      lines.push(`<details>`);
+      lines.push(`<summary><b>New tests (${summary.newTests.length})</b></summary>\n`);
       lines.push(
         formatSummaryTests({
           title: "New tests",
@@ -97,9 +105,12 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
           remoteHref: summary.remoteHref,
         }),
       );
+      lines.push(`\n</details>\n`);
     }
 
     if (summary.flakyTests?.length) {
+      lines.push(`<details>`);
+      lines.push(`<summary><b>Flaky tests (${summary.flakyTests.length})</b></summary>\n`);
       lines.push(
         formatSummaryTests({
           title: "Flaky tests",
@@ -107,9 +118,12 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
           remoteHref: summary.remoteHref,
         }),
       );
+      lines.push(`\n</details>\n`);
     }
 
     if (summary.retryTests?.length) {
+      lines.push(`<details>`);
+      lines.push(`<summary><b>Retry tests (${summary.retryTests.length})</b></summary>\n`);
       lines.push(
         formatSummaryTests({
           title: "Retry tests",
@@ -117,6 +131,7 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
           remoteHref: summary.remoteHref,
         }),
       );
+      lines.push(`\n</details>\n`);
     }
 
     if (i < summaries.length - 1) {
