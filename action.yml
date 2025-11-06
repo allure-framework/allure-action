@@ -1,5 +1,5 @@
-name: "Allure Report"
-description: ""
+name: "Allure Report Official"
+description: "Bring seamless Allure Report 3 integration to your GitHub pipelines"
 author: "Allure Team"
 
 inputs:
