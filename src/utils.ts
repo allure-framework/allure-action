@@ -77,7 +77,7 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     const newCount = summary.newTests?.length ?? 0;
     const flakyCount = summary.flakyTests?.length ?? 0;
     const retryCount = summary.retryTests?.length ?? 0;
-    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">📊 View Report</a>` : '';
+    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">View</a>` : '';
 
     return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
   });
