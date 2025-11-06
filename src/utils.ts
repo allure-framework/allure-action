@@ -40,6 +40,7 @@ export const formatSummaryTests = (params: {
 
   tests.forEach((test) => {
     const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
+    const statusText = `${statusIcon} ${test.status}`;
 
     const testName = remoteHref
       ? `[${test.name}](${remoteHref}/#${test.id})`
@@ -47,7 +48,7 @@ export const formatSummaryTests = (params: {
 
     const duration = formatDuration(test.duration);
 
-    lines.push(`| ${statusIcon} | ${testName} | ${duration} |`);
+    lines.push(`| ${statusText} | ${testName} | ${duration} |`);
   });
 
   return lines.join("\n");
@@ -80,7 +81,7 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     const flakyCount = summary.flakyTests?.length ?? 0;
     const retryCount = summary.retryTests?.length ?? 0;
 
-    const report = summary.remoteHref ? `[📊 View Report](${summary.remoteHref})` : '';
+    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">📊 View Report</a>` : '';
     return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];

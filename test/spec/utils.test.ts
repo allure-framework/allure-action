@@ -400,5 +400,60 @@ describe("utils", () => {
 
       expect(result).toMatchSnapshot();
     });
+
+    it("should display tests with all possible statuses (passed, failed, broken, skipped, unknown)", () => {
+      const summaries = [
+        {
+          name: "Test Suite 11",
+          stats: {
+            passed: 10,
+            failed: 5,
+            broken: 3,
+            skipped: 2,
+            unknown: 1
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/report",
+          newTests: [
+            {
+              id: "test-passed",
+              name: "should pass successfully",
+              status: "passed",
+              duration: 100
+            },
+            {
+              id: "test-failed",
+              name: "should fail with error",
+              status: "failed",
+              duration: 150
+            },
+            {
+              id: "test-broken",
+              name: "should be broken",
+              status: "broken",
+              duration: 120
+            },
+            {
+              id: "test-skipped",
+              name: "should be skipped",
+              status: "skipped",
+              duration: 0
+            },
+            {
+              id: "test-unknown",
+              name: "should have unknown status",
+              status: "unknown",
+              duration: 80
+            }
+          ],
+          flakyTests: [],
+          retryTests: []
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
   });
 });
