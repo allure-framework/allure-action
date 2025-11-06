@@ -47,8 +47,11 @@ jobs:
       - name: Build TypeScript
         run: yarn build
 
+      - name: Run Tests
+        run: yarn test
+
       - name: Run Allure Action
         uses: ./
         with:
-          working-directory: "."
+          working-directory: "./out/allure-report"
           github-token: ${{ secrets.GITHUB_TOKEN }}
