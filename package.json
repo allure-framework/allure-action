@@ -28,6 +28,9 @@
   "overrides": {
     "axios": "^1.13.1"
   },
+  "resolutions": {
+    "vite": "^7.2.1"
+  },
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1",
