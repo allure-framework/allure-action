@@ -66,7 +66,7 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       ...summary.stats,
     };
     const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-    const name = summary.remoteHref ? `[${summary.name}](${summary.remoteHref})` : summary.name;
+    const name = summary.name;
     const duration = formatDuration(summary.duration);
     const statsLabels = [
       `<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`,

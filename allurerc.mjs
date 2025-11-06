@@ -5,7 +5,6 @@ const { ALLURE_SERVICE_URL, ALLURE_SERVICE_ACCESS_TOKEN, ALLURE_SERVICE_PROJECT 
 
 const config = {
   output: "./out/allure-report",
-  historyPath: "./history.jsonl",
   plugins: {
     awesome: {
       options: {

@@ -28,6 +28,9 @@ Add the action to your workflow right after your tests, which produce Allure Rep
 - name: Run Allure Action
   uses: ./
   with:
+    # Path to the working directory where `allurerc.js|mjs` is located in
+    # If there's no `output` field in the config or there's no config at all, the action searches for `<working-directory>/allure-report` folder
+    working-directory: "./"
     # Github Token that uses for posting the comments in Pull Requests
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
