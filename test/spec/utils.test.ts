@@ -75,7 +75,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
           retryTests: []
@@ -113,7 +113,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
           retryTests: []
@@ -227,7 +227,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 5000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [
             {
               id: "test-1",
@@ -270,7 +270,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [
             {
@@ -307,7 +307,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 7000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
           retryTests: [
@@ -338,7 +338,7 @@ describe("utils", () => {
             unknown: 12
           },
           duration: 1209391,
-          remoteHref: "https://example.com/allure-report/unit",
+          remoteHref: "https://example.com/allure-report/unit/",
           newTests: [
             {
               id: "new-1",
@@ -413,7 +413,7 @@ describe("utils", () => {
             unknown: 1
           },
           duration: 5000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [
             {
               id: "test-passed",

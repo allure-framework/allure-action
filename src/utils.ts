@@ -41,11 +41,9 @@ export const formatSummaryTests = (params: {
   tests.forEach((test) => {
     const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
     const statusText = `${statusIcon} ${test.status}`;
-
     const testName = remoteHref
-      ? `[${test.name}](${remoteHref}/#${test.id})`
+      ? `[${test.name}](${remoteHref}#${test.id})`
       : test.name;
-
     const duration = formatDuration(test.duration);
 
     lines.push(`| ${statusText} | ${testName} | ${duration} |`);
@@ -76,12 +74,11 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       `<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`,
       `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
     ].join("&nbsp;&nbsp;&nbsp;");
-
     const newCount = summary.newTests?.length ?? 0;
     const flakyCount = summary.flakyTests?.length ?? 0;
     const retryCount = summary.retryTests?.length ?? 0;
-
     const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">📊 View Report</a>` : '';
+
     return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
