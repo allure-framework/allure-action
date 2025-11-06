@@ -75,7 +75,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
           retryTests: []
@@ -113,7 +113,7 @@ describe("utils", () => {
             unknown: 0
           },
           duration: 3000,
-          remoteHref: "https://example.com/report",
+          remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
           retryTests: []
@@ -205,6 +205,247 @@ describe("utils", () => {
           },
           duration: 1500,
           newTests: [],
+          flakyTests: [],
+          retryTests: []
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should display new tests in table format", () => {
+      const summaries = [
+        {
+          name: "Test Suite 7",
+          stats: {
+            passed: 10,
+            failed: 1,
+            broken: 0,
+            skipped: 0,
+            unknown: 0
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/report/",
+          newTests: [
+            {
+              id: "test-1",
+              name: "should be awesome",
+              status: "failed",
+              duration: 120
+            },
+            {
+              id: "test-2",
+              name: "should handle edge cases",
+              status: "passed",
+              duration: 85
+            },
+            {
+              id: "test-3",
+              name: "should process input correctly",
+              status: "passed",
+              duration: 95
+            }
+          ],
+          flakyTests: [],
+          retryTests: []
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should display flaky tests in table format", () => {
+      const summaries = [
+        {
+          name: "Test Suite 8",
+          stats: {
+            passed: 8,
+            failed: 2,
+            broken: 0,
+            skipped: 0,
+            unknown: 0
+          },
+          duration: 3000,
+          remoteHref: "https://example.com/report/",
+          newTests: [],
+          flakyTests: [
+            {
+              id: "test-4",
+              name: "should handle async operations",
+              status: "failed",
+              duration: 150
+            },
+            {
+              id: "test-5",
+              name: "should process network requests",
+              status: "passed",
+              duration: 180
+            }
+          ],
+          retryTests: []
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should display retry tests in table format", () => {
+      const summaries = [
+        {
+          name: "Test Suite 9",
+          stats: {
+            passed: 15,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0
+          },
+          duration: 7000,
+          remoteHref: "https://example.com/report/",
+          newTests: [],
+          flakyTests: [],
+          retryTests: [
+            {
+              id: "test-6",
+              name: "should retry database connection",
+              status: "passed",
+              duration: 200
+            }
+          ]
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should display all test types together in table format", () => {
+      const summaries = [
+        {
+          name: "Unit tests",
+          stats: {
+            passed: 321,
+            failed: 24,
+            broken: 3,
+            skipped: 10,
+            unknown: 12
+          },
+          duration: 1209391,
+          remoteHref: "https://example.com/allure-report/unit/",
+          newTests: [
+            {
+              id: "new-1",
+              name: "should validate new feature",
+              status: "passed",
+              duration: 45
+            }
+          ],
+          flakyTests: [
+            {
+              id: "flaky-1",
+              name: "should handle race condition",
+              status: "failed",
+              duration: 230
+            }
+          ],
+          retryTests: [
+            {
+              id: "retry-1",
+              name: "should reconnect on timeout",
+              status: "passed",
+              duration: 150
+            }
+          ]
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should display tests without remoteHref in table format", () => {
+      const summaries = [
+        {
+          name: "Test Suite 10",
+          stats: {
+            passed: 5,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0
+          },
+          duration: 2000,
+          newTests: [
+            {
+              id: "test-7",
+              name: "should work without links",
+              status: "passed",
+              duration: 100
+            }
+          ],
+          flakyTests: [],
+          retryTests: []
+        }
+      ] as unknown as PluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should display tests with all possible statuses (passed, failed, broken, skipped, unknown)", () => {
+      const summaries = [
+        {
+          name: "Test Suite 11",
+          stats: {
+            passed: 10,
+            failed: 5,
+            broken: 3,
+            skipped: 2,
+            unknown: 1
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/report/",
+          newTests: [
+            {
+              id: "test-passed",
+              name: "should pass successfully",
+              status: "passed",
+              duration: 100
+            },
+            {
+              id: "test-failed",
+              name: "should fail with error",
+              status: "failed",
+              duration: 150
+            },
+            {
+              id: "test-broken",
+              name: "should be broken",
+              status: "broken",
+              duration: 120
+            },
+            {
+              id: "test-skipped",
+              name: "should be skipped",
+              status: "skipped",
+              duration: 0
+            },
+            {
+              id: "test-unknown",
+              name: "should have unknown status",
+              status: "unknown",
+              duration: 80
+            }
+          ],
           flakyTests: [],
           retryTests: []
         }
