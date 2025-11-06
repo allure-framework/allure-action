@@ -11,7 +11,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Unit tests
-
+    env:
+       ALLURE_SERVICE_URL: ${{ secrets.ALLURE_SERVICE_URL }}
+       ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
+       ALLURE_SERVICE_PROJECT: ${{ secrets.ALLURE_SERVICE_PROJECT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,27 +30,6 @@ jobs:
         run: yarn build
 
       - name: Run tests
-        run: yarn test
-
-  integration-test:
-    runs-on: ubuntu-latest
-    name: Integration test
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --immutable --immutable-cache --check-cache
-
-      - name: Build TypeScript
-        run: yarn build
-
-      - name: Run Tests
         run: yarn test
 
       - name: Run Allure Action
