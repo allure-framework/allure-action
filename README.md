@@ -26,7 +26,7 @@ Add the action to your workflow right after your tests, which produce Allure Rep
 
 ```yaml
 - name: Run Allure Action
-  uses: ./
+  uses: allure-framework/allure-report-official@v0
   with:
     # Path to the working directory where `allurerc.js|mjs` is located in
     # If there's no `output` field in the config or there's no config at all, the action searches for `<working-directory>/allure-report` folder
