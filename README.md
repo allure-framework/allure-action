@@ -25,8 +25,10 @@ This actions scans working directory for Allure Report data and posts a summary 
 Add the action to your workflow right after your tests, which produce Allure Report:
 
 ```yaml
-- name: Run Allure Action
-  uses: allure-framework/allure-report-official@v0
+- name: Run tests
+
+- name: Allure Report Official
+  uses: allure-framework/allure-report@v0.1.0
   with:
     # Path to the working directory where `allurerc.js|mjs` is located in
     # If there's no `output` field in the config or there's no config at all, the action searches for `<working-directory>/allure-report` folder

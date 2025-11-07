@@ -5,15 +5,13 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.app.json",
+    "build": "esbuild ./src/index.ts --bundle --minify --platform=node --outfile=./dist/index.js --format=cjs",
     "clean": "rm -rf dist",
-    "dev": "tsc --watch",
+    "format": "prettier --write './{src,test}/**/*.{json,js,ts,tsx}' package.json",
     "lint-staged": "lint-staged",
-    "package": "yarn clean && yarn build",
     "prepare": "husky",
-    "prettier:format": "prettier --write './{src,test}/**/*.{json,js,ts,tsx}' package.json",
     "test": "yarn allure run -- vitest run"
   },
   "lint-staged": {
@@ -25,11 +23,11 @@
       "prettier --write"
     ]
   },
-  "overrides": {
-    "axios": "^1.13.1"
-  },
   "resolutions": {
     "vite": "^7.2.1"
+  },
+  "overrides": {
+    "axios": "^1.13.1"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
@@ -53,6 +51,7 @@
     "@vitest/snapshot": "^3.2.4",
     "allure": "^3.0.0-beta.22",
     "allure-vitest": "^3.4.2",
+    "esbuild": "^0.25.12",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.31.0",
