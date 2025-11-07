@@ -7,7 +7,7 @@
   "author": "",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "esbuild ./src/index.ts --bundle --minify --platform=node --outfile=./dist/index.js --format=cjs",
+    "build": "esbuild ./src/index.ts --outfile=./dist/index.js --bundle --minify --platform=node --format=cjs",
     "clean": "rm -rf dist",
     "format": "prettier --write './{src,test}/**/*.{json,js,ts,tsx}' package.json",
     "lint-staged": "lint-staged",
