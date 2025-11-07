@@ -1,6 +1,9 @@
 name: "Allure Report Official"
 description: "Bring seamless Allure Report 3 integration to your GitHub pipelines"
 author: "Allure Team"
+branding:
+  icon: "check-circle"
+  color: "green"
 
 inputs:
   working-directory:
