@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Release
     steps:
+      - name: "Check release version"
+        run: |
+          expr "${{ github.event.inputs.releaseVersion }}" : '\(^[1-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(-beta\.[0-9][0-9]*\)\{0,1\}\)$'
+
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.QAMETA_CI }}
