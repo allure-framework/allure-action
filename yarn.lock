@@ -2242,6 +2242,7 @@ __metadata:
     lint-staged: "npm:^16.1.0"
     prettier: "npm:^3.5.3"
     prettier-plugin-packagejson: "npm:^2.5.15"
+    rollup: "npm:^4.53.0"
     typescript: "npm:^5.8.3"
     vitest: "npm:^3.2.4"
   languageName: unknown
@@ -5995,7 +5996,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^4.43.0":
+"rollup@npm:^4.43.0, rollup@npm:^4.53.0":
   version: 4.53.0
   resolution: "rollup@npm:4.53.0"
   dependencies:

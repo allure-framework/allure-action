@@ -15,10 +15,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Unit tests
-    env:
-      ALLURE_SERVICE_URL: ${{ secrets.ALLURE_SERVICE_URL }}
-      ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
-      ALLURE_SERVICE_PROJECT: ${{ secrets.ALLURE_SERVICE_PROJECT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +31,10 @@ jobs:
 
       - name: Run tests
         run: yarn test
+        env:
+          ALLURE_SERVICE_URL: ${{ secrets.ALLURE_SERVICE_URL }}
+          ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
+          ALLURE_SERVICE_PROJECT: ${{ secrets.ALLURE_SERVICE_PROJECT }}
 
       - name: Run Allure Action
         uses: ./
