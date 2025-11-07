@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Unit tests
     env:
-       ALLURE_SERVICE_URL: ${{ secrets.ALLURE_SERVICE_URL }}
-       ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
-       ALLURE_SERVICE_PROJECT: ${{ secrets.ALLURE_SERVICE_PROJECT }}
+      ALLURE_SERVICE_URL: ${{ secrets.ALLURE_SERVICE_URL }}
+      ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
+      ALLURE_SERVICE_PROJECT: ${{ secrets.ALLURE_SERVICE_PROJECT }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +28,7 @@ jobs:
           cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install --immutable --immutable-cache --check-cache
+        run: yarn install --immutable --immutable-cache
 
       - name: Build TypeScript
         run: yarn build
