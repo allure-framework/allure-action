@@ -1,0 +1,79 @@
+{
+  "name": "@allurereport/core",
+  "version": "3.0.0-beta.22",
+  "description": "Collection of generic Allure utilities used across the entire project",
+  "keywords": [
+    "allure"
+  ],
+  "repository": "https://github.com/allure-framework/allure3",
+  "license": "Apache-2.0",
+  "author": "Qameta Software",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "run clean && tsc --project ./tsconfig.json",
+    "clean": "rimraf ./dist",
+    "eslint": "eslint ./src/**/*.{js,jsx,ts,tsx}",
+    "eslint:format": "eslint --fix ./src/**/*.{js,jsx,ts,tsx}",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@allurereport/ci": "3.0.0-beta.22",
+    "@allurereport/core-api": "3.0.0-beta.22",
+    "@allurereport/plugin-allure2": "3.0.0-beta.22",
+    "@allurereport/plugin-api": "3.0.0-beta.22",
+    "@allurereport/plugin-awesome": "3.0.0-beta.22",
+    "@allurereport/plugin-classic": "3.0.0-beta.22",
+    "@allurereport/plugin-csv": "3.0.0-beta.22",
+    "@allurereport/plugin-dashboard": "3.0.0-beta.22",
+    "@allurereport/plugin-jira": "3.0.0-beta.22",
+    "@allurereport/plugin-log": "3.0.0-beta.22",
+    "@allurereport/plugin-progress": "3.0.0-beta.22",
+    "@allurereport/plugin-slack": "3.0.0-beta.22",
+    "@allurereport/plugin-testplan": "3.0.0-beta.22",
+    "@allurereport/reader": "3.0.0-beta.22",
+    "@allurereport/reader-api": "3.0.0-beta.22",
+    "@allurereport/service": "3.0.0-beta.22",
+    "@allurereport/summary": "3.0.0-beta.22",
+    "handlebars": "^4.7.8",
+    "markdown-it": "^14.1.0",
+    "node-stream-zip": "^1.15.0",
+    "p-limit": "^7.2.0",
+    "progress": "^2.0.3",
+    "yoctocolors": "^2.1.1",
+    "zip-stream": "^7.0.2"
+  },
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^2.6.1",
+    "@types/eslint": "^8.56.11",
+    "@types/handlebars": "^4.1.0",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.17.9",
+    "@types/progress": "^2",
+    "@types/zip-stream": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/runner": "^2.1.9",
+    "@vitest/snapshot": "^2.1.9",
+    "allure-js-commons": "^3.3.3",
+    "allure-vitest": "^3.3.3",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsdoc": "^50.0.0",
+    "eslint-plugin-n": "^17.10.1",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "rimraf": "^6.0.1",
+    "tslib": "^2.7.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  }
+}

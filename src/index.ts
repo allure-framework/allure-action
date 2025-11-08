@@ -5,7 +5,7 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { generateSummaryMarkdownTable, getGithubContext, getGithubInput, getOctokit } from "./utils.js";
+import { generateSummaryMarkdownTable, getGithubContext, getGithubInput, getOctokit } from "./utils";
 
 const stripAnsiCodes = (str: string, replacement?: string): string => str.replace(/\u001b\[\d+m/g, replacement ?? "");
 
@@ -52,9 +52,9 @@ const run = async (): Promise<void> => {
 
     qualityGateResults.forEach((result) => {
       summaryLines.push(`**${result.rule}** has failed:`);
-      summaryLines.push("```shell")
-      summaryLines.push(stripAnsiCodes(result.message))
-      summaryLines.push("```")
+      summaryLines.push("```shell");
+      summaryLines.push(stripAnsiCodes(result.message));
+      summaryLines.push("```");
       summaryLines.push("");
     });
 
@@ -65,10 +65,12 @@ const run = async (): Promise<void> => {
       head_sha: payload.pull_request.head.sha,
       status: "completed",
       conclusion: !qualityGateFailed ? "success" : "failure",
-      output: !qualityGateFailed ? undefined : {
-        title: "Quality Gate",
-        summary: summaryLines.join("\n"),
-      },
+      output: !qualityGateFailed
+        ? undefined
+        : {
+            title: "Quality Gate",
+            summary: summaryLines.join("\n"),
+          },
     });
   }
 
