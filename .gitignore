@@ -34,7 +34,6 @@ node_modules
 
 #Junk
 out
-dist
 dist-tests
 *.tgz
 *.log
