@@ -14,7 +14,7 @@
 
 ## Overview
 
-This actions scans working directory for Allure Report data and posts a summary comment that includes:
+This actions scans given report directory for data and posts a summary comment that includes:
 
 - Summary statistics about all test results
 - New, flaky and retry tests
@@ -32,9 +32,9 @@ Add the action to your workflow right after your tests, which produce Allure Rep
 - name: Run Allure Action
   uses: allure-framework/allure-report@v0.1.0
   with:
-    # Path to the working directory where `allurerc.js|mjs` is located in
-    # If there's no `output` field in the config or there's no config at all, the action searches for `<working-directory>/allure-report` folder
-    working-directory: "./"
+    # Path to the generated report directory
+    # By default, it's set to `./allure-report`
+    report-directory: "./"
     # Github Token that uses for posting the comments in Pull Requests
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
