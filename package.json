@@ -5,9 +5,9 @@
   "keywords": [],
   "license": "ISC",
   "author": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.app.json",
+    "build": "tsup src/index.ts --format cjs --dts --out-dir dist --clean",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint-staged": "lint-staged",
@@ -25,11 +25,11 @@
       "prettier --write"
     ]
   },
-  "overrides": {
-    "axios": "^1.13.1"
-  },
   "resolutions": {
     "vite": "^7.2.1"
+  },
+  "overrides": {
+    "axios": "^1.13.1"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
@@ -64,6 +64,7 @@
     "lint-staged": "^16.1.0",
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.15",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }
