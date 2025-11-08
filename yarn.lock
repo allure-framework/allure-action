@@ -2385,6 +2385,7 @@ __metadata:
     allure: "npm:^3.0.0-beta.22"
     allure-vitest: "npm:^3.4.2"
     d3-shape: "npm:^3.2.0"
+    esbuild: "npm:^0.25.12"
     eslint: "npm:^9.28.0"
     eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-import: "npm:^2.31.0"
@@ -3697,7 +3698,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.25.0":
+"esbuild@npm:^0.25.0, esbuild@npm:^0.25.12":
   version: 0.25.12
   resolution: "esbuild@npm:0.25.12"
   dependencies:

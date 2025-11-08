@@ -7,8 +7,7 @@
   "author": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs --dts --out-dir dist --clean",
-    "clean": "rm -rf dist",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --minify",
     "dev": "tsc --watch",
     "lint-staged": "lint-staged",
     "package": "yarn clean && yarn build",
@@ -53,6 +52,7 @@
     "@vitest/snapshot": "^3.2.4",
     "allure": "^3.0.0-beta.22",
     "allure-vitest": "^3.4.2",
+    "esbuild": "^0.25.12",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.31.0",
