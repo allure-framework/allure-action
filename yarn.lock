@@ -95,7 +95,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/core@npm:3.0.0-beta.22, @allurereport/core@npm:^3.0.0-beta.22":
+"@allurereport/core@npm:3.0.0-beta.22":
   version: 3.0.0-beta.22
   resolution: "@allurereport/core@npm:3.0.0-beta.22"
   dependencies:
@@ -2382,7 +2382,6 @@ __metadata:
     "@actions/github": "npm:^6.0.1"
     "@actions/glob": "npm:^0.4.0"
     "@actions/io": "npm:^1.1.3"
-    "@allurereport/core": "npm:^3.0.0-beta.22"
     "@allurereport/plugin-api": "npm:^3.0.0-beta.22"
     "@stylistic/eslint-plugin": "npm:^4.4.1"
     "@trivago/prettier-plugin-sort-imports": "npm:^5.2.2"

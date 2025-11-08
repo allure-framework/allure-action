@@ -6,10 +6,10 @@ branding:
   color: "green"
 
 inputs:
-  working-directory:
-    description: "The working directory to scan for files"
+  report-directory:
+    description: "The report directory to scan for files"
     required: false
-    default: "."
+    default: "./allure-report"
   github-token:
     description: "GitHub token for creating comments"
     required: false

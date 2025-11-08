@@ -1,5 +1,4 @@
 import * as core from "@actions/core";
-import { readConfig } from "@allurereport/core";
 import { type QualityGateValidationResult } from "@allurereport/plugin-api";
 import fg from "fast-glob";
 import { existsSync } from "node:fs";
@@ -21,9 +20,7 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const workingDirectory = getGithubInput("working-directory") || process.cwd();
-  const config = await readConfig(workingDirectory);
-  const reportDir = config.output ?? path.join(workingDirectory, "allure-report");
+  const reportDir = getGithubInput("report-directory") || path.join(process.cwd(), "allure-report");
   const qualityGateFile = path.join(reportDir, "quality-gate.json");
   const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
