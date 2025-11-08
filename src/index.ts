@@ -52,9 +52,9 @@ const run = async (): Promise<void> => {
 
     qualityGateResults.forEach((result) => {
       summaryLines.push(`**${result.rule}** has failed:`);
-      summaryLines.push("```shell")
-      summaryLines.push(stripAnsiCodes(result.message))
-      summaryLines.push("```")
+      summaryLines.push("```shell");
+      summaryLines.push(stripAnsiCodes(result.message));
+      summaryLines.push("```");
       summaryLines.push("");
     });
 
@@ -65,10 +65,12 @@ const run = async (): Promise<void> => {
       head_sha: payload.pull_request.head.sha,
       status: "completed",
       conclusion: !qualityGateFailed ? "success" : "failure",
-      output: !qualityGateFailed ? undefined : {
-        title: "Quality Gate",
-        summary: summaryLines.join("\n"),
-      },
+      output: !qualityGateFailed
+        ? undefined
+        : {
+            title: "Quality Gate",
+            summary: summaryLines.join("\n"),
+          },
     });
   }
 
@@ -89,8 +91,6 @@ const run = async (): Promise<void> => {
   });
 };
 
-if (require.main === module) {
-  run();
-}
+run();
 
 export { run };
