@@ -35,6 +35,7 @@ node_modules
 #Junk
 out
 dist-tests
+dist/index.js.map
 *.tgz
 *.log
 .gradle
