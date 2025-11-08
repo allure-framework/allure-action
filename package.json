@@ -7,7 +7,7 @@
   "author": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/index.js --minify",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/index.js --minify  --banner:js=\"const require = (await import('node:module')).createRequire(import.meta.url);\"",
     "dev": "tsc --watch",
     "lint-staged": "lint-staged",
     "package": "yarn clean && yarn build",
