@@ -53,3 +53,5 @@ build
 
 tsconfig.app*
 !tsconfig.app.json
+
+dist/**/*.d.ts
