@@ -1,6 +1,11 @@
-import type { PluginSummary } from "@allurereport/plugin-api";
+import type { PluginSummary, SummaryTestResult } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
-import { formatDuration, generateSummaryMarkdownTable } from "../../src/utils.js";
+import {
+  formatDuration,
+  formatSummaryTests,
+  generateSummaryMarkdownTable,
+  generateTestsSectionComment,
+} from "../../src/utils.js";
 
 describe("utils", () => {
   describe("formatDuration", () => {
@@ -454,6 +459,215 @@ describe("utils", () => {
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe("formatSummaryTests", () => {
+    it("should format tests without remoteHref", () => {
+      const tests: SummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "should pass",
+          status: "passed",
+          duration: 100,
+        },
+        {
+          id: "test-2",
+          name: "should fail",
+          status: "failed",
+          duration: 150,
+        },
+      ];
+
+      const result = formatSummaryTests({ tests });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should format tests with remoteHref", () => {
+      const tests: SummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "should pass",
+          status: "passed",
+          duration: 100,
+        },
+        {
+          id: "test-2",
+          name: "should fail",
+          status: "failed",
+          duration: 150,
+        },
+      ];
+
+      const result = formatSummaryTests({ tests, remoteHref: "https://example.com/report/" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should format tests with different statuses", () => {
+      const tests: SummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "passed test",
+          status: "passed",
+          duration: 100,
+        },
+        {
+          id: "test-2",
+          name: "failed test",
+          status: "failed",
+          duration: 150,
+        },
+        {
+          id: "test-3",
+          name: "broken test",
+          status: "broken",
+          duration: 120,
+        },
+        {
+          id: "test-4",
+          name: "skipped test",
+          status: "skipped",
+          duration: 0,
+        },
+        {
+          id: "test-5",
+          name: "unknown test",
+          status: "unknown",
+          duration: 80,
+        },
+      ];
+
+      const result = formatSummaryTests({ tests, remoteHref: "https://example.com/report/" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should handle empty tests array", () => {
+      const tests: SummaryTestResult[] = [];
+
+      const result = formatSummaryTests({ tests });
+
+      expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe("generateTestsSectionComment", () => {
+    it("should return empty array for empty tests", () => {
+      const result = generateTestsSectionComment({
+        title: "New Tests",
+        tests: [],
+      });
+
+      expect(result).toEqual([]);
+    });
+
+    it("should generate a collapsible section for tests without remoteHref", () => {
+      const tests: SummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "should pass",
+          status: "passed",
+          duration: 100,
+        },
+        {
+          id: "test-2",
+          name: "should fail",
+          status: "failed",
+          duration: 150,
+        },
+      ];
+
+      const result = generateTestsSectionComment({
+        title: "New Tests",
+        tests,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchSnapshot();
+    });
+
+    it("should generate a collapsible section for tests with remoteHref", () => {
+      const tests: SummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "should pass",
+          status: "passed",
+          duration: 100,
+        },
+        {
+          id: "test-2",
+          name: "should fail",
+          status: "failed",
+          duration: 150,
+        },
+      ];
+
+      const result = generateTestsSectionComment({
+        title: "Flaky Tests",
+        tests,
+        remoteHref: "https://example.com/report/",
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchSnapshot();
+    });
+
+    it("should chunk tests when exceeding section limit", () => {
+      const tests: SummaryTestResult[] = Array.from({ length: 250 }, (_, i) => ({
+        id: `test-${i}`,
+        name: `test ${i}`,
+        status: "passed" as const,
+        duration: 100,
+      }));
+
+      const result = generateTestsSectionComment({
+        title: "Many Tests",
+        tests,
+        sectionLimit: 100,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toContain("Many Tests #1");
+      expect(result[1]).toContain("Many Tests #2");
+      expect(result[2]).toContain("Many Tests #3");
+    });
+
+    it("should not add chunk number when tests fit in one section", () => {
+      const tests: SummaryTestResult[] = Array.from({ length: 50 }, (_, i) => ({
+        id: `test-${i}`,
+        name: `test ${i}`,
+        status: "passed" as const,
+        duration: 100,
+      }));
+
+      const result = generateTestsSectionComment({
+        title: "Few Tests",
+        tests,
+        sectionLimit: 100,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toContain("Few Tests (50)");
+      expect(result[0]).not.toContain("Few Tests #1");
+    });
+
+    it("should handle custom section limit", () => {
+      const tests: SummaryTestResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `test-${i}`,
+        name: `test ${i}`,
+        status: "passed" as const,
+        duration: 100,
+      }));
+
+      const result = generateTestsSectionComment({
+        title: "Custom Limit Tests",
+        tests,
+        sectionLimit: 10,
+      });
+
+      expect(result).toHaveLength(3);
     });
   });
 });

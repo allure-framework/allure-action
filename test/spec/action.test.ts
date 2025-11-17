@@ -1,5 +1,7 @@
+/* eslint max-lines: 0 */
 import * as core from "@actions/core";
 import fg from "fast-glob";
+import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { run } from "../../src/index.js";
@@ -11,6 +13,9 @@ vi.mock("fast-glob", () => ({
 }));
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),
+}));
+vi.mock("node:fs", () => ({
+  existsSync: vi.fn(),
 }));
 vi.mock("@actions/core", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -105,8 +110,9 @@ describe("action", () => {
       await run();
 
       expect(fs.readFile).not.toHaveBeenCalled();
-      expect(getOctokit).not.toHaveBeenCalled();
+      expect(getOctokit).toHaveBeenCalledWith("token");
       expect(core.info).toHaveBeenCalledWith("No published reports found");
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
 
     it("should generate markdown table from collected summary files and print it to the output", async () => {
@@ -121,6 +127,10 @@ describe("action", () => {
                 failed: 2,
                 broken: 1,
               },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
             }),
           },
         ],
@@ -142,6 +152,654 @@ describe("action", () => {
         issue_number: 1,
       });
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+    });
+
+    it("should create comments for new tests", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/report/",
+              newTests: [
+                {
+                  id: "test-1",
+                  name: "should be a new test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+    });
+
+    it("should create comments for flaky tests", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 8,
+                failed: 2,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 3000,
+              remoteHref: "https://example.com/report/",
+              newTests: [],
+              flakyTests: [
+                {
+                  id: "test-2",
+                  name: "should be a flaky test",
+                  status: "failed",
+                  duration: 150,
+                },
+              ],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+    });
+
+    it("should create comments for retry tests", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 15,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 7000,
+              remoteHref: "https://example.com/report/",
+              newTests: [],
+              flakyTests: [],
+              retryTests: [
+                {
+                  id: "test-3",
+                  name: "should be a retry test",
+                  status: "passed",
+                  duration: 200,
+                },
+              ],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+    });
+
+    it("should create comments for all test types", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 20,
+                failed: 3,
+                broken: 1,
+                skipped: 2,
+                unknown: 0,
+              },
+              duration: 10000,
+              remoteHref: "https://example.com/report/",
+              newTests: [
+                {
+                  id: "new-1",
+                  name: "new test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [
+                {
+                  id: "flaky-1",
+                  name: "flaky test",
+                  status: "failed",
+                  duration: 150,
+                },
+              ],
+              retryTests: [
+                {
+                  id: "retry-1",
+                  name: "retry test",
+                  status: "passed",
+                  duration: 200,
+                },
+              ],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(4);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[3][0].body).toMatchSnapshot();
+    });
+
+    it("should handle multiple summary files", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 2,
+                broken: 1,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+          {
+            path: "report2/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 2",
+              stats: {
+                passed: 5,
+                failed: 0,
+                broken: 0,
+                skipped: 1,
+                unknown: 0,
+              },
+              duration: 3000,
+              remoteHref: "https://example.com/report/",
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+
+      await run();
+
+      expect(fs.readFile).toHaveBeenCalledTimes(fixtures.summaryFiles.length);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+    });
+
+    it("should not create additional comments when there are no new/flaky/retry tests", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle summary files without remoteHref", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 2,
+                broken: 1,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [
+                {
+                  id: "test-1",
+                  name: "new test without link",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+    });
+
+    it("should handle test arrays with large number of tests requiring chunking", async () => {
+      const manyTests = Array.from({ length: 250 }, (_, i) => ({
+        id: `test-${i}`,
+        name: `test ${i}`,
+        status: "passed" as const,
+        duration: 100,
+      }));
+
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 250,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 25000,
+              remoteHref: "https://example.com/report/",
+              newTests: manyTests,
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+    });
+
+    it("should use custom report directory when specified", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "custom/report/path";
+          case "github-token":
+            return "token";
+          default:
+            return "";
+        }
+      });
+
+      (fg as unknown as Mock).mockResolvedValue([]);
+
+      await run();
+
+      expect(fg).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.stringContaining("custom/report/path")]),
+        expect.any(Object),
+      );
+    });
+
+    it("should handle multiple summaries with mixed test types", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Unit Tests",
+              stats: {
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/unit/",
+              newTests: [
+                {
+                  id: "unit-new-1",
+                  name: "new unit test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+          {
+            path: "report2/summary.json",
+            content: JSON.stringify({
+              name: "Integration Tests",
+              stats: {
+                passed: 5,
+                failed: 0,
+                broken: 0,
+                skipped: 1,
+                unknown: 0,
+              },
+              duration: 3000,
+              remoteHref: "https://example.com/integration/",
+              newTests: [],
+              flakyTests: [
+                {
+                  id: "int-flaky-1",
+                  name: "flaky integration test",
+                  status: "failed",
+                  duration: 200,
+                },
+              ],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe("quality gate", () => {
+    beforeEach(() => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/quality-gate";
+          case "github-token":
+            return "token";
+          default:
+            return "";
+        }
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "pull_request",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+        payload: {
+          pull_request: {
+            // eslint-disable-next-line id-blacklist
+            number: 1,
+            head: {
+              sha: "abc123",
+            },
+          },
+        },
+      });
+    });
+
+    it("should create a successful check when quality gate passes", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateFile: "test/fixtures/quality-gate/quality-gate.json",
+        qualityGateContent: JSON.stringify([]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure Quality Gate",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+        output: undefined,
+      });
+    });
+
+    it("should create a failed check when quality gate fails", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 8,
+                failed: 2,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateContent: JSON.stringify([
+          {
+            rule: "Failed tests threshold",
+            message: "\u001b[31mFailed tests: 2 exceeds threshold of 0\u001b[0m",
+          },
+        ]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure Quality Gate",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "failure",
+        output: {
+          title: "Quality Gate",
+          summary: expect.stringContaining("Failed tests threshold"),
+        },
+      });
+    });
+
+    it("should strip ANSI codes from quality gate messages", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 8,
+                failed: 2,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateContent: JSON.stringify([
+          {
+            rule: "Failed tests threshold",
+            message: "\u001b[31mFailed tests: 2 exceeds threshold of 0\u001b[0m",
+          },
+        ]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+
+      await run();
+
+      const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
+      expect(summaryOutput).not.toContain("\u001b[31m");
+      expect(summaryOutput).not.toContain("\u001b[0m");
+      expect(summaryOutput).toContain("Failed tests: 2 exceeds threshold of 0");
+    });
+
+    it("should handle multiple quality gate violations", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 5,
+                failed: 5,
+                broken: 2,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateContent: JSON.stringify([
+          {
+            rule: "Failed tests threshold",
+            message: "Failed tests: 5 exceeds threshold of 0",
+          },
+          {
+            rule: "Broken tests threshold",
+            message: "Broken tests: 2 exceeds threshold of 0",
+          },
+        ]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+
+      await run();
+
+      const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
+
+      expect(summaryOutput).toContain("Failed tests threshold");
+      expect(summaryOutput).toContain("Broken tests threshold");
     });
   });
 });
