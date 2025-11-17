@@ -29,7 +29,7 @@ export const formatDuration = (ms?: number): string => {
 
 export const formatSummaryTests = (params: { tests: SummaryTestResult[]; remoteHref?: string }): string => {
   const { tests, remoteHref } = params;
-  const lines: string[] = [`| Status | Test Name | Duration |`, `|--------|-----------|----------|`];
+  const lines: string[] = [];
 
   tests.forEach((test) => {
     const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
@@ -37,7 +37,7 @@ export const formatSummaryTests = (params: { tests: SummaryTestResult[]; remoteH
     const testName = remoteHref ? `[${test.name}](${remoteHref}#${test.id})` : test.name;
     const duration = formatDuration(test.duration);
 
-    lines.push(`| ${statusText} | ${testName} | ${duration} |`);
+    lines.push(`- ${statusText} ${testName} (${duration})`);
   });
 
   return lines.join("\n");

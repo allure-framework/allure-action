@@ -11,9 +11,7 @@ exports[`action > when the action should be run > should create comments for all
 "<details>
 <summary><b>New tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [new test](https://example.com/report/#new-1) | 100ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [new test](https://example.com/report/#new-1) (100ms)
 
 </details>
 "
@@ -23,9 +21,7 @@ exports[`action > when the action should be run > should create comments for all
 "<details>
 <summary><b>Flaky tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | [flaky test](https://example.com/report/#flaky-1) | 150ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [flaky test](https://example.com/report/#flaky-1) (150ms)
 
 </details>
 "
@@ -35,9 +31,7 @@ exports[`action > when the action should be run > should create comments for all
 "<details>
 <summary><b>Retry tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [retry test](https://example.com/report/#retry-1) | 200ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [retry test](https://example.com/report/#retry-1) (200ms)
 
 </details>
 "
@@ -54,9 +48,7 @@ exports[`action > when the action should be run > should create comments for fla
 "<details>
 <summary><b>Flaky tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | [should be a flaky test](https://example.com/report/#test-2) | 150ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should be a flaky test](https://example.com/report/#test-2) (150ms)
 
 </details>
 "
@@ -73,9 +65,7 @@ exports[`action > when the action should be run > should create comments for new
 "<details>
 <summary><b>New tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [should be a new test](https://example.com/report/#test-1) | 100ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a new test](https://example.com/report/#test-1) (100ms)
 
 </details>
 "
@@ -92,9 +82,7 @@ exports[`action > when the action should be run > should create comments for ret
 "<details>
 <summary><b>Retry tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [should be a retry test](https://example.com/report/#test-3) | 200ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a retry test](https://example.com/report/#test-3) (200ms)
 
 </details>
 "
@@ -119,9 +107,7 @@ exports[`action > when the action should be run > should handle summary files wi
 "<details>
 <summary><b>New tests in Test Suite 1 (1)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | new test without link | 100ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed new test without link (100ms)
 
 </details>
 "

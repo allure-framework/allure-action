@@ -1,33 +1,24 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`utils > formatSummaryTests > should format tests with different statuses 1`] = `
-"| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [passed test](https://example.com/report/#test-1) | 100ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | [failed test](https://example.com/report/#test-2) | 150ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" /> broken | [broken test](https://example.com/report/#test-3) | 120ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" /> skipped | [skipped test](https://example.com/report/#test-4) | 0ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" /> unknown | [unknown test](https://example.com/report/#test-5) | 80ms |"
+"- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [passed test](https://example.com/report/#test-1) (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [failed test](https://example.com/report/#test-2) (150ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" /> broken [broken test](https://example.com/report/#test-3) (120ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" /> skipped [skipped test](https://example.com/report/#test-4) (0ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" /> unknown [unknown test](https://example.com/report/#test-5) (80ms)"
 `;
 
 exports[`utils > formatSummaryTests > should format tests with remoteHref 1`] = `
-"| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [should pass](https://example.com/report/#test-1) | 100ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | [should fail](https://example.com/report/#test-2) | 150ms |"
+"- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should pass](https://example.com/report/#test-1) (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should fail](https://example.com/report/#test-2) (150ms)"
 `;
 
 exports[`utils > formatSummaryTests > should format tests without remoteHref 1`] = `
-"| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | should pass | 100ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | should fail | 150ms |"
+"- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed should pass (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed should fail (150ms)"
 `;
 
-exports[`utils > formatSummaryTests > should handle empty tests array 1`] = `
-"| Status | Test Name | Duration |
-|--------|-----------|----------|"
-`;
+exports[`utils > formatSummaryTests > should handle empty tests array 1`] = `""`;
 
 exports[`utils > generateSummaryMarkdownTable > should display all test types together in table format 1`] = `
 "# Allure Report Summary
@@ -131,10 +122,8 @@ exports[`utils > generateTestsSectionComment > should generate a collapsible sec
 "<details>
 <summary><b>Flaky Tests (2)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | [should pass](https://example.com/report/#test-1) | 100ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | [should fail](https://example.com/report/#test-2) | 150ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should pass](https://example.com/report/#test-1) (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should fail](https://example.com/report/#test-2) (150ms)
 
 </details>
 "
@@ -144,10 +133,8 @@ exports[`utils > generateTestsSectionComment > should generate a collapsible sec
 "<details>
 <summary><b>New Tests (2)</b></summary>
 
-| Status | Test Name | Duration |
-|--------|-----------|----------|
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed | should pass | 100ms |
-| <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed | should fail | 150ms |
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed should pass (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed should fail (150ms)
 
 </details>
 "
