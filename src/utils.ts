@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { PluginSummary, SummaryTestResult } from "@allurereport/plugin-api";
+import type { PluginSummary, SummaryTestResult } from "@allurereport/plugin-api";
+import chunk from "lodash.chunk";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
 
@@ -26,32 +27,26 @@ export const formatDuration = (ms?: number): string => {
   return parts.join(" ");
 };
 
-export const formatSummaryTests = (params: {
-  title: string;
-  tests: SummaryTestResult[];
-  remoteHref?: string;
-}): string => {
-  const { title, tests, remoteHref } = params;
-  const lines: string[] = [
-    `### ${title}`,
-    `| Status | Test Name | Duration |`,
-    `|--------|-----------|----------|`
-  ];
+export const formatSummaryTests = (params: { tests: SummaryTestResult[]; remoteHref?: string }): string => {
+  const { tests, remoteHref } = params;
+  const lines: string[] = [];
 
   tests.forEach((test) => {
     const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
     const statusText = `${statusIcon} ${test.status}`;
-    const testName = remoteHref
-      ? `[${test.name}](${remoteHref}#${test.id})`
-      : test.name;
+    const testName = remoteHref ? `[${test.name}](${remoteHref}#${test.id})` : test.name;
     const duration = formatDuration(test.duration);
 
-    lines.push(`| ${statusText} | ${testName} | ${duration} |`);
+    lines.push(`- ${statusText} ${testName} (${duration})`);
   });
 
   return lines.join("\n");
 };
 
+/**
+ * Generates a markdown table based on information from all available Allure Reports
+ * Doesn't include certaion informatino about every test to keep the table compact
+ */
 export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string => {
   const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
   const delimiter = `|-|-|-|-|-|-|-|-|`;
@@ -77,65 +72,51 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     const newCount = summary.newTests?.length ?? 0;
     const flakyCount = summary.flakyTests?.length ?? 0;
     const retryCount = summary.retryTests?.length ?? 0;
-    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">View</a>` : '';
+    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">View</a>` : "";
 
     return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
 
-  summaries.forEach((summary, i) => {
-    const { newTests, flakyTests, retryTests } = summary;
-    const hasTestsToDisplay = [newTests, flakyTests, retryTests].some((tests) => tests?.length);
+  return lines.join("\n");
+};
 
-    if (!hasTestsToDisplay) {
-      return;
-    }
+/**
+ * Generates a collapsible markdown section with details about given tests with a given title
+ * Keep in mind, that tests cound shouldn't be so big due to github comment body size limitations (>65k characters)
+ * Default 200 tests limit is an approximation to avoid hitting the limit
+ */
+export const generateTestsSectionComment = (params: {
+  title: string;
+  tests: SummaryTestResult[];
+  remoteHref?: string;
+  sectionLimit?: number;
+}) => {
+  const { title, tests, remoteHref, sectionLimit = 200 } = params;
+  const comments: string[] = [];
 
-    lines.push(`## ${summary.name}\n`)
+  if (tests.length === 0) {
+    return [];
+  }
 
-    if (summary.newTests?.length) {
-      lines.push(`<details>`);
-      lines.push(`<summary><b>New tests (${summary.newTests.length})</b></summary>\n`);
-      lines.push(
-        formatSummaryTests({
-          title: "New tests",
-          tests: summary.newTests,
-          remoteHref: summary.remoteHref,
-        }),
-      );
-      lines.push(`\n</details>\n`);
-    }
+  const testsChunks = chunk(tests, sectionLimit);
 
-    if (summary.flakyTests?.length) {
-      lines.push(`<details>`);
-      lines.push(`<summary><b>Flaky tests (${summary.flakyTests.length})</b></summary>\n`);
-      lines.push(
-        formatSummaryTests({
-          title: "Flaky tests",
-          tests: summary.flakyTests,
-          remoteHref: summary.remoteHref,
-        }),
-      );
-      lines.push(`\n</details>\n`);
-    }
+  testsChunks.forEach((testsChunk, i) => {
+    const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
+    const lines: string[] = [];
 
-    if (summary.retryTests?.length) {
-      lines.push(`<details>`);
-      lines.push(`<summary><b>Retry tests (${summary.retryTests.length})</b></summary>\n`);
-      lines.push(
-        formatSummaryTests({
-          title: "Retry tests",
-          tests: summary.retryTests,
-          remoteHref: summary.remoteHref,
-        }),
-      );
-      lines.push(`\n</details>\n`);
-    }
+    lines.push(`<details>`);
+    lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
+    lines.push(
+      formatSummaryTests({
+        tests: testsChunk,
+        remoteHref: remoteHref,
+      }),
+    );
+    lines.push(`\n</details>\n`);
 
-    if (i < summaries.length - 1) {
-      lines.push("\n---\n");
-    }
+    comments.push(lines.join("\n"));
   });
 
-  return lines.join("\n");
+  return comments;
 };

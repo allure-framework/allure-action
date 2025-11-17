@@ -5,5 +5,8 @@ export const octokitMock = {
     issues: {
       createComment: vi.fn(),
     },
+    checks: {
+      create: vi.fn(),
+    },
   },
-}
+};

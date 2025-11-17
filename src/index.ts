@@ -1,11 +1,18 @@
 import * as core from "@actions/core";
-import { type QualityGateValidationResult } from "@allurereport/plugin-api";
+import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
 import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { generateSummaryMarkdownTable, getGithubContext, getGithubInput, getOctokit } from "./utils";
+import {
+  generateSummaryMarkdownTable,
+  generateTestsSectionComment,
+  getGithubContext,
+  getGithubInput,
+  getOctokit,
+} from "./utils.js";
 
+// eslint-disable-next-line no-control-regex
 const stripAnsiCodes = (str: string, replacement?: string): string => str.replace(/\u001b\[\d+m/g, replacement ?? "");
 
 const run = async (): Promise<void> => {
@@ -30,7 +37,7 @@ const run = async (): Promise<void> => {
     summaryFiles.map(async (file) => {
       const content = await fs.readFile(file, "utf-8");
 
-      return JSON.parse(content);
+      return JSON.parse(content) as PluginSummary;
     }),
   );
 
@@ -39,11 +46,12 @@ const run = async (): Promise<void> => {
 
     try {
       qualityGateResults = JSON.parse(qualityGateContentRaw) as QualityGateValidationResult[];
-    } catch (ignored) {}
+    } catch {}
   }
 
+  const octokit = getOctokit(token);
+
   if (qualityGateResults) {
-    const octokit = getOctokit(token);
     const summaryLines: string[] = [];
     const qualityGateFailed = qualityGateResults.length > 0;
 
@@ -76,16 +84,64 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const markdown = generateSummaryMarkdownTable(summaryFilesContent);
+  const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
   const issue_number = payload.pull_request.number;
-  const octokit = getOctokit(token);
 
   await octokit.rest.issues.createComment({
     owner: repo.owner,
     repo: repo.repo,
     issue_number,
-    body: markdown,
+    body: tableMarkdown,
   });
+
+  const commentsToPublish: string[] = [];
+
+  for (const summary of summaryFilesContent) {
+    const { name, newTests, flakyTests, retryTests, remoteHref } = summary;
+
+    if (newTests?.length) {
+      commentsToPublish.push(
+        ...generateTestsSectionComment({
+          title: `${name}: ${newTests.length} new tests`,
+          tests: newTests,
+          remoteHref,
+        }),
+      );
+    }
+
+    if (flakyTests?.length) {
+      commentsToPublish.push(
+        ...generateTestsSectionComment({
+          title: `${name}: ${flakyTests.length} flaky tests`,
+          tests: flakyTests,
+          remoteHref,
+        }),
+      );
+    }
+
+    if (retryTests?.length) {
+      commentsToPublish.push(
+        ...generateTestsSectionComment({
+          title: `${name}: ${retryTests.length} retried tests`,
+          tests: retryTests,
+          remoteHref,
+        }),
+      );
+    }
+  }
+
+  if (commentsToPublish.length === 0) {
+    return;
+  }
+
+  for (const comment of commentsToPublish) {
+    await octokit.rest.issues.createComment({
+      owner: repo.owner,
+      repo: repo.repo,
+      issue_number,
+      body: comment,
+    });
+  }
 };
 
 if (require.main === module) {

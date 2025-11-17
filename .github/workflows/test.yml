@@ -39,5 +39,5 @@ jobs:
       - name: Run Allure Action
         uses: ./
         with:
-          report-directory: "./"
+          report-directory: "./out/allure-report"
           github-token: ${{ secrets.GITHUB_TOKEN }}
