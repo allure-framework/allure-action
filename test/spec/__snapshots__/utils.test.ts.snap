@@ -120,7 +120,7 @@ exports[`utils > generateSummaryMarkdownTable > should return a table with heade
 
 exports[`utils > generateTestsSectionComment > should generate a collapsible section for tests with remoteHref 1`] = `
 "<details>
-<summary><b>Flaky Tests (2)</b></summary>
+<summary><b>Flaky Tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should pass](https://example.com/report/#test-1) (100ms)
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should fail](https://example.com/report/#test-2) (150ms)
@@ -131,7 +131,7 @@ exports[`utils > generateTestsSectionComment > should generate a collapsible sec
 
 exports[`utils > generateTestsSectionComment > should generate a collapsible section for tests without remoteHref 1`] = `
 "<details>
-<summary><b>New Tests (2)</b></summary>
+<summary><b>New Tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed should pass (100ms)
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed should fail (150ms)

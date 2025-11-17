@@ -94,8 +94,6 @@ export const generateTestsSectionComment = (params: {
 }) => {
   const { title, tests, remoteHref, sectionLimit = 200 } = params;
   const comments: string[] = [];
-  // TODO:
-  // const lines: string[] = [`## Allure Report - ${title}`];
 
   if (tests.length === 0) {
     return [];
@@ -104,11 +102,11 @@ export const generateTestsSectionComment = (params: {
   const testsChunks = chunk(tests, sectionLimit);
 
   testsChunks.forEach((testsChunk, i) => {
-    const sectionTitle = testsChunks.length > 1 ? `${title} #${i + 1}` : title;
+    const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
     const lines: string[] = [];
 
     lines.push(`<details>`);
-    lines.push(`<summary><b>${sectionTitle} (${tests.length})</b></summary>\n`);
+    lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
     lines.push(
       formatSummaryTests({
         tests: testsChunk,

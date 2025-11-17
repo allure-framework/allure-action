@@ -102,7 +102,7 @@ const run = async (): Promise<void> => {
     if (newTests?.length) {
       commentsToPublish.push(
         ...generateTestsSectionComment({
-          title: `New tests in ${name}`,
+          title: `${name}: ${newTests.length} new tests`,
           tests: newTests,
           remoteHref,
         }),
@@ -112,7 +112,7 @@ const run = async (): Promise<void> => {
     if (flakyTests?.length) {
       commentsToPublish.push(
         ...generateTestsSectionComment({
-          title: `Flaky tests in ${name}`,
+          title: `${name}: ${flakyTests.length} flaky tests`,
           tests: flakyTests,
           remoteHref,
         }),
@@ -122,7 +122,7 @@ const run = async (): Promise<void> => {
     if (retryTests?.length) {
       commentsToPublish.push(
         ...generateTestsSectionComment({
-          title: `Retry tests in ${name}`,
+          title: `${name}: ${retryTests.length} retried tests`,
           tests: retryTests,
           remoteHref,
         }),

@@ -629,9 +629,9 @@ describe("utils", () => {
       });
 
       expect(result).toHaveLength(3);
-      expect(result[0]).toContain("Many Tests #1");
-      expect(result[1]).toContain("Many Tests #2");
-      expect(result[2]).toContain("Many Tests #3");
+      expect(result[0]).toContain("Many Tests (part 1)");
+      expect(result[1]).toContain("Many Tests (part 2)");
+      expect(result[2]).toContain("Many Tests (part 3)");
     });
 
     it("should not add chunk number when tests fit in one section", () => {
@@ -649,8 +649,8 @@ describe("utils", () => {
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toContain("Few Tests (50)");
-      expect(result[0]).not.toContain("Few Tests #1");
+      expect(result[0]).toContain("Few Tests</b>");
+      expect(result[0]).not.toContain("Few Tests (part 1)");
     });
 
     it("should handle custom section limit", () => {

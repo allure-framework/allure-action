@@ -9,7 +9,7 @@ exports[`action > when the action should be run > should create comments for all
 
 exports[`action > when the action should be run > should create comments for all test types 2`] = `
 "<details>
-<summary><b>New tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 new tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [new test](https://example.com/report/#new-1) (100ms)
 
@@ -19,7 +19,7 @@ exports[`action > when the action should be run > should create comments for all
 
 exports[`action > when the action should be run > should create comments for all test types 3`] = `
 "<details>
-<summary><b>Flaky tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 flaky tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [flaky test](https://example.com/report/#flaky-1) (150ms)
 
@@ -29,7 +29,7 @@ exports[`action > when the action should be run > should create comments for all
 
 exports[`action > when the action should be run > should create comments for all test types 4`] = `
 "<details>
-<summary><b>Retry tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 retried tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [retry test](https://example.com/report/#retry-1) (200ms)
 
@@ -46,7 +46,7 @@ exports[`action > when the action should be run > should create comments for fla
 
 exports[`action > when the action should be run > should create comments for flaky tests 2`] = `
 "<details>
-<summary><b>Flaky tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 flaky tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should be a flaky test](https://example.com/report/#test-2) (150ms)
 
@@ -63,7 +63,7 @@ exports[`action > when the action should be run > should create comments for new
 
 exports[`action > when the action should be run > should create comments for new tests 2`] = `
 "<details>
-<summary><b>New tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 new tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a new test](https://example.com/report/#test-1) (100ms)
 
@@ -80,7 +80,7 @@ exports[`action > when the action should be run > should create comments for ret
 
 exports[`action > when the action should be run > should create comments for retry tests 2`] = `
 "<details>
-<summary><b>Retry tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 retried tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a retry test](https://example.com/report/#test-3) (200ms)
 
@@ -105,7 +105,7 @@ exports[`action > when the action should be run > should handle multiple summary
 
 exports[`action > when the action should be run > should handle summary files without remoteHref 1`] = `
 "<details>
-<summary><b>New tests in Test Suite 1 (1)</b></summary>
+<summary><b>Test Suite 1: 1 new tests</b></summary>
 
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed new test without link (100ms)
 
