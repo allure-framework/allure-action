@@ -2067,6 +2067,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash.chunk@npm:^4":
+  version: 4.2.9
+  resolution: "@types/lodash.chunk@npm:4.2.9"
+  dependencies:
+    "@types/lodash": "npm:*"
+  checksum: 10/ccffe7273a0941655d5b988baeffa8f7d4d19a8b43ed728ff4e616013506efe85914ba99d4ec299e0106506e1bca3923b065eabb0aa5f1e4b18f68e790ae6b88
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:*":
+  version: 4.17.20
+  resolution: "@types/lodash@npm:4.17.20"
+  checksum: 10/8cd8ad3bd78d2e06a93ae8d6c9907981d5673655fec7cb274a4d9a59549aab5bb5b3017361280773b8990ddfccf363e14d1b37c97af8a9fe363de677f9a61524
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^24.0.0":
   version: 24.10.0
   resolution: "@types/node@npm:24.10.0"
@@ -2387,6 +2403,7 @@ __metadata:
     "@trivago/prettier-plugin-sort-imports": "npm:^5.2.2"
     "@types/d3-shape": "npm:^3"
     "@types/eslint": "npm:^9.6.1"
+    "@types/lodash.chunk": "npm:^4"
     "@types/node": "npm:^24.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^8.34.0"
     "@typescript-eslint/parser": "npm:^8.34.0"
@@ -2406,6 +2423,7 @@ __metadata:
     fast-glob: "npm:^3.3.3"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.1.0"
+    lodash.chunk: "npm:^4.2.0"
     prettier: "npm:^3.5.3"
     prettier-plugin-packagejson: "npm:^2.5.15"
     tsup: "npm:^8.5.0"
@@ -5275,6 +5293,13 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10/72eb661788a0368c099a184c59d2fee760b3831c9c1c33955e8a19ae4a21b4116e53fa736dc086cdeb9fce9f7cc508f2f92d2d3aae516f133e16a2bb59a39f5a
+  languageName: node
+  linkType: hard
+
+"lodash.chunk@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "lodash.chunk@npm:4.2.0"
+  checksum: 10/3b6639fda107a0d8c3996090eeb7ad0f05063e6a1f4692a01335e7c1990030d3274c3164d78159f24928d86eb0943ad326b0a4a2da706c250c4d3166ddd8ed0e
   languageName: node
   linkType: hard
 

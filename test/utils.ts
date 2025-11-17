@@ -6,4 +6,4 @@ export const octokitMock = {
       createComment: vi.fn(),
     },
   },
-}
+};

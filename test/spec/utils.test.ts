@@ -1,6 +1,6 @@
+import type { PluginSummary } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
 import { formatDuration, generateSummaryMarkdownTable } from "../../src/utils.js";
-import {PluginSummary} from "@allurereport/plugin-api";
 
 describe("utils", () => {
   describe("formatDuration", () => {
@@ -49,13 +49,13 @@ describe("utils", () => {
             failed: 2,
             broken: 1,
             skipped: 3,
-            unknown: 0
+            unknown: 0,
           },
           duration: 5000,
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -72,14 +72,14 @@ describe("utils", () => {
             failed: 0,
             broken: 0,
             skipped: 1,
-            unknown: 0
+            unknown: 0,
           },
           duration: 3000,
           remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -96,12 +96,12 @@ describe("utils", () => {
             failed: 2,
             broken: 1,
             skipped: 3,
-            unknown: 0
+            unknown: 0,
           },
           duration: 5000,
           newTests: [],
           flakyTests: [],
-          retryTests: []
+          retryTests: [],
         },
         {
           name: "Test Suite 2",
@@ -110,14 +110,14 @@ describe("utils", () => {
             failed: 0,
             broken: 0,
             skipped: 1,
-            unknown: 0
+            unknown: 0,
           },
           duration: 3000,
           remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -130,14 +130,14 @@ describe("utils", () => {
         {
           name: "Test Suite 3",
           stats: {
-            passed: 7
+            passed: 7,
             // Other stats are missing
           },
           duration: 2500,
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -154,13 +154,13 @@ describe("utils", () => {
             failed: 0,
             broken: 0,
             skipped: 0,
-            unknown: 0
+            unknown: 0,
           },
           duration: 3661001, // 1h 1m 1s 1ms
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -177,13 +177,13 @@ describe("utils", () => {
             failed: 0,
             broken: 0,
             skipped: 0,
-            unknown: 0
+            unknown: 0,
           },
           duration: 0,
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -201,13 +201,13 @@ describe("utils", () => {
             broken: 1,
             skipped: 3,
             unknown: 0,
-            custom: 5 // Custom stat property
+            custom: 5, // Custom stat property
           },
           duration: 1500,
           newTests: [],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -224,7 +224,7 @@ describe("utils", () => {
             failed: 1,
             broken: 0,
             skipped: 0,
-            unknown: 0
+            unknown: 0,
           },
           duration: 5000,
           remoteHref: "https://example.com/report/",
@@ -233,24 +233,24 @@ describe("utils", () => {
               id: "test-1",
               name: "should be awesome",
               status: "failed",
-              duration: 120
+              duration: 120,
             },
             {
               id: "test-2",
               name: "should handle edge cases",
               status: "passed",
-              duration: 85
+              duration: 85,
             },
             {
               id: "test-3",
               name: "should process input correctly",
               status: "passed",
-              duration: 95
-            }
+              duration: 95,
+            },
           ],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -267,7 +267,7 @@ describe("utils", () => {
             failed: 2,
             broken: 0,
             skipped: 0,
-            unknown: 0
+            unknown: 0,
           },
           duration: 3000,
           remoteHref: "https://example.com/report/",
@@ -277,17 +277,17 @@ describe("utils", () => {
               id: "test-4",
               name: "should handle async operations",
               status: "failed",
-              duration: 150
+              duration: 150,
             },
             {
               id: "test-5",
               name: "should process network requests",
               status: "passed",
-              duration: 180
-            }
+              duration: 180,
+            },
           ],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -304,7 +304,7 @@ describe("utils", () => {
             failed: 0,
             broken: 0,
             skipped: 0,
-            unknown: 0
+            unknown: 0,
           },
           duration: 7000,
           remoteHref: "https://example.com/report/",
@@ -315,10 +315,10 @@ describe("utils", () => {
               id: "test-6",
               name: "should retry database connection",
               status: "passed",
-              duration: 200
-            }
-          ]
-        }
+              duration: 200,
+            },
+          ],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -335,7 +335,7 @@ describe("utils", () => {
             failed: 24,
             broken: 3,
             skipped: 10,
-            unknown: 12
+            unknown: 12,
           },
           duration: 1209391,
           remoteHref: "https://example.com/allure-report/unit/",
@@ -344,26 +344,26 @@ describe("utils", () => {
               id: "new-1",
               name: "should validate new feature",
               status: "passed",
-              duration: 45
-            }
+              duration: 45,
+            },
           ],
           flakyTests: [
             {
               id: "flaky-1",
               name: "should handle race condition",
               status: "failed",
-              duration: 230
-            }
+              duration: 230,
+            },
           ],
           retryTests: [
             {
               id: "retry-1",
               name: "should reconnect on timeout",
               status: "passed",
-              duration: 150
-            }
-          ]
-        }
+              duration: 150,
+            },
+          ],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -380,7 +380,7 @@ describe("utils", () => {
             failed: 0,
             broken: 0,
             skipped: 0,
-            unknown: 0
+            unknown: 0,
           },
           duration: 2000,
           newTests: [
@@ -388,12 +388,12 @@ describe("utils", () => {
               id: "test-7",
               name: "should work without links",
               status: "passed",
-              duration: 100
-            }
+              duration: 100,
+            },
           ],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
@@ -410,7 +410,7 @@ describe("utils", () => {
             failed: 5,
             broken: 3,
             skipped: 2,
-            unknown: 1
+            unknown: 1,
           },
           duration: 5000,
           remoteHref: "https://example.com/report/",
@@ -419,36 +419,36 @@ describe("utils", () => {
               id: "test-passed",
               name: "should pass successfully",
               status: "passed",
-              duration: 100
+              duration: 100,
             },
             {
               id: "test-failed",
               name: "should fail with error",
               status: "failed",
-              duration: 150
+              duration: 150,
             },
             {
               id: "test-broken",
               name: "should be broken",
               status: "broken",
-              duration: 120
+              duration: 120,
             },
             {
               id: "test-skipped",
               name: "should be skipped",
               status: "skipped",
-              duration: 0
+              duration: 0,
             },
             {
               id: "test-unknown",
               name: "should have unknown status",
               status: "unknown",
-              duration: 80
-            }
+              duration: 80,
+            },
           ],
           flakyTests: [],
-          retryTests: []
-        }
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
 
       const result = generateSummaryMarkdownTable(summaries);
