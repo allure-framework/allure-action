@@ -4,9 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       releaseVersion:
-        description: 'Release version (e.g., 1.0.0)'
+        description: "Release version (e.g., v1.0.0)"
         required: true
         type: string
+      majorReleaseVersion:
+        description: "Related major release version (e.g., v1)"
+        required: true
+        type: choice
+        options:
+          - v0
 
 permissions:
   contents: read
@@ -18,7 +24,7 @@ jobs:
     steps:
       - name: "Check release version"
         run: |
-          expr "${{ github.event.inputs.releaseVersion }}" : '\(^[1-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(-beta\.[0-9][0-9]*\)\{0,1\}\)$'
+          expr "${{ github.event.inputs.releaseVersion }}" : 'v\(^[0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(-beta\.[0-9][0-9]*\)\{0,1\}\)$'
 
       - uses: actions/checkout@v4
         with:
@@ -60,3 +66,9 @@ jobs:
           target_commitish: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.QAMETA_CI }}
+
+      - name: Tag new target
+        run: git tag -f ${{ github.event.inputs.majorReleaseVersion }} ${{ github.event.inputs.releaseVersion }}
+
+      - name: Push new tag
+        run: git push origin ${{ github.event.inputs.majorReleaseVersion }} --force
