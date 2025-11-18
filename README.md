@@ -37,7 +37,7 @@ Then, add the action to your workflow right after your tests, which produce Allu
     # run your tests that generate Allure Report data
      
 - name: Run Allure Action
-  uses: allure-framework/allure-report@v0.1.0
+  uses: allure-framework/allure-report@v0
   with:
     # Path to the generated report directory
     # By default, it's set to `./allure-report`
