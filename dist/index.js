@@ -37711,7 +37711,6 @@ const node_fs_1 = __nccwpck_require__(3024);
 const fs = __importStar(__nccwpck_require__(1455));
 const path = __importStar(__nccwpck_require__(6760));
 const utils_js_1 = __nccwpck_require__(1798);
-const stripAnsiCodes = (str, replacement) => str.replace(/\u001b\[\d+m/g, replacement ?? "");
 const run = async () => {
     const token = (0, utils_js_1.getGithubInput)("github-token");
     const { eventName, repo, payload } = (0, utils_js_1.getGithubContext)();
@@ -37745,7 +37744,7 @@ const run = async () => {
         qualityGateResults.forEach((result) => {
             summaryLines.push(`**${result.rule}** has failed:`);
             summaryLines.push("```shell");
-            summaryLines.push(stripAnsiCodes(result.message));
+            summaryLines.push((0, utils_js_1.stripAnsiCodes)(result.message));
             summaryLines.push("```");
             summaryLines.push("");
         });
@@ -37776,31 +37775,46 @@ const run = async () => {
         issue_number,
         body: tableMarkdown,
     });
-    const commentsToPublish = [];
+    const flakyTests = new Map();
+    const newTests = new Map();
+    const retryTests = new Map();
     for (const summary of summaryFilesContent) {
-        const { name, newTests, flakyTests, retryTests, remoteHref } = summary;
-        if (newTests?.length) {
-            commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
-                title: `${name}: ${newTests.length} new tests`,
-                tests: newTests,
-                remoteHref,
-            }));
+        if (summary.newTests?.length) {
+            summary.newTests.forEach((test) => {
+                newTests.set(test.id, {
+                    ...test,
+                    remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+                });
+            });
         }
-        if (flakyTests?.length) {
-            commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
-                title: `${name}: ${flakyTests.length} flaky tests`,
-                tests: flakyTests,
-                remoteHref,
-            }));
+        if (summary.flakyTests?.length) {
+            summary.flakyTests.forEach((test) => {
+                flakyTests.set(test.id, {
+                    ...test,
+                    remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+                });
+            });
         }
-        if (retryTests?.length) {
-            commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
-                title: `${name}: ${retryTests.length} retried tests`,
-                tests: retryTests,
-                remoteHref,
-            }));
+        if (summary.retryTests?.length) {
+            summary.retryTests.forEach((test) => {
+                retryTests.set(test.id, {
+                    ...test,
+                    remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+                });
+            });
         }
     }
+    const commentsToPublish = [];
+    commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
+        title: `Allure Report: ${newTests.size} new tests`,
+        mappedTests: newTests,
+    }), ...(0, utils_js_1.generateTestsSectionComment)({
+        title: `Allure Report: ${flakyTests.size} flaky tests`,
+        mappedTests: flakyTests,
+    }), ...(0, utils_js_1.generateTestsSectionComment)({
+        title: `Allure Report: ${retryTests.size} retried tests`,
+        mappedTests: retryTests,
+    }));
     if (commentsToPublish.length === 0) {
         return;
     }
@@ -37863,7 +37877,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.generateTestsSectionComment = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.formatDuration = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
+exports.stripAnsiCodes = exports.generateTestsSectionComment = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.formatDuration = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const lodash_chunk_1 = __importDefault(__nccwpck_require__(458));
@@ -37892,13 +37906,12 @@ const formatDuration = (ms) => {
     return parts.join(" ");
 };
 exports.formatDuration = formatDuration;
-const formatSummaryTests = (params) => {
-    const { tests, remoteHref } = params;
+const formatSummaryTests = (tests) => {
     const lines = [];
     tests.forEach((test) => {
         const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
         const statusText = `${statusIcon} ${test.status}`;
-        const testName = remoteHref ? `[${test.name}](${remoteHref}#${test.id})` : test.name;
+        const testName = test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name;
         const duration = (0, exports.formatDuration)(test.duration);
         lines.push(`- ${statusText} ${testName} (${duration})`);
     });
@@ -37938,27 +37951,27 @@ const generateSummaryMarkdownTable = (summaries) => {
 };
 exports.generateSummaryMarkdownTable = generateSummaryMarkdownTable;
 const generateTestsSectionComment = (params) => {
-    const { title, tests, remoteHref, sectionLimit = 200 } = params;
+    const { title, mappedTests, sectionLimit = 200 } = params;
     const comments = [];
-    if (tests.length === 0) {
+    if (mappedTests.size === 0) {
         return [];
     }
-    const testsChunks = (0, lodash_chunk_1.default)(tests, sectionLimit);
+    const testsList = Array.from(mappedTests.values()).flat();
+    const testsChunks = (0, lodash_chunk_1.default)(testsList, sectionLimit);
     testsChunks.forEach((testsChunk, i) => {
         const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
         const lines = [];
         lines.push(`<details>`);
         lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
-        lines.push((0, exports.formatSummaryTests)({
-            tests: testsChunk,
-            remoteHref: remoteHref,
-        }));
+        lines.push((0, exports.formatSummaryTests)(testsChunk));
         lines.push(`\n</details>\n`);
         comments.push(lines.join("\n"));
     });
     return comments;
 };
 exports.generateTestsSectionComment = generateTestsSectionComment;
+const stripAnsiCodes = (str, replacement) => str.replace(/\u001b\[\d+m/g, replacement ?? "");
+exports.stripAnsiCodes = stripAnsiCodes;
 
 
 /***/ }),

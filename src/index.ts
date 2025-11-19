@@ -4,16 +4,15 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import type { RemoteSummaryTestResultsMap } from "./model.js";
 import {
   generateSummaryMarkdownTable,
   generateTestsSectionComment,
   getGithubContext,
   getGithubInput,
   getOctokit,
+  stripAnsiCodes,
 } from "./utils.js";
-
-// eslint-disable-next-line no-control-regex
-const stripAnsiCodes = (str: string, replacement?: string): string => str.replace(/\u001b\[\d+m/g, replacement ?? "");
 
 const run = async (): Promise<void> => {
   const token = getGithubInput("github-token");
@@ -94,41 +93,55 @@ const run = async (): Promise<void> => {
     body: tableMarkdown,
   });
 
-  const commentsToPublish: string[] = [];
+  const flakyTests: RemoteSummaryTestResultsMap = new Map();
+  const newTests: RemoteSummaryTestResultsMap = new Map();
+  const retryTests: RemoteSummaryTestResultsMap = new Map();
 
   for (const summary of summaryFilesContent) {
-    const { name, newTests, flakyTests, retryTests, remoteHref } = summary;
-
-    if (newTests?.length) {
-      commentsToPublish.push(
-        ...generateTestsSectionComment({
-          title: `${name}: ${newTests.length} new tests`,
-          tests: newTests,
-          remoteHref,
-        }),
-      );
+    if (summary.newTests?.length) {
+      summary.newTests.forEach((test) => {
+        newTests.set(test.id, {
+          ...test,
+          remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+        });
+      });
     }
 
-    if (flakyTests?.length) {
-      commentsToPublish.push(
-        ...generateTestsSectionComment({
-          title: `${name}: ${flakyTests.length} flaky tests`,
-          tests: flakyTests,
-          remoteHref,
-        }),
-      );
+    if (summary.flakyTests?.length) {
+      summary.flakyTests.forEach((test) => {
+        flakyTests.set(test.id, {
+          ...test,
+          remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+        });
+      });
     }
 
-    if (retryTests?.length) {
-      commentsToPublish.push(
-        ...generateTestsSectionComment({
-          title: `${name}: ${retryTests.length} retried tests`,
-          tests: retryTests,
-          remoteHref,
-        }),
-      );
+    if (summary.retryTests?.length) {
+      summary.retryTests.forEach((test) => {
+        retryTests.set(test.id, {
+          ...test,
+          remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+        });
+      });
     }
   }
+
+  const commentsToPublish: string[] = [];
+
+  commentsToPublish.push(
+    ...generateTestsSectionComment({
+      title: `Allure Report: ${newTests.size} new tests`,
+      mappedTests: newTests,
+    }),
+    ...generateTestsSectionComment({
+      title: `Allure Report: ${flakyTests.size} flaky tests`,
+      mappedTests: flakyTests,
+    }),
+    ...generateTestsSectionComment({
+      title: `Allure Report: ${retryTests.size} retried tests`,
+      mappedTests: retryTests,
+    }),
+  );
 
   if (commentsToPublish.length === 0) {
     return;

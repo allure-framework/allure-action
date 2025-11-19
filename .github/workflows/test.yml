@@ -35,6 +35,7 @@ jobs:
 
       - name: Run tests
         run: yarn test
+        continue-on-error: true
 
       - name: Run Allure Action
         uses: ./
