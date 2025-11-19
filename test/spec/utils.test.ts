@@ -1,5 +1,6 @@
-import type { PluginSummary, SummaryTestResult } from "@allurereport/plugin-api";
+import type { PluginSummary } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
+import type { RemoteSummaryTestResult, RemoteSummaryTestResultsMap } from "../../src/model.js";
 import {
   formatDuration,
   formatSummaryTests,
@@ -62,7 +63,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -86,7 +86,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -124,7 +123,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -135,16 +133,14 @@ describe("utils", () => {
         {
           name: "Test Suite 3",
           stats: {
-            passed: 7,
-            // Other stats are missing
+            passed: 10,
           },
-          duration: 2500,
+          duration: 2000,
           newTests: [],
           flakyTests: [],
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -155,10 +151,10 @@ describe("utils", () => {
         {
           name: "Test Suite 4",
           stats: {
-            passed: 20,
-            failed: 0,
-            broken: 0,
-            skipped: 0,
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
             unknown: 0,
           },
           duration: 3661001, // 1h 1m 1s 1ms
@@ -167,7 +163,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -178,10 +173,10 @@ describe("utils", () => {
         {
           name: "Test Suite 5",
           stats: {
-            passed: 5,
-            failed: 0,
-            broken: 0,
-            skipped: 0,
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
             unknown: 0,
           },
           duration: 0,
@@ -190,7 +185,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -206,15 +200,14 @@ describe("utils", () => {
             broken: 1,
             skipped: 3,
             unknown: 0,
-            custom: 5, // Custom stat property
+            custom: 5,
           },
-          duration: 1500,
+          duration: 1000,
           newTests: [],
           flakyTests: [],
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -223,12 +216,12 @@ describe("utils", () => {
     it("should display new tests in table format", () => {
       const summaries = [
         {
-          name: "Test Suite 7",
+          name: "Test Suite 1",
           stats: {
             passed: 10,
-            failed: 1,
-            broken: 0,
-            skipped: 0,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
             unknown: 0,
           },
           duration: 5000,
@@ -236,28 +229,27 @@ describe("utils", () => {
           newTests: [
             {
               id: "test-1",
-              name: "should be awesome",
-              status: "failed",
-              duration: 120,
+              name: "New test 1",
+              status: "passed",
+              duration: 100,
             },
             {
               id: "test-2",
-              name: "should handle edge cases",
-              status: "passed",
-              duration: 85,
+              name: "New test 2",
+              status: "failed",
+              duration: 150,
             },
             {
               id: "test-3",
-              name: "should process input correctly",
+              name: "New test 3",
               status: "passed",
-              duration: 95,
+              duration: 120,
             },
           ],
           flakyTests: [],
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -266,35 +258,34 @@ describe("utils", () => {
     it("should display flaky tests in table format", () => {
       const summaries = [
         {
-          name: "Test Suite 8",
+          name: "Test Suite 1",
           stats: {
-            passed: 8,
+            passed: 10,
             failed: 2,
-            broken: 0,
-            skipped: 0,
+            broken: 1,
+            skipped: 3,
             unknown: 0,
           },
-          duration: 3000,
+          duration: 5000,
           remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [
             {
-              id: "test-4",
-              name: "should handle async operations",
-              status: "failed",
-              duration: 150,
+              id: "test-1",
+              name: "Flaky test 1",
+              status: "passed",
+              duration: 100,
             },
             {
-              id: "test-5",
-              name: "should process network requests",
-              status: "passed",
-              duration: 180,
+              id: "test-2",
+              name: "Flaky test 2",
+              status: "failed",
+              duration: 150,
             },
           ],
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -303,29 +294,28 @@ describe("utils", () => {
     it("should display retry tests in table format", () => {
       const summaries = [
         {
-          name: "Test Suite 9",
+          name: "Test Suite 1",
           stats: {
-            passed: 15,
-            failed: 0,
-            broken: 0,
-            skipped: 0,
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
             unknown: 0,
           },
-          duration: 7000,
+          duration: 5000,
           remoteHref: "https://example.com/report/",
           newTests: [],
           flakyTests: [],
           retryTests: [
             {
-              id: "test-6",
-              name: "should retry database connection",
+              id: "test-1",
+              name: "Retry test 1",
               status: "passed",
-              duration: 200,
+              duration: 100,
             },
           ],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -334,43 +324,42 @@ describe("utils", () => {
     it("should display all test types together in table format", () => {
       const summaries = [
         {
-          name: "Unit tests",
+          name: "Test Suite 1",
           stats: {
-            passed: 321,
-            failed: 24,
-            broken: 3,
-            skipped: 10,
-            unknown: 12,
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
+            unknown: 0,
           },
-          duration: 1209391,
-          remoteHref: "https://example.com/allure-report/unit/",
+          duration: 5000,
+          remoteHref: "https://example.com/report/",
           newTests: [
             {
-              id: "new-1",
-              name: "should validate new feature",
+              id: "test-1",
+              name: "New test 1",
               status: "passed",
-              duration: 45,
+              duration: 100,
             },
           ],
           flakyTests: [
             {
-              id: "flaky-1",
-              name: "should handle race condition",
+              id: "test-2",
+              name: "Flaky test 1",
               status: "failed",
-              duration: 230,
+              duration: 150,
             },
           ],
           retryTests: [
             {
-              id: "retry-1",
-              name: "should reconnect on timeout",
+              id: "test-3",
+              name: "Retry test 1",
               status: "passed",
-              duration: 150,
+              duration: 120,
             },
           ],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -379,19 +368,19 @@ describe("utils", () => {
     it("should display tests without remoteHref in table format", () => {
       const summaries = [
         {
-          name: "Test Suite 10",
+          name: "Test Suite 1",
           stats: {
-            passed: 5,
-            failed: 0,
-            broken: 0,
-            skipped: 0,
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
             unknown: 0,
           },
-          duration: 2000,
+          duration: 5000,
           newTests: [
             {
-              id: "test-7",
-              name: "should work without links",
+              id: "test-1",
+              name: "New test 1",
               status: "passed",
               duration: 100,
             },
@@ -400,7 +389,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -409,44 +397,44 @@ describe("utils", () => {
     it("should display tests with all possible statuses (passed, failed, broken, skipped, unknown)", () => {
       const summaries = [
         {
-          name: "Test Suite 11",
+          name: "Test Suite 1",
           stats: {
             passed: 10,
-            failed: 5,
-            broken: 3,
-            skipped: 2,
-            unknown: 1,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
+            unknown: 0,
           },
           duration: 5000,
           remoteHref: "https://example.com/report/",
           newTests: [
             {
-              id: "test-passed",
-              name: "should pass successfully",
+              id: "test-1",
+              name: "Passed test",
               status: "passed",
               duration: 100,
             },
             {
-              id: "test-failed",
-              name: "should fail with error",
+              id: "test-2",
+              name: "Failed test",
               status: "failed",
               duration: 150,
             },
             {
-              id: "test-broken",
-              name: "should be broken",
+              id: "test-3",
+              name: "Broken test",
               status: "broken",
               duration: 120,
             },
             {
-              id: "test-skipped",
-              name: "should be skipped",
+              id: "test-4",
+              name: "Skipped test",
               status: "skipped",
               duration: 0,
             },
             {
-              id: "test-unknown",
-              name: "should have unknown status",
+              id: "test-5",
+              name: "Unknown test",
               status: "unknown",
               duration: 80,
             },
@@ -455,7 +443,6 @@ describe("utils", () => {
           retryTests: [],
         },
       ] as unknown as PluginSummary[];
-
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
@@ -464,7 +451,7 @@ describe("utils", () => {
 
   describe("formatSummaryTests", () => {
     it("should format tests without remoteHref", () => {
-      const tests: SummaryTestResult[] = [
+      const tests: RemoteSummaryTestResult[] = [
         {
           id: "test-1",
           name: "should pass",
@@ -478,76 +465,79 @@ describe("utils", () => {
           duration: 150,
         },
       ];
-
-      const result = formatSummaryTests({ tests });
+      const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
     });
 
     it("should format tests with remoteHref", () => {
-      const tests: SummaryTestResult[] = [
+      const tests: RemoteSummaryTestResult[] = [
         {
           id: "test-1",
           name: "should pass",
           status: "passed",
           duration: 100,
+          remoteHref: "https://example.com/report/#test-1",
         },
         {
           id: "test-2",
           name: "should fail",
           status: "failed",
           duration: 150,
+          remoteHref: "https://example.com/report/#test-2",
         },
       ];
-
-      const result = formatSummaryTests({ tests, remoteHref: "https://example.com/report/" });
+      const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
     });
 
     it("should format tests with different statuses", () => {
-      const tests: SummaryTestResult[] = [
+      const tests: RemoteSummaryTestResult[] = [
         {
           id: "test-1",
           name: "passed test",
           status: "passed",
           duration: 100,
+          remoteHref: "https://example.com/report/#test-1",
         },
         {
           id: "test-2",
           name: "failed test",
           status: "failed",
           duration: 150,
+          remoteHref: "https://example.com/report/#test-2",
         },
         {
           id: "test-3",
           name: "broken test",
           status: "broken",
           duration: 120,
+          remoteHref: "https://example.com/report/#test-3",
         },
         {
           id: "test-4",
           name: "skipped test",
           status: "skipped",
           duration: 0,
+          remoteHref: "https://example.com/report/#test-4",
         },
         {
           id: "test-5",
           name: "unknown test",
           status: "unknown",
           duration: 80,
+          remoteHref: "https://example.com/report/#test-5",
         },
       ];
-
-      const result = formatSummaryTests({ tests, remoteHref: "https://example.com/report/" });
+      const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
     });
 
     it("should handle empty tests array", () => {
-      const tests: SummaryTestResult[] = [];
-
-      const result = formatSummaryTests({ tests });
+      const tests: RemoteSummaryTestResult[] = [];
+      const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
     });
@@ -555,33 +545,34 @@ describe("utils", () => {
 
   describe("generateTestsSectionComment", () => {
     it("should return empty array for empty tests", () => {
+      const mappedTests: RemoteSummaryTestResultsMap = new Map();
       const result = generateTestsSectionComment({
         title: "New Tests",
-        tests: [],
+        mappedTests,
       });
 
       expect(result).toEqual([]);
     });
 
     it("should generate a collapsible section for tests without remoteHref", () => {
-      const tests: SummaryTestResult[] = [
-        {
-          id: "test-1",
-          name: "should pass",
-          status: "passed",
-          duration: 100,
-        },
-        {
-          id: "test-2",
-          name: "should fail",
-          status: "failed",
-          duration: 150,
-        },
-      ];
+      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+
+      mappedTests.set("test-1", {
+        id: "test-1",
+        name: "should pass",
+        status: "passed",
+        duration: 100,
+      });
+      mappedTests.set("test-2", {
+        id: "test-2",
+        name: "should fail",
+        status: "failed",
+        duration: 150,
+      });
 
       const result = generateTestsSectionComment({
         title: "New Tests",
-        tests,
+        mappedTests,
       });
 
       expect(result).toHaveLength(1);
@@ -589,25 +580,26 @@ describe("utils", () => {
     });
 
     it("should generate a collapsible section for tests with remoteHref", () => {
-      const tests: SummaryTestResult[] = [
-        {
-          id: "test-1",
-          name: "should pass",
-          status: "passed",
-          duration: 100,
-        },
-        {
-          id: "test-2",
-          name: "should fail",
-          status: "failed",
-          duration: 150,
-        },
-      ];
+      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+
+      mappedTests.set("test-1", {
+        id: "test-1",
+        name: "should pass",
+        status: "passed",
+        duration: 100,
+        remoteHref: "https://example.com/report/#test-1",
+      });
+      mappedTests.set("test-2", {
+        id: "test-2",
+        name: "should fail",
+        status: "failed",
+        duration: 150,
+        remoteHref: "https://example.com/report/#test-2",
+      });
 
       const result = generateTestsSectionComment({
         title: "Flaky Tests",
-        tests,
-        remoteHref: "https://example.com/report/",
+        mappedTests,
       });
 
       expect(result).toHaveLength(1);
@@ -615,16 +607,20 @@ describe("utils", () => {
     });
 
     it("should chunk tests when exceeding section limit", () => {
-      const tests: SummaryTestResult[] = Array.from({ length: 250 }, (_, i) => ({
-        id: `test-${i}`,
-        name: `test ${i}`,
-        status: "passed" as const,
-        duration: 100,
-      }));
+      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+
+      for (let i = 0; i < 250; i++) {
+        mappedTests.set(`test-${i}`, {
+          id: `test-${i}`,
+          name: `test ${i}`,
+          status: "passed" as const,
+          duration: 100,
+        });
+      }
 
       const result = generateTestsSectionComment({
         title: "Many Tests",
-        tests,
+        mappedTests,
         sectionLimit: 100,
       });
 
@@ -635,16 +631,20 @@ describe("utils", () => {
     });
 
     it("should not add chunk number when tests fit in one section", () => {
-      const tests: SummaryTestResult[] = Array.from({ length: 50 }, (_, i) => ({
-        id: `test-${i}`,
-        name: `test ${i}`,
-        status: "passed" as const,
-        duration: 100,
-      }));
+      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+
+      for (let i = 0; i < 50; i++) {
+        mappedTests.set(`test-${i}`, {
+          id: `test-${i}`,
+          name: `test ${i}`,
+          status: "passed" as const,
+          duration: 100,
+        });
+      }
 
       const result = generateTestsSectionComment({
         title: "Few Tests",
-        tests,
+        mappedTests,
         sectionLimit: 100,
       });
 
@@ -654,16 +654,20 @@ describe("utils", () => {
     });
 
     it("should handle custom section limit", () => {
-      const tests: SummaryTestResult[] = Array.from({ length: 30 }, (_, i) => ({
-        id: `test-${i}`,
-        name: `test ${i}`,
-        status: "passed" as const,
-        duration: 100,
-      }));
+      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+
+      for (let i = 0; i < 30; i++) {
+        mappedTests.set(`test-${i}`, {
+          id: `test-${i}`,
+          name: `test ${i}`,
+          status: "passed" as const,
+          duration: 100,
+        });
+      }
 
       const result = generateTestsSectionComment({
         title: "Custom Limit Tests",
-        tests,
+        mappedTests,
         sectionLimit: 10,
       });
 

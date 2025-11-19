@@ -1,7 +1,8 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import type { PluginSummary, SummaryTestResult } from "@allurereport/plugin-api";
+import type { PluginSummary } from "@allurereport/plugin-api";
 import chunk from "lodash.chunk";
+import type { RemoteSummaryTestResult, RemoteSummaryTestResultsMap } from "./model.js";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
 
@@ -27,14 +28,13 @@ export const formatDuration = (ms?: number): string => {
   return parts.join(" ");
 };
 
-export const formatSummaryTests = (params: { tests: SummaryTestResult[]; remoteHref?: string }): string => {
-  const { tests, remoteHref } = params;
+export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => {
   const lines: string[] = [];
 
   tests.forEach((test) => {
     const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
     const statusText = `${statusIcon} ${test.status}`;
-    const testName = remoteHref ? `[${test.name}](${remoteHref}#${test.id})` : test.name;
+    const testName = test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name;
     const duration = formatDuration(test.duration);
 
     lines.push(`- ${statusText} ${testName} (${duration})`);
@@ -88,18 +88,18 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
  */
 export const generateTestsSectionComment = (params: {
   title: string;
-  tests: SummaryTestResult[];
-  remoteHref?: string;
+  mappedTests: RemoteSummaryTestResultsMap;
   sectionLimit?: number;
 }) => {
-  const { title, tests, remoteHref, sectionLimit = 200 } = params;
+  const { title, mappedTests, sectionLimit = 200 } = params;
   const comments: string[] = [];
 
-  if (tests.length === 0) {
+  if (mappedTests.size === 0) {
     return [];
   }
 
-  const testsChunks = chunk(tests, sectionLimit);
+  const testsList = Array.from(mappedTests.values()).flat();
+  const testsChunks = chunk(testsList, sectionLimit);
 
   testsChunks.forEach((testsChunk, i) => {
     const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
@@ -107,16 +107,16 @@ export const generateTestsSectionComment = (params: {
 
     lines.push(`<details>`);
     lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
-    lines.push(
-      formatSummaryTests({
-        tests: testsChunk,
-        remoteHref: remoteHref,
-      }),
-    );
+    lines.push(formatSummaryTests(testsChunk));
     lines.push(`\n</details>\n`);
 
     comments.push(lines.join("\n"));
   });
 
   return comments;
+};
+
+export const stripAnsiCodes = (str: string, replacement?: string): string => {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\u001b\[\d+m/g, replacement ?? "");
 };
