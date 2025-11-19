@@ -37781,7 +37781,7 @@ const run = async () => {
     for (const summary of summaryFilesContent) {
         if (summary.newTests?.length) {
             summary.newTests.forEach((test) => {
-                newTests.set(test.id, {
+                newTests.set(test.name, {
                     ...test,
                     remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
                 });
@@ -37789,7 +37789,7 @@ const run = async () => {
         }
         if (summary.flakyTests?.length) {
             summary.flakyTests.forEach((test) => {
-                flakyTests.set(test.id, {
+                flakyTests.set(test.name, {
                     ...test,
                     remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
                 });
@@ -37797,7 +37797,7 @@ const run = async () => {
         }
         if (summary.retryTests?.length) {
             summary.retryTests.forEach((test) => {
-                retryTests.set(test.id, {
+                retryTests.set(test.name, {
                     ...test,
                     remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
                 });
@@ -37970,7 +37970,9 @@ const generateTestsSectionComment = (params) => {
     return comments;
 };
 exports.generateTestsSectionComment = generateTestsSectionComment;
-const stripAnsiCodes = (str, replacement) => str.replace(/\u001b\[\d+m/g, replacement ?? "");
+const stripAnsiCodes = (str, replacement) => {
+    return str.replace(/\u001b\[\d+m/g, replacement ?? "");
+};
 exports.stripAnsiCodes = stripAnsiCodes;
 
 

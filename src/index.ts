@@ -100,7 +100,7 @@ const run = async (): Promise<void> => {
   for (const summary of summaryFilesContent) {
     if (summary.newTests?.length) {
       summary.newTests.forEach((test) => {
-        newTests.set(test.id, {
+        newTests.set(test.name, {
           ...test,
           remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
         });
@@ -109,7 +109,7 @@ const run = async (): Promise<void> => {
 
     if (summary.flakyTests?.length) {
       summary.flakyTests.forEach((test) => {
-        flakyTests.set(test.id, {
+        flakyTests.set(test.name, {
           ...test,
           remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
         });
@@ -118,7 +118,7 @@ const run = async (): Promise<void> => {
 
     if (summary.retryTests?.length) {
       summary.retryTests.forEach((test) => {
-        retryTests.set(test.id, {
+        retryTests.set(test.name, {
           ...test,
           remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
         });
