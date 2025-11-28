@@ -37710,6 +37710,7 @@ const fast_glob_1 = __importDefault(__nccwpck_require__(5648));
 const node_fs_1 = __nccwpck_require__(3024);
 const fs = __importStar(__nccwpck_require__(1455));
 const path = __importStar(__nccwpck_require__(6760));
+const node_url_1 = __nccwpck_require__(3136);
 const utils_js_1 = __nccwpck_require__(1798);
 const run = async () => {
     const token = (0, utils_js_1.getGithubInput)("github-token");
@@ -37783,7 +37784,7 @@ const run = async () => {
             summary.newTests.forEach((test) => {
                 newTests.set(test.name, {
                     ...test,
-                    remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+                    remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
                 });
             });
         }
@@ -37791,7 +37792,7 @@ const run = async () => {
             summary.flakyTests.forEach((test) => {
                 flakyTests.set(test.name, {
                     ...test,
-                    remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+                    remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
                 });
             });
         }
@@ -37799,7 +37800,7 @@ const run = async () => {
             summary.retryTests.forEach((test) => {
                 retryTests.set(test.name, {
                     ...test,
-                    remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+                    remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
                 });
             });
         }
@@ -38127,6 +38128,14 @@ module.exports = require("node:path");
 
 "use strict";
 module.exports = require("node:stream");
+
+/***/ }),
+
+/***/ 3136:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:url");
 
 /***/ }),
 
