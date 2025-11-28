@@ -11,7 +11,7 @@ exports[`action > when the action should be run > should create comments for all
 "<details>
 <summary><b>Allure Report: 1 new tests</b></summary>
 
-- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [new test](https:/example.com/report/#new-1) (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [new test](https://example.com/report/#new-1) (100ms)
 
 </details>
 "
@@ -21,7 +21,7 @@ exports[`action > when the action should be run > should create comments for all
 "<details>
 <summary><b>Allure Report: 1 flaky tests</b></summary>
 
-- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [flaky test](https:/example.com/report/#flaky-1) (150ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [flaky test](https://example.com/report/#flaky-1) (150ms)
 
 </details>
 "
@@ -31,7 +31,7 @@ exports[`action > when the action should be run > should create comments for all
 "<details>
 <summary><b>Allure Report: 1 retried tests</b></summary>
 
-- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [retry test](https:/example.com/report/#retry-1) (200ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [retry test](https://example.com/report/#retry-1) (200ms)
 
 </details>
 "
@@ -48,7 +48,7 @@ exports[`action > when the action should be run > should create comments for fla
 "<details>
 <summary><b>Allure Report: 1 flaky tests</b></summary>
 
-- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should be a flaky test](https:/example.com/report/#test-2) (150ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [should be a flaky test](https://example.com/report/#test-2) (150ms)
 
 </details>
 "
@@ -65,7 +65,7 @@ exports[`action > when the action should be run > should create comments for new
 "<details>
 <summary><b>Allure Report: 1 new tests</b></summary>
 
-- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a new test](https:/example.com/report/#test-1) (100ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a new test](https://example.com/report/#test-1) (100ms)
 
 </details>
 "
@@ -82,7 +82,7 @@ exports[`action > when the action should be run > should create comments for ret
 "<details>
 <summary><b>Allure Report: 1 retried tests</b></summary>
 
-- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a retry test](https:/example.com/report/#test-3) (200ms)
+- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [should be a retry test](https://example.com/report/#test-3) (200ms)
 
 </details>
 "

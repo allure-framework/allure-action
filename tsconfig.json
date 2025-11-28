@@ -6,7 +6,6 @@
     "esModuleInterop": true,
     "removeComments": true,
     "declaration": true,
-    "lib": ["ESNext"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2020",

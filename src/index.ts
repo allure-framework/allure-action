@@ -4,6 +4,7 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { URL } from "node:url";
 import type { RemoteSummaryTestResultsMap } from "./model.js";
 import {
   generateSummaryMarkdownTable,
@@ -102,7 +103,7 @@ const run = async (): Promise<void> => {
       summary.newTests.forEach((test) => {
         newTests.set(test.name, {
           ...test,
-          remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+          remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
         });
       });
     }
@@ -111,7 +112,7 @@ const run = async (): Promise<void> => {
       summary.flakyTests.forEach((test) => {
         flakyTests.set(test.name, {
           ...test,
-          remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+          remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
         });
       });
     }
@@ -120,7 +121,7 @@ const run = async (): Promise<void> => {
       summary.retryTests.forEach((test) => {
         retryTests.set(test.name, {
           ...test,
-          remoteHref: summary.remoteHref ? path.join(summary.remoteHref, `#${test.id}`) : undefined,
+          remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
         });
       });
     }
