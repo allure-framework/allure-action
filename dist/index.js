@@ -37776,46 +37776,39 @@ const run = async () => {
         issue_number,
         body: tableMarkdown,
     });
-    const flakyTests = new Map();
-    const newTests = new Map();
-    const retryTests = new Map();
+    const commentsToPublish = [];
     for (const summary of summaryFilesContent) {
-        if (summary.newTests?.length) {
-            summary.newTests.forEach((test) => {
-                newTests.set(test.name, {
-                    ...test,
-                    remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-                });
-            });
+        if (!summary?.withTestResultsLinks) {
+            continue;
         }
-        if (summary.flakyTests?.length) {
-            summary.flakyTests.forEach((test) => {
-                flakyTests.set(test.name, {
+        if (summary?.newTests?.length) {
+            commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
+                title: `${summary.name}: ${summary.newTests.length} new tests`,
+                tests: summary.newTests.map((test) => ({
                     ...test,
                     remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-                });
-            });
+                })),
+            }));
         }
-        if (summary.retryTests?.length) {
-            summary.retryTests.forEach((test) => {
-                retryTests.set(test.name, {
+        if (summary?.flakyTests?.length) {
+            commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
+                title: `${summary.name}: ${summary.flakyTests.length} flaky tests`,
+                tests: summary.flakyTests.map((test) => ({
                     ...test,
                     remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-                });
-            });
+                })),
+            }));
+        }
+        if (summary?.retryTests?.length) {
+            commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
+                title: `${summary.name}: ${summary.retryTests.length} retried tests`,
+                tests: summary.retryTests.map((test) => ({
+                    ...test,
+                    remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
+                })),
+            }));
         }
     }
-    const commentsToPublish = [];
-    commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
-        title: `Allure Report: ${newTests.size} new tests`,
-        mappedTests: newTests,
-    }), ...(0, utils_js_1.generateTestsSectionComment)({
-        title: `Allure Report: ${flakyTests.size} flaky tests`,
-        mappedTests: flakyTests,
-    }), ...(0, utils_js_1.generateTestsSectionComment)({
-        title: `Allure Report: ${retryTests.size} retried tests`,
-        mappedTests: retryTests,
-    }));
     if (commentsToPublish.length === 0) {
         return;
     }
@@ -37952,13 +37945,12 @@ const generateSummaryMarkdownTable = (summaries) => {
 };
 exports.generateSummaryMarkdownTable = generateSummaryMarkdownTable;
 const generateTestsSectionComment = (params) => {
-    const { title, mappedTests, sectionLimit = 200 } = params;
+    const { title, tests, sectionLimit = 200 } = params;
     const comments = [];
-    if (mappedTests.size === 0) {
+    if (tests.length === 0) {
         return [];
     }
-    const testsList = Array.from(mappedTests.values()).flat();
-    const testsChunks = (0, lodash_chunk_1.default)(testsList, sectionLimit);
+    const testsChunks = (0, lodash_chunk_1.default)(tests, sectionLimit);
     testsChunks.forEach((testsChunk, i) => {
         const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
         const lines = [];

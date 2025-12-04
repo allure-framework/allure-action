@@ -1,6 +1,6 @@
 import type { PluginSummary } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
-import type { RemoteSummaryTestResult, RemoteSummaryTestResultsMap } from "../../src/model.js";
+import type { RemoteSummaryTestResult } from "../../src/model.js";
 import {
   formatDuration,
   formatSummaryTests,
@@ -545,34 +545,34 @@ describe("utils", () => {
 
   describe("generateTestsSectionComment", () => {
     it("should return empty array for empty tests", () => {
-      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+      const tests: RemoteSummaryTestResult[] = [];
       const result = generateTestsSectionComment({
         title: "New Tests",
-        mappedTests,
+        tests: tests,
       });
 
       expect(result).toEqual([]);
     });
 
     it("should generate a collapsible section for tests without remoteHref", () => {
-      const mappedTests: RemoteSummaryTestResultsMap = new Map();
-
-      mappedTests.set("test-1", {
-        id: "test-1",
-        name: "should pass",
-        status: "passed",
-        duration: 100,
-      });
-      mappedTests.set("test-2", {
-        id: "test-2",
-        name: "should fail",
-        status: "failed",
-        duration: 150,
-      });
+      const tests: RemoteSummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "should pass",
+          status: "passed",
+          duration: 100,
+        },
+        {
+          id: "test-2",
+          name: "should fail",
+          status: "failed",
+          duration: 150,
+        },
+      ];
 
       const result = generateTestsSectionComment({
         title: "New Tests",
-        mappedTests,
+        tests: tests,
       });
 
       expect(result).toHaveLength(1);
@@ -580,26 +580,26 @@ describe("utils", () => {
     });
 
     it("should generate a collapsible section for tests with remoteHref", () => {
-      const mappedTests: RemoteSummaryTestResultsMap = new Map();
-
-      mappedTests.set("test-1", {
-        id: "test-1",
-        name: "should pass",
-        status: "passed",
-        duration: 100,
-        remoteHref: "https://example.com/report/#test-1",
-      });
-      mappedTests.set("test-2", {
-        id: "test-2",
-        name: "should fail",
-        status: "failed",
-        duration: 150,
-        remoteHref: "https://example.com/report/#test-2",
-      });
+      const tests: RemoteSummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: "should pass",
+          status: "passed",
+          duration: 100,
+          remoteHref: "https://example.com/report/#test-1",
+        },
+        {
+          id: "test-2",
+          name: "should fail",
+          status: "failed",
+          duration: 150,
+          remoteHref: "https://example.com/report/#test-2",
+        },
+      ];
 
       const result = generateTestsSectionComment({
         title: "Flaky Tests",
-        mappedTests,
+        tests: tests,
       });
 
       expect(result).toHaveLength(1);
@@ -607,10 +607,10 @@ describe("utils", () => {
     });
 
     it("should chunk tests when exceeding section limit", () => {
-      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+      const tests: RemoteSummaryTestResult[] = [];
 
       for (let i = 0; i < 250; i++) {
-        mappedTests.set(`test-${i}`, {
+        tests.push({
           id: `test-${i}`,
           name: `test ${i}`,
           status: "passed" as const,
@@ -620,7 +620,7 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Many Tests",
-        mappedTests,
+        tests: tests,
         sectionLimit: 100,
       });
 
@@ -631,10 +631,10 @@ describe("utils", () => {
     });
 
     it("should not add chunk number when tests fit in one section", () => {
-      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+      const tests: RemoteSummaryTestResult[] = [];
 
       for (let i = 0; i < 50; i++) {
-        mappedTests.set(`test-${i}`, {
+        tests.push({
           id: `test-${i}`,
           name: `test ${i}`,
           status: "passed" as const,
@@ -644,7 +644,7 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Few Tests",
-        mappedTests,
+        tests: tests,
         sectionLimit: 100,
       });
 
@@ -654,10 +654,10 @@ describe("utils", () => {
     });
 
     it("should handle custom section limit", () => {
-      const mappedTests: RemoteSummaryTestResultsMap = new Map();
+      const tests: RemoteSummaryTestResult[] = [];
 
       for (let i = 0; i < 30; i++) {
-        mappedTests.set(`test-${i}`, {
+        tests.push({
           id: `test-${i}`,
           name: `test ${i}`,
           status: "passed" as const,
@@ -667,7 +667,7 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Custom Limit Tests",
-        mappedTests,
+        tests: tests,
         sectionLimit: 10,
       });
 
