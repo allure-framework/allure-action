@@ -170,6 +170,7 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/report/",
+              withTestResultsLinks: true,
               newTests: [
                 {
                   id: "test-1",
@@ -203,21 +204,22 @@ describe("action", () => {
             content: JSON.stringify({
               name: "Test Suite 1",
               stats: {
-                passed: 8,
-                failed: 2,
+                passed: 10,
+                failed: 1,
                 broken: 0,
                 skipped: 0,
                 unknown: 0,
               },
-              duration: 3000,
+              duration: 5000,
               remoteHref: "https://example.com/report/",
+              withTestResultsLinks: true,
               newTests: [],
               flakyTests: [
                 {
-                  id: "test-2",
-                  name: "should be a flaky test",
+                  id: "test-1",
+                  name: "should be flaky",
                   status: "failed",
-                  duration: 150,
+                  duration: 100,
                 },
               ],
               retryTests: [],
@@ -244,22 +246,23 @@ describe("action", () => {
             content: JSON.stringify({
               name: "Test Suite 1",
               stats: {
-                passed: 15,
-                failed: 0,
+                passed: 10,
+                failed: 1,
                 broken: 0,
                 skipped: 0,
                 unknown: 0,
               },
-              duration: 7000,
+              duration: 5000,
               remoteHref: "https://example.com/report/",
+              withTestResultsLinks: true,
               newTests: [],
               flakyTests: [],
               retryTests: [
                 {
-                  id: "test-3",
-                  name: "should be a retry test",
+                  id: "test-1",
+                  name: "should be retried",
                   status: "passed",
-                  duration: 200,
+                  duration: 100,
                 },
               ],
             }),
@@ -285,34 +288,35 @@ describe("action", () => {
             content: JSON.stringify({
               name: "Test Suite 1",
               stats: {
-                passed: 20,
-                failed: 3,
-                broken: 1,
-                skipped: 2,
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
                 unknown: 0,
               },
-              duration: 10000,
+              duration: 5000,
               remoteHref: "https://example.com/report/",
+              withTestResultsLinks: true,
               newTests: [
                 {
-                  id: "new-1",
-                  name: "new test",
+                  id: "test-1",
+                  name: "should be a new test",
                   status: "passed",
                   duration: 100,
                 },
               ],
               flakyTests: [
                 {
-                  id: "flaky-1",
-                  name: "flaky test",
+                  id: "test-2",
+                  name: "should be flaky",
                   status: "failed",
                   duration: 150,
                 },
               ],
               retryTests: [
                 {
-                  id: "retry-1",
-                  name: "retry test",
+                  id: "test-3",
+                  name: "should be retried",
                   status: "passed",
                   duration: 200,
                 },
@@ -427,16 +431,17 @@ describe("action", () => {
               name: "Test Suite 1",
               stats: {
                 passed: 10,
-                failed: 2,
-                broken: 1,
+                failed: 1,
+                broken: 0,
                 skipped: 0,
                 unknown: 0,
               },
               duration: 5000,
+              withTestResultsLinks: true,
               newTests: [
                 {
                   id: "test-1",
-                  name: "new test without link",
+                  name: "should be a new test",
                   status: "passed",
                   duration: 100,
                 },
@@ -472,14 +477,15 @@ describe("action", () => {
             content: JSON.stringify({
               name: "Test Suite 1",
               stats: {
-                passed: 250,
-                failed: 0,
+                passed: 10,
+                failed: 1,
                 broken: 0,
                 skipped: 0,
                 unknown: 0,
               },
-              duration: 25000,
+              duration: 5000,
               remoteHref: "https://example.com/report/",
+              withTestResultsLinks: true,
               newTests: manyTests,
               flakyTests: [],
               retryTests: [],
@@ -534,6 +540,7 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/unit/",
+              withTestResultsLinks: true,
               newTests: [
                 {
                   id: "unit-new-1",
@@ -559,6 +566,7 @@ describe("action", () => {
               },
               duration: 3000,
               remoteHref: "https://example.com/integration/",
+              withTestResultsLinks: true,
               newTests: [],
               flakyTests: [
                 {
@@ -582,6 +590,194 @@ describe("action", () => {
       await run();
 
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+    });
+
+    it("should not create test detail comments for summaries without withTestResultsLinks flag", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/report/",
+              newTests: [
+                {
+                  id: "test-1",
+                  name: "should be a new test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+    });
+
+    it("should post separate comments for each summary with withTestResultsLinks flag", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Suite A",
+              stats: {
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/suite-a/",
+              withTestResultsLinks: true,
+              newTests: [
+                {
+                  id: "suite-a-test-1",
+                  name: "Suite A new test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+          {
+            path: "report2/summary.json",
+            content: JSON.stringify({
+              name: "Suite B",
+              stats: {
+                passed: 5,
+                failed: 0,
+                broken: 0,
+                skipped: 1,
+                unknown: 0,
+              },
+              duration: 3000,
+              remoteHref: "https://example.com/suite-b/",
+              withTestResultsLinks: true,
+              newTests: [
+                {
+                  id: "suite-b-test-1",
+                  name: "Suite B new test",
+                  status: "passed",
+                  duration: 150,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite A: 1 new tests");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite A new test");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("suite-a-test-1");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain("Suite B");
+
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Suite B: 1 new tests");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Suite B new test");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("suite-b-test-1");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).not.toContain("Suite A");
+    });
+
+    it("should handle mixed summaries with and without withTestResultsLinks flag", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Suite With Links",
+              stats: {
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/with-links/",
+              withTestResultsLinks: true,
+              newTests: [
+                {
+                  id: "test-1",
+                  name: "should post comment",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+          {
+            path: "report2/summary.json",
+            content: JSON.stringify({
+              name: "Suite Without Links",
+              stats: {
+                passed: 5,
+                failed: 0,
+                broken: 0,
+                skipped: 1,
+                unknown: 0,
+              },
+              duration: 3000,
+              remoteHref: "https://example.com/without-links/",
+              newTests: [
+                {
+                  id: "test-2",
+                  name: "should NOT post comment",
+                  status: "passed",
+                  duration: 150,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite With Links");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("should post comment");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain("Suite Without Links");
     });
   });
 

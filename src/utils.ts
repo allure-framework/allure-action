@@ -2,7 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import type { PluginSummary } from "@allurereport/plugin-api";
 import chunk from "lodash.chunk";
-import type { RemoteSummaryTestResult, RemoteSummaryTestResultsMap } from "./model.js";
+import type { RemoteSummaryTestResult } from "./model.js";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
 
@@ -88,18 +88,17 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
  */
 export const generateTestsSectionComment = (params: {
   title: string;
-  mappedTests: RemoteSummaryTestResultsMap;
+  tests: RemoteSummaryTestResult[];
   sectionLimit?: number;
 }) => {
-  const { title, mappedTests, sectionLimit = 200 } = params;
+  const { title, tests, sectionLimit = 200 } = params;
   const comments: string[] = [];
 
-  if (mappedTests.size === 0) {
+  if (tests.length === 0) {
     return [];
   }
 
-  const testsList = Array.from(mappedTests.values()).flat();
-  const testsChunks = chunk(testsList, sectionLimit);
+  const testsChunks = chunk(tests, sectionLimit);
 
   testsChunks.forEach((testsChunk, i) => {
     const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;

@@ -5,7 +5,6 @@ import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { URL } from "node:url";
-import type { RemoteSummaryTestResultsMap } from "./model.js";
 import {
   generateSummaryMarkdownTable,
   generateTestsSectionComment,
@@ -94,55 +93,49 @@ const run = async (): Promise<void> => {
     body: tableMarkdown,
   });
 
-  const flakyTests: RemoteSummaryTestResultsMap = new Map();
-  const newTests: RemoteSummaryTestResultsMap = new Map();
-  const retryTests: RemoteSummaryTestResultsMap = new Map();
-
-  for (const summary of summaryFilesContent) {
-    if (summary.newTests?.length) {
-      summary.newTests.forEach((test) => {
-        newTests.set(test.name, {
-          ...test,
-          remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-        });
-      });
-    }
-
-    if (summary.flakyTests?.length) {
-      summary.flakyTests.forEach((test) => {
-        flakyTests.set(test.name, {
-          ...test,
-          remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-        });
-      });
-    }
-
-    if (summary.retryTests?.length) {
-      summary.retryTests.forEach((test) => {
-        retryTests.set(test.name, {
-          ...test,
-          remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-        });
-      });
-    }
-  }
-
   const commentsToPublish: string[] = [];
 
-  commentsToPublish.push(
-    ...generateTestsSectionComment({
-      title: `Allure Report: ${newTests.size} new tests`,
-      mappedTests: newTests,
-    }),
-    ...generateTestsSectionComment({
-      title: `Allure Report: ${flakyTests.size} flaky tests`,
-      mappedTests: flakyTests,
-    }),
-    ...generateTestsSectionComment({
-      title: `Allure Report: ${retryTests.size} retried tests`,
-      mappedTests: retryTests,
-    }),
-  );
+  for (const summary of summaryFilesContent) {
+    if (!summary?.withTestResultsLinks) {
+      continue;
+    }
+
+    if (summary?.newTests?.length) {
+      commentsToPublish.push(
+        ...generateTestsSectionComment({
+          title: `${summary.name}: ${summary.newTests.length} new tests`,
+          tests: summary.newTests.map((test) => ({
+            ...test,
+            remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
+          })),
+        }),
+      );
+    }
+
+    if (summary?.flakyTests?.length) {
+      commentsToPublish.push(
+        ...generateTestsSectionComment({
+          title: `${summary.name}: ${summary.flakyTests.length} flaky tests`,
+          tests: summary.flakyTests.map((test) => ({
+            ...test,
+            remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
+          })),
+        }),
+      );
+    }
+
+    if (summary?.retryTests?.length) {
+      commentsToPublish.push(
+        ...generateTestsSectionComment({
+          title: `${summary.name}: ${summary.retryTests.length} retried tests`,
+          tests: summary.retryTests.map((test) => ({
+            ...test,
+            remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
+          })),
+        }),
+      );
+    }
+  }
 
   if (commentsToPublish.length === 0) {
     return;

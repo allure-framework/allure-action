@@ -46,7 +46,7 @@
     "lodash.chunk": "^4.2.0"
   },
   "devDependencies": {
-    "@allurereport/plugin-api": "^3.0.0-beta.22",
+    "@allurereport/plugin-api": "^3.0.0-beta.25",
     "@stylistic/eslint-plugin": "^4.4.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/d3-shape": "^3",
@@ -58,7 +58,7 @@
     "@vercel/ncc": "^0.38.4",
     "@vitest/runner": "^3.2.4",
     "@vitest/snapshot": "^3.2.4",
-    "allure": "^3.0.0-beta.22",
+    "allure": "^3.0.0-beta.25",
     "allure-vitest": "^3.4.2",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
