@@ -170,7 +170,9 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/report/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "test-1",
@@ -202,7 +204,7 @@ describe("action", () => {
           {
             path: "report1/summary.json",
             content: JSON.stringify({
-              name: "Test Suite 1",
+              name: "Test Suite 2",
               stats: {
                 passed: 10,
                 failed: 1,
@@ -212,13 +214,15 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/report/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [],
               flakyTests: [
                 {
-                  id: "test-1",
-                  name: "should be flaky",
-                  status: "failed",
+                  id: "test-2",
+                  name: "should be a flaky test",
+                  status: "passed",
                   duration: 100,
                 },
               ],
@@ -254,13 +258,15 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/report/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [],
               flakyTests: [],
               retryTests: [
                 {
                   id: "test-1",
-                  name: "should be retried",
+                  name: "should be a retry test",
                   status: "passed",
                   duration: 100,
                 },
@@ -296,7 +302,9 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/report/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "test-1",
@@ -308,17 +316,17 @@ describe("action", () => {
               flakyTests: [
                 {
                   id: "test-2",
-                  name: "should be flaky",
-                  status: "failed",
-                  duration: 150,
+                  name: "should be a flaky test",
+                  status: "passed",
+                  duration: 100,
                 },
               ],
               retryTests: [
                 {
                   id: "test-3",
-                  name: "should be retried",
+                  name: "should be a retry test",
                   status: "passed",
-                  duration: 200,
+                  duration: 100,
                 },
               ],
             }),
@@ -437,7 +445,9 @@ describe("action", () => {
                 unknown: 0,
               },
               duration: 5000,
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "test-1",
@@ -485,7 +495,9 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/report/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: manyTests,
               flakyTests: [],
               retryTests: [],
@@ -540,7 +552,9 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/unit/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "unit-new-1",
@@ -566,7 +580,9 @@ describe("action", () => {
               },
               duration: 3000,
               remoteHref: "https://example.com/integration/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [],
               flakyTests: [
                 {
@@ -648,7 +664,9 @@ describe("action", () => {
               },
               duration: 5000,
               remoteHref: "https://example.com/suite-a/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "suite-a-test-1",
@@ -674,7 +692,9 @@ describe("action", () => {
               },
               duration: 3000,
               remoteHref: "https://example.com/suite-b/",
-              withTestResultsLinks: true,
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "suite-b-test-1",
@@ -725,8 +745,10 @@ describe("action", () => {
                 unknown: 0,
               },
               duration: 5000,
-              remoteHref: "https://example.com/with-links/",
-              withTestResultsLinks: true,
+              remoteHref: "https://example.com/mixed-a/",
+              meta: {
+                withTestResultsLinks: true,
+              },
               newTests: [
                 {
                   id: "test-1",

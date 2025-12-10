@@ -96,7 +96,7 @@ const run = async (): Promise<void> => {
   const commentsToPublish: string[] = [];
 
   for (const summary of summaryFilesContent) {
-    if (!summary?.withTestResultsLinks) {
+    if (!summary?.meta?.withTestResultsLinks) {
       continue;
     }
 
