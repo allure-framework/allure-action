@@ -22,11 +22,12 @@ This actions scans given report directory for data and posts a summary comment t
 
 ## Usage
 
-Add `pull-requests: write` permission to your workflow to make possible posting comments to Pull Requests:
+Add `pull-requests` and `checks` permissions to your workflow to make possible posting comments to Pull Requests:
 
 ```yaml
 permissions:
   pull-requests: write
+  checks: write
 ```
 
 Then, add the action to your workflow right after your tests, which produce Allure Report:
