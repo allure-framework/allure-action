@@ -548,6 +548,7 @@ describe("utils", () => {
       const tests: RemoteSummaryTestResult[] = [];
       const result = generateTestsSectionComment({
         title: "New Tests",
+        marker: "<!-- test-marker -->",
         tests: tests,
       });
 
@@ -572,11 +573,13 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "New Tests",
+        marker: "<!-- test-marker -->",
         tests: tests,
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toMatchSnapshot();
+      expect(result[0].body).toMatchSnapshot();
+      expect(result[0].marker).toBe("<!-- test-marker -->");
     });
 
     it("should generate a collapsible section for tests with remoteHref", () => {
@@ -599,11 +602,13 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Flaky Tests",
+        marker: "<!-- flaky-marker -->",
         tests: tests,
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toMatchSnapshot();
+      expect(result[0].body).toMatchSnapshot();
+      expect(result[0].marker).toBe("<!-- flaky-marker -->");
     });
 
     it("should chunk tests when exceeding section limit", () => {
@@ -620,14 +625,18 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Many Tests",
+        marker: "<!-- many-tests -->",
         tests: tests,
         sectionLimit: 100,
       });
 
       expect(result).toHaveLength(3);
-      expect(result[0]).toContain("Many Tests (part 1)");
-      expect(result[1]).toContain("Many Tests (part 2)");
-      expect(result[2]).toContain("Many Tests (part 3)");
+      expect(result[0].body).toContain("Many Tests (part 1)");
+      expect(result[1].body).toContain("Many Tests (part 2)");
+      expect(result[2].body).toContain("Many Tests (part 3)");
+      expect(result[0].marker).toBe("<!-- many-tests -->-part-1");
+      expect(result[1].marker).toBe("<!-- many-tests -->-part-2");
+      expect(result[2].marker).toBe("<!-- many-tests -->-part-3");
     });
 
     it("should not add chunk number when tests fit in one section", () => {
@@ -644,13 +653,15 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Few Tests",
+        marker: "<!-- few-tests -->",
         tests: tests,
         sectionLimit: 100,
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toContain("Few Tests</b>");
-      expect(result[0]).not.toContain("Few Tests (part 1)");
+      expect(result[0].body).toContain("Few Tests</b>");
+      expect(result[0].body).not.toContain("Few Tests (part 1)");
+      expect(result[0].marker).toBe("<!-- few-tests -->");
     });
 
     it("should handle custom section limit", () => {
@@ -667,6 +678,7 @@ describe("utils", () => {
 
       const result = generateTestsSectionComment({
         title: "Custom Limit Tests",
+        marker: "<!-- custom-tests -->",
         tests: tests,
         sectionLimit: 10,
       });

@@ -10,6 +10,43 @@ export const getGithubContext = () => github.context;
 
 export const getOctokit = (token: string) => github.getOctokit(token);
 
+/**
+ * Finds an existing comment with the given marker and updates it, or creates a new one
+ */
+export const findOrCreateComment = async (params: {
+  octokit: ReturnType<typeof getOctokit>;
+  owner: string;
+  repo: string;
+  issue_number: number;
+  marker: string;
+  body: string;
+}): Promise<void> => {
+  const { octokit, owner, repo, issue_number, marker, body } = params;
+  const commentBody = `${marker}\n${body}`;
+  const { data: existingComments } = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number,
+  });
+  const existingComment = existingComments.find((comment) => comment.body?.includes(marker));
+
+  if (existingComment) {
+    await octokit.rest.issues.updateComment({
+      owner,
+      repo,
+      comment_id: existingComment.id,
+      body: commentBody,
+    });
+  } else {
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number,
+      body: commentBody,
+    });
+  }
+};
+
 export const formatDuration = (ms?: number): string => {
   if (!ms || ms < 0) return "0ms";
 
@@ -88,11 +125,12 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
  */
 export const generateTestsSectionComment = (params: {
   title: string;
+  marker: string;
   tests: RemoteSummaryTestResult[];
   sectionLimit?: number;
 }) => {
-  const { title, tests, sectionLimit = 200 } = params;
-  const comments: string[] = [];
+  const { title, marker, tests, sectionLimit = 200 } = params;
+  const comments: { marker: string; body: string }[] = [];
 
   if (tests.length === 0) {
     return [];
@@ -109,7 +147,10 @@ export const generateTestsSectionComment = (params: {
     lines.push(formatSummaryTests(testsChunk));
     lines.push(`\n</details>\n`);
 
-    comments.push(lines.join("\n"));
+    comments.push({
+      marker: testsChunks.length > 1 ? `${marker}-part-${i + 1}` : marker,
+      body: lines.join("\n"),
+    });
   });
 
   return comments;

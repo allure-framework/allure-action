@@ -9219,6 +9219,56 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 8188:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var isGlob = __nccwpck_require__(1925);
+var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
+var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
+
+var slash = '/';
+var backslash = /\\/g;
+var enclosure = /[\{\[].*[\}\]]$/;
+var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
+var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
+
+/**
+ * @param {string} str
+ * @param {Object} opts
+ * @param {boolean} [opts.flipBackslashes=true]
+ * @returns {string}
+ */
+module.exports = function globParent(str, opts) {
+  var options = Object.assign({ flipBackslashes: true }, opts);
+
+  // flip windows path separators
+  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
+    str = str.replace(backslash, slash);
+  }
+
+  // special case for strings ending in enclosure containing path separator
+  if (enclosure.test(str)) {
+    str += slash;
+  }
+
+  // preserves full path in case of trailing path separator
+  str += 'a';
+
+  // remove path parts that are globby
+  do {
+    str = pathPosixDirname(str);
+  } while (isGlob(str) || globby.test(str));
+
+  // remove escape chars and return result
+  return str.replace(escaped, '$1');
+};
+
+
+/***/ }),
+
 /***/ 5648:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -10369,7 +10419,7 @@ exports.convertPosixPathToPattern = convertPosixPathToPattern;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isAbsolute = exports.partitionAbsoluteAndRelative = exports.removeDuplicateSlashes = exports.matchAny = exports.convertPatternsToRe = exports.makeRe = exports.getPatternParts = exports.expandBraceExpansion = exports.expandPatternsWithBraceExpansion = exports.isAffectDepthOfReadingPattern = exports.endsWithSlashGlobStar = exports.hasGlobStar = exports.getBaseDirectory = exports.isPatternRelatedToParentDirectory = exports.getPatternsOutsideCurrentDirectory = exports.getPatternsInsideCurrentDirectory = exports.getPositivePatterns = exports.getNegativePatterns = exports.isPositivePattern = exports.isNegativePattern = exports.convertToNegativePattern = exports.convertToPositivePattern = exports.isDynamicPattern = exports.isStaticPattern = void 0;
 const path = __nccwpck_require__(6928);
-const globParent = __nccwpck_require__(8505);
+const globParent = __nccwpck_require__(8188);
 const micromatch = __nccwpck_require__(8785);
 const GLOBSTAR = '**';
 const ESCAPE_SYMBOL = '\\';
@@ -11190,56 +11240,6 @@ const fill = (start, end, step, options = {}) => {
 };
 
 module.exports = fill;
-
-
-/***/ }),
-
-/***/ 8505:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var isGlob = __nccwpck_require__(1925);
-var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
-var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
-
-var slash = '/';
-var backslash = /\\/g;
-var enclosure = /[\{\[].*[\}\]]$/;
-var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
-var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
-
-/**
- * @param {string} str
- * @param {Object} opts
- * @param {boolean} [opts.flipBackslashes=true]
- * @returns {string}
- */
-module.exports = function globParent(str, opts) {
-  var options = Object.assign({ flipBackslashes: true }, opts);
-
-  // flip windows path separators
-  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
-    str = str.replace(backslash, slash);
-  }
-
-  // special case for strings ending in enclosure containing path separator
-  if (enclosure.test(str)) {
-    str += slash;
-  }
-
-  // preserves full path in case of trailing path separator
-  str += 'a';
-
-  // remove path parts that are globby
-  do {
-    str = pathPosixDirname(str);
-  } while (isGlob(str) || globby.test(str));
-
-  // remove escape chars and return result
-  return str.replace(escaped, '$1');
-};
 
 
 /***/ }),
@@ -37770,10 +37770,12 @@ const run = async () => {
     }
     const tableMarkdown = (0, utils_js_1.generateSummaryMarkdownTable)(summaryFilesContent);
     const issue_number = payload.pull_request.number;
-    await octokit.rest.issues.createComment({
+    await (0, utils_js_1.findOrCreateComment)({
+        octokit,
         owner: repo.owner,
         repo: repo.repo,
         issue_number,
+        marker: "<!-- allure-report-summary -->",
         body: tableMarkdown,
     });
     const commentsToPublish = [];
@@ -37784,6 +37786,7 @@ const run = async () => {
         if (summary?.newTests?.length) {
             commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
                 title: `${summary.name}: ${summary.newTests.length} new tests`,
+                marker: "<!-- allure-new-tests -->",
                 tests: summary.newTests.map((test) => ({
                     ...test,
                     remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
@@ -37793,6 +37796,7 @@ const run = async () => {
         if (summary?.flakyTests?.length) {
             commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
                 title: `${summary.name}: ${summary.flakyTests.length} flaky tests`,
+                marker: "<!-- allure-flaky-tests -->",
                 tests: summary.flakyTests.map((test) => ({
                     ...test,
                     remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
@@ -37802,6 +37806,7 @@ const run = async () => {
         if (summary?.retryTests?.length) {
             commentsToPublish.push(...(0, utils_js_1.generateTestsSectionComment)({
                 title: `${summary.name}: ${summary.retryTests.length} retried tests`,
+                marker: "<!-- allure-retry-tests -->",
                 tests: summary.retryTests.map((test) => ({
                     ...test,
                     remoteHref: summary.remoteHref ? new node_url_1.URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
@@ -37812,12 +37817,14 @@ const run = async () => {
     if (commentsToPublish.length === 0) {
         return;
     }
-    for (const comment of commentsToPublish) {
-        await octokit.rest.issues.createComment({
+    for (const commentData of commentsToPublish) {
+        await (0, utils_js_1.findOrCreateComment)({
+            octokit,
             owner: repo.owner,
             repo: repo.repo,
             issue_number,
-            body: comment,
+            marker: commentData.marker,
+            body: commentData.body,
         });
     }
 };
@@ -37871,7 +37878,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stripAnsiCodes = exports.generateTestsSectionComment = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.formatDuration = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
+exports.stripAnsiCodes = exports.generateTestsSectionComment = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.formatDuration = exports.findOrCreateComment = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const lodash_chunk_1 = __importDefault(__nccwpck_require__(458));
@@ -37881,6 +37888,33 @@ const getGithubContext = () => github.context;
 exports.getGithubContext = getGithubContext;
 const getOctokit = (token) => github.getOctokit(token);
 exports.getOctokit = getOctokit;
+const findOrCreateComment = async (params) => {
+    const { octokit, owner, repo, issue_number, marker, body } = params;
+    const commentBody = `${marker}\n${body}`;
+    const { data: existingComments } = await octokit.rest.issues.listComments({
+        owner,
+        repo,
+        issue_number,
+    });
+    const existingComment = existingComments.find((comment) => comment.body?.includes(marker));
+    if (existingComment) {
+        await octokit.rest.issues.updateComment({
+            owner,
+            repo,
+            comment_id: existingComment.id,
+            body: commentBody,
+        });
+    }
+    else {
+        await octokit.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number,
+            body: commentBody,
+        });
+    }
+};
+exports.findOrCreateComment = findOrCreateComment;
 const formatDuration = (ms) => {
     if (!ms || ms < 0)
         return "0ms";
@@ -37945,7 +37979,7 @@ const generateSummaryMarkdownTable = (summaries) => {
 };
 exports.generateSummaryMarkdownTable = generateSummaryMarkdownTable;
 const generateTestsSectionComment = (params) => {
-    const { title, tests, sectionLimit = 200 } = params;
+    const { title, marker, tests, sectionLimit = 200 } = params;
     const comments = [];
     if (tests.length === 0) {
         return [];
@@ -37958,7 +37992,10 @@ const generateTestsSectionComment = (params) => {
         lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
         lines.push((0, exports.formatSummaryTests)(testsChunk));
         lines.push(`\n</details>\n`);
-        comments.push(lines.join("\n"));
+        comments.push({
+            marker: testsChunks.length > 1 ? `${marker}-part-${i + 1}` : marker,
+            body: lines.join("\n"),
+        });
     });
     return comments;
 };

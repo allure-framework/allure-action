@@ -6,6 +6,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { URL } from "node:url";
 import {
+  findOrCreateComment,
   generateSummaryMarkdownTable,
   generateTestsSectionComment,
   getGithubContext,
@@ -86,14 +87,16 @@ const run = async (): Promise<void> => {
   const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
   const issue_number = payload.pull_request.number;
 
-  await octokit.rest.issues.createComment({
+  await findOrCreateComment({
+    octokit,
     owner: repo.owner,
     repo: repo.repo,
     issue_number,
+    marker: "<!-- allure-report-summary -->",
     body: tableMarkdown,
   });
 
-  const commentsToPublish: string[] = [];
+  const commentsToPublish: { marker: string; body: string }[] = [];
 
   for (const summary of summaryFilesContent) {
     if (!summary?.meta?.withTestResultsLinks) {
@@ -104,6 +107,7 @@ const run = async (): Promise<void> => {
       commentsToPublish.push(
         ...generateTestsSectionComment({
           title: `${summary.name}: ${summary.newTests.length} new tests`,
+          marker: "<!-- allure-new-tests -->",
           tests: summary.newTests.map((test) => ({
             ...test,
             remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
@@ -116,6 +120,7 @@ const run = async (): Promise<void> => {
       commentsToPublish.push(
         ...generateTestsSectionComment({
           title: `${summary.name}: ${summary.flakyTests.length} flaky tests`,
+          marker: "<!-- allure-flaky-tests -->",
           tests: summary.flakyTests.map((test) => ({
             ...test,
             remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
@@ -128,6 +133,7 @@ const run = async (): Promise<void> => {
       commentsToPublish.push(
         ...generateTestsSectionComment({
           title: `${summary.name}: ${summary.retryTests.length} retried tests`,
+          marker: "<!-- allure-retry-tests -->",
           tests: summary.retryTests.map((test) => ({
             ...test,
             remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
@@ -141,12 +147,14 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  for (const comment of commentsToPublish) {
-    await octokit.rest.issues.createComment({
+  for (const commentData of commentsToPublish) {
+    await findOrCreateComment({
+      octokit,
       owner: repo.owner,
       repo: repo.repo,
       issue_number,
-      body: comment,
+      marker: commentData.marker,
+      body: commentData.body,
     });
   }
 };
