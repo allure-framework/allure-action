@@ -198,12 +198,10 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<!-- allure-new-tests -->");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
     });
 
     it("should create comments for flaky tests", async () => {
@@ -246,12 +244,10 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<!-- allure-flaky-tests -->");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
     });
 
     it("should create comments for retry tests", async () => {
@@ -294,12 +290,10 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<!-- allure-retry-tests -->");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
     });
 
     it("should create comments for all test types", async () => {
@@ -356,12 +350,9 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(4);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(4);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[3][0].body).toMatchSnapshot();
     });
 
     it("should handle multiple summary files", async () => {
@@ -491,9 +482,9 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
 
     it("should handle test arrays with large number of tests requiring chunking", async () => {
@@ -536,8 +527,8 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(3);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should use custom report directory when specified", async () => {
@@ -632,8 +623,8 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(3);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should not create test detail comments for summaries without withTestResultsLinks flag", async () => {
@@ -748,18 +739,8 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(3);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
-
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite A: 1 new tests");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite A new test");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("suite-a-test-1");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain("Suite B");
-
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Suite B: 1 new tests");
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Suite B new test");
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("suite-b-test-1");
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).not.toContain("Suite A");
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should handle mixed summaries with and without withTestResultsLinks flag", async () => {
@@ -829,11 +810,8 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite With Links");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("should post comment");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain("Suite Without Links");
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should update existing comment instead of creating new one when marker is found", async () => {
@@ -935,7 +913,7 @@ describe("action", () => {
 
       await run();
 
-      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledWith({
         owner: "owner",
@@ -943,8 +921,6 @@ describe("action", () => {
         comment_id: existingSummaryCommentId,
         body: expect.stringContaining("<!-- allure-report-summary -->"),
       });
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
-      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-new-tests -->");
     });
   });
 

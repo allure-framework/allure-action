@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import type { PluginSummary } from "@allurereport/plugin-api";
-import chunk from "lodash.chunk";
 import type { RemoteSummaryTestResult } from "./model.js";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
@@ -28,7 +27,13 @@ export const findOrCreateComment = async (params: {
     repo,
     issue_number,
   });
-  const existingComment = existingComments.find((comment) => comment.body?.includes(marker));
+  const existingComment = existingComments.find((comment, i) => {
+    console.log(`comment #${i}`, comment);
+
+    return comment.body?.includes(marker);
+  });
+
+  console.log(existingComment);
 
   if (existingComment) {
     await octokit.rest.issues.updateComment({
@@ -109,51 +114,25 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     const newCount = summary.newTests?.length ?? 0;
     const flakyCount = summary.flakyTests?.length ?? 0;
     const retryCount = summary.retryTests?.length ?? 0;
-    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">View</a>` : "";
+    const cells: string[] = [img, name, duration, statsLabels];
 
-    return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
+    if (!summary.remoteHref) {
+      cells.push(newCount.toString());
+      cells.push(flakyCount.toString());
+      cells.push(retryCount.toString());
+      cells.push("");
+    } else {
+      cells.push(`<a href="${summary.remoteHref}?filter=new" target="_blank">${newCount}</a>`);
+      cells.push(`<a href="${summary.remoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`);
+      cells.push(`<a href="${summary.remoteHref}?filter=retry" target="_blank">${retryCount}</a>`);
+      cells.push(`<a href="${summary.remoteHref}" target="_blank">View</a>`);
+    }
+
+    return `| ${cells.join(" | ")} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
 
   return lines.join("\n");
-};
-
-/**
- * Generates a collapsible markdown section with details about given tests with a given title
- * Keep in mind, that tests cound shouldn't be so big due to github comment body size limitations (>65k characters)
- * Default 200 tests limit is an approximation to avoid hitting the limit
- */
-export const generateTestsSectionComment = (params: {
-  title: string;
-  marker: string;
-  tests: RemoteSummaryTestResult[];
-  sectionLimit?: number;
-}) => {
-  const { title, marker, tests, sectionLimit = 200 } = params;
-  const comments: { marker: string; body: string }[] = [];
-
-  if (tests.length === 0) {
-    return [];
-  }
-
-  const testsChunks = chunk(tests, sectionLimit);
-
-  testsChunks.forEach((testsChunk, i) => {
-    const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
-    const lines: string[] = [];
-
-    lines.push(`<details>`);
-    lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
-    lines.push(formatSummaryTests(testsChunk));
-    lines.push(`\n</details>\n`);
-
-    comments.push({
-      marker: testsChunks.length > 1 ? `${marker}-part-${i + 1}` : marker,
-      body: lines.join("\n"),
-    });
-  });
-
-  return comments;
 };
 
 export const stripAnsiCodes = (str: string, replacement?: string): string => {

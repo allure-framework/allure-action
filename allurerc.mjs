@@ -3,6 +3,9 @@ import { env } from "node:process";
 
 const { ALLURE_SERVICE_ACCESS_TOKEN } = env;
 
+/**
+ * @typedef {import("allure").Config}
+ */
 const config = {
   output: "./out/allure-report",
   plugins: {
