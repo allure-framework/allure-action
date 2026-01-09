@@ -1,7 +1,7 @@
 import { defineConfig } from "allure";
 import { env } from "node:process";
 
-const { ALLURE_SERVICE_URL, ALLURE_SERVICE_ACCESS_TOKEN, ALLURE_SERVICE_PROJECT } = env;
+const { ALLURE_SERVICE_ACCESS_TOKEN } = env;
 
 const config = {
   output: "./out/allure-report",
@@ -20,15 +20,12 @@ const config = {
         groupBy: "none",
       },
     },
-  }
-}
+  },
+};
 
-if (ALLURE_SERVICE_URL && ALLURE_SERVICE_ACCESS_TOKEN && ALLURE_SERVICE_PROJECT) {
+if (ALLURE_SERVICE_ACCESS_TOKEN) {
   config.allureService = {
-    url: ALLURE_SERVICE_URL,
-    project: ALLURE_SERVICE_PROJECT,
     accessToken: ALLURE_SERVICE_ACCESS_TOKEN,
-    publish: true,
   };
 }
 
