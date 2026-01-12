@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import type { PluginSummary } from "@allurereport/plugin-api";
-import chunk from "lodash.chunk";
 import type { RemoteSummaryTestResult } from "./model.js";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
@@ -9,6 +8,43 @@ export const getGithubInput = (name: string) => core.getInput(name, { required: 
 export const getGithubContext = () => github.context;
 
 export const getOctokit = (token: string) => github.getOctokit(token);
+
+/**
+ * Finds an existing comment with the given marker and updates it, or creates a new one
+ */
+export const findOrCreateComment = async (params: {
+  octokit: ReturnType<typeof getOctokit>;
+  owner: string;
+  repo: string;
+  issue_number: number;
+  marker: string;
+  body: string;
+}): Promise<void> => {
+  const { octokit, owner, repo, issue_number, marker, body } = params;
+  const commentBody = `${marker}\n${body}`;
+  const { data: existingComments } = await octokit.rest.issues.listComments({
+    owner,
+    repo,
+    issue_number,
+  });
+  const existingComment = existingComments.find((comment) => comment.body?.includes(marker));
+
+  if (existingComment) {
+    await octokit.rest.issues.updateComment({
+      owner,
+      repo,
+      comment_id: existingComment.id,
+      body: commentBody,
+    });
+  } else {
+    await octokit.rest.issues.createComment({
+      owner,
+      repo,
+      issue_number,
+      body: commentBody,
+    });
+  }
+};
 
 export const formatDuration = (ms?: number): string => {
   if (!ms || ms < 0) return "0ms";
@@ -72,47 +108,37 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     const newCount = summary.newTests?.length ?? 0;
     const flakyCount = summary.flakyTests?.length ?? 0;
     const retryCount = summary.retryTests?.length ?? 0;
-    const report = summary.remoteHref ? `<a href="${summary.remoteHref}" target="_blank">View</a>` : "";
+    const cells: string[] = [img, name, duration, statsLabels];
 
-    return `| ${img} | ${name} | ${duration} | ${statsLabels} | ${newCount} | ${flakyCount} | ${retryCount} | ${report} |`;
+    if (!summary.remoteHref) {
+      cells.push(newCount.toString());
+      cells.push(flakyCount.toString());
+      cells.push(retryCount.toString());
+      cells.push("");
+    } else {
+      cells.push(
+        newCount > 0
+          ? `<a href="${summary.remoteHref}?filter=new" target="_blank">${newCount}</a>`
+          : newCount.toString(),
+      );
+      cells.push(
+        flakyCount > 0
+          ? `<a href="${summary.remoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`
+          : flakyCount.toString(),
+      );
+      cells.push(
+        retryCount > 0
+          ? `<a href="${summary.remoteHref}?filter=retry" target="_blank">${retryCount}</a>`
+          : retryCount.toString(),
+      );
+      cells.push(`<a href="${summary.remoteHref}" target="_blank">View</a>`);
+    }
+
+    return `| ${cells.join(" | ")} |`;
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
 
   return lines.join("\n");
-};
-
-/**
- * Generates a collapsible markdown section with details about given tests with a given title
- * Keep in mind, that tests cound shouldn't be so big due to github comment body size limitations (>65k characters)
- * Default 200 tests limit is an approximation to avoid hitting the limit
- */
-export const generateTestsSectionComment = (params: {
-  title: string;
-  tests: RemoteSummaryTestResult[];
-  sectionLimit?: number;
-}) => {
-  const { title, tests, sectionLimit = 200 } = params;
-  const comments: string[] = [];
-
-  if (tests.length === 0) {
-    return [];
-  }
-
-  const testsChunks = chunk(tests, sectionLimit);
-
-  testsChunks.forEach((testsChunk, i) => {
-    const sectionTitle = testsChunks.length > 1 ? `${title} (part ${i + 1})` : title;
-    const lines: string[] = [];
-
-    lines.push(`<details>`);
-    lines.push(`<summary><b>${sectionTitle}</b></summary>\n`);
-    lines.push(formatSummaryTests(testsChunk));
-    lines.push(`\n</details>\n`);
-
-    comments.push(lines.join("\n"));
-  });
-
-  return comments;
 };
 
 export const stripAnsiCodes = (str: string, replacement?: string): string => {

@@ -106,6 +106,7 @@ describe("action", () => {
 
     it("should print notification about missing reports when there isn't any summary file in the report dir", async () => {
       (fg as unknown as Mock).mockResolvedValue([]);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
@@ -138,6 +139,7 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
@@ -145,12 +147,14 @@ describe("action", () => {
       expect(fs.readFile).toHaveBeenCalledWith(fixtures.summaryFiles[0].path, "utf-8");
       expect(getOctokit).toHaveBeenCalledTimes(1);
       expect(getOctokit).toHaveBeenCalledWith("token");
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0]).toMatchObject({
         owner: "owner",
         repo: "repo",
         issue_number: 1,
       });
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
 
@@ -190,12 +194,14 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
     });
 
     it("should create comments for flaky tests", async () => {
@@ -234,12 +240,14 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
     });
 
     it("should create comments for retry tests", async () => {
@@ -278,12 +286,14 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
     });
 
     it("should create comments for all test types", async () => {
@@ -336,14 +346,13 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(4);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toMatchSnapshot();
-      expect(octokitMock.rest.issues.createComment.mock.calls[3][0].body).toMatchSnapshot();
     });
 
     it("should handle multiple summary files", async () => {
@@ -391,9 +400,11 @@ describe("action", () => {
       (fs.readFile as unknown as Mock)
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(fs.readFile).toHaveBeenCalledTimes(fixtures.summaryFiles.length);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
@@ -424,9 +435,11 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
@@ -465,11 +478,13 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
 
     it("should handle test arrays with large number of tests requiring chunking", async () => {
@@ -508,10 +523,12 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should use custom report directory when specified", async () => {
@@ -602,10 +619,12 @@ describe("action", () => {
       (fs.readFile as unknown as Mock)
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should not create test detail comments for summaries without withTestResultsLinks flag", async () => {
@@ -641,9 +660,11 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
@@ -714,20 +735,12 @@ describe("action", () => {
       (fs.readFile as unknown as Mock)
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
-
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite A: 1 new tests");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite A new test");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("suite-a-test-1");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain("Suite B");
-
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Suite B: 1 new tests");
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Suite B new test");
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("suite-b-test-1");
-      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).not.toContain("Suite A");
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
     it("should handle mixed summaries with and without withTestResultsLinks flag", async () => {
@@ -793,13 +806,121 @@ describe("action", () => {
       (fs.readFile as unknown as Mock)
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Suite With Links");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("should post comment");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain("Suite Without Links");
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+    });
+
+    it("should update existing comment instead of creating new one when marker is found", async () => {
+      const existingCommentId = 123456;
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 2,
+                broken: 1,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+        data: [
+          {
+            id: existingCommentId,
+            body: "<!-- allure-report-summary -->\n# Old Allure Report Summary",
+          },
+        ],
+      });
+
+      await run();
+
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        comment_id: existingCommentId,
+        body: expect.stringContaining("<!-- allure-report-summary -->"),
+      });
+      expect(octokitMock.rest.issues.updateComment.mock.calls[0][0].body).toContain("Test Suite 1");
+    });
+
+    it("should update existing summary comment and create new test detail comments", async () => {
+      const existingSummaryCommentId = 111;
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/report/",
+              meta: {
+                withTestResultsLinks: true,
+              },
+              newTests: [
+                {
+                  id: "test-1",
+                  name: "should be a new test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock)
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: existingSummaryCommentId,
+              body: "<!-- allure-report-summary -->\n# Old Summary",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        comment_id: existingSummaryCommentId,
+        body: expect.stringContaining("<!-- allure-report-summary -->"),
+      });
     });
   });
 
@@ -863,6 +984,7 @@ describe("action", () => {
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.qualityGateContent);
       (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
@@ -912,6 +1034,7 @@ describe("action", () => {
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.qualityGateContent);
       (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
@@ -964,6 +1087,7 @@ describe("action", () => {
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.qualityGateContent);
       (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 
@@ -1011,6 +1135,7 @@ describe("action", () => {
         .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
         .mockResolvedValueOnce(fixtures.qualityGateContent);
       (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
 
       await run();
 

@@ -4,10 +4,9 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { URL } from "node:url";
 import {
+  findOrCreateComment,
   generateSummaryMarkdownTable,
-  generateTestsSectionComment,
   getGithubContext,
   getGithubInput,
   getOctokit,
@@ -31,7 +30,6 @@ const run = async (): Promise<void> => {
   const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
   });
-  let qualityGateResults: QualityGateValidationResult[] | undefined;
   const summaryFilesContent = await Promise.all(
     summaryFiles.map(async (file) => {
       const content = await fs.readFile(file, "utf-8");
@@ -39,6 +37,7 @@ const run = async (): Promise<void> => {
       return JSON.parse(content) as PluginSummary;
     }),
   );
+  let qualityGateResults: QualityGateValidationResult[] | undefined;
 
   if (existsSync(qualityGateFile)) {
     const qualityGateContentRaw = await fs.readFile(qualityGateFile, "utf-8");
@@ -86,69 +85,14 @@ const run = async (): Promise<void> => {
   const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
   const issue_number = payload.pull_request.number;
 
-  await octokit.rest.issues.createComment({
+  await findOrCreateComment({
+    octokit,
     owner: repo.owner,
     repo: repo.repo,
     issue_number,
+    marker: "<!-- allure-report-summary -->",
     body: tableMarkdown,
   });
-
-  const commentsToPublish: string[] = [];
-
-  for (const summary of summaryFilesContent) {
-    if (!summary?.meta?.withTestResultsLinks) {
-      continue;
-    }
-
-    if (summary?.newTests?.length) {
-      commentsToPublish.push(
-        ...generateTestsSectionComment({
-          title: `${summary.name}: ${summary.newTests.length} new tests`,
-          tests: summary.newTests.map((test) => ({
-            ...test,
-            remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-          })),
-        }),
-      );
-    }
-
-    if (summary?.flakyTests?.length) {
-      commentsToPublish.push(
-        ...generateTestsSectionComment({
-          title: `${summary.name}: ${summary.flakyTests.length} flaky tests`,
-          tests: summary.flakyTests.map((test) => ({
-            ...test,
-            remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-          })),
-        }),
-      );
-    }
-
-    if (summary?.retryTests?.length) {
-      commentsToPublish.push(
-        ...generateTestsSectionComment({
-          title: `${summary.name}: ${summary.retryTests.length} retried tests`,
-          tests: summary.retryTests.map((test) => ({
-            ...test,
-            remoteHref: summary.remoteHref ? new URL(`#${test.id}`, summary.remoteHref).toString() : undefined,
-          })),
-        }),
-      );
-    }
-  }
-
-  if (commentsToPublish.length === 0) {
-    return;
-  }
-
-  for (const comment of commentsToPublish) {
-    await octokit.rest.issues.createComment({
-      owner: repo.owner,
-      repo: repo.repo,
-      issue_number,
-      body: comment,
-    });
-  }
 };
 
 if (require.main === module) {
