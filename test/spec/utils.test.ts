@@ -1,8 +1,7 @@
 /* eslint max-lines: off */
 import type { PluginSummary } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
-import type { RemoteSummaryTestResult } from "../../src/model.js";
-import { formatDuration, formatSummaryTests, generateSummaryMarkdownTable, stripAnsiCodes } from "../../src/utils.js";
+import { formatDuration, generateSummaryMarkdownTable, stripAnsiCodes } from "../../src/utils.js";
 
 describe("utils", () => {
   describe("formatDuration", () => {
@@ -551,100 +550,6 @@ describe("utils", () => {
         },
       ] as unknown as PluginSummary[];
       const result = generateSummaryMarkdownTable(summaries);
-
-      expect(result).toMatchSnapshot();
-    });
-  });
-
-  describe("formatSummaryTests", () => {
-    it("should format tests without remoteHref", () => {
-      const tests: RemoteSummaryTestResult[] = [
-        {
-          id: "test-1",
-          name: "should pass",
-          status: "passed",
-          duration: 100,
-        },
-        {
-          id: "test-2",
-          name: "should fail",
-          status: "failed",
-          duration: 150,
-        },
-      ];
-      const result = formatSummaryTests(tests);
-
-      expect(result).toMatchSnapshot();
-    });
-
-    it("should format tests with remoteHref", () => {
-      const tests: RemoteSummaryTestResult[] = [
-        {
-          id: "test-1",
-          name: "should pass",
-          status: "passed",
-          duration: 100,
-          remoteHref: "https://example.com/report/#test-1",
-        },
-        {
-          id: "test-2",
-          name: "should fail",
-          status: "failed",
-          duration: 150,
-          remoteHref: "https://example.com/report/#test-2",
-        },
-      ];
-      const result = formatSummaryTests(tests);
-
-      expect(result).toMatchSnapshot();
-    });
-
-    it("should format tests with different statuses", () => {
-      const tests: RemoteSummaryTestResult[] = [
-        {
-          id: "test-1",
-          name: "passed test",
-          status: "passed",
-          duration: 100,
-          remoteHref: "https://example.com/report/#test-1",
-        },
-        {
-          id: "test-2",
-          name: "failed test",
-          status: "failed",
-          duration: 150,
-          remoteHref: "https://example.com/report/#test-2",
-        },
-        {
-          id: "test-3",
-          name: "broken test",
-          status: "broken",
-          duration: 120,
-          remoteHref: "https://example.com/report/#test-3",
-        },
-        {
-          id: "test-4",
-          name: "skipped test",
-          status: "skipped",
-          duration: 0,
-          remoteHref: "https://example.com/report/#test-4",
-        },
-        {
-          id: "test-5",
-          name: "unknown test",
-          status: "unknown",
-          duration: 80,
-          remoteHref: "https://example.com/report/#test-5",
-        },
-      ];
-      const result = formatSummaryTests(tests);
-
-      expect(result).toMatchSnapshot();
-    });
-
-    it("should handle empty tests array", () => {
-      const tests: RemoteSummaryTestResult[] = [];
-      const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
     });

@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import type { PluginSummary } from "@allurereport/plugin-api";
-import type { RemoteSummaryTestResult } from "./model.js";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
 
@@ -62,21 +61,6 @@ export const formatDuration = (ms?: number): string => {
   if (msLeft) parts.push(`${msLeft}ms`);
 
   return parts.join(" ");
-};
-
-export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => {
-  const lines: string[] = [];
-
-  tests.forEach((test) => {
-    const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
-    const statusText = `${statusIcon} ${test.status}`;
-    const testName = test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name;
-    const duration = formatDuration(test.duration);
-
-    lines.push(`- ${statusText} ${testName} (${duration})`);
-  });
-
-  return lines.join("\n");
 };
 
 /**

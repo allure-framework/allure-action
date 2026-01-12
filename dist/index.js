@@ -37343,7 +37343,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stripAnsiCodes = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.formatDuration = exports.findOrCreateComment = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
+exports.stripAnsiCodes = exports.generateSummaryMarkdownTable = exports.formatDuration = exports.findOrCreateComment = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const getGithubInput = (name) => core.getInput(name, { required: false });
@@ -37398,18 +37398,6 @@ const formatDuration = (ms) => {
     return parts.join(" ");
 };
 exports.formatDuration = formatDuration;
-const formatSummaryTests = (tests) => {
-    const lines = [];
-    tests.forEach((test) => {
-        const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
-        const statusText = `${statusIcon} ${test.status}`;
-        const testName = test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name;
-        const duration = (0, exports.formatDuration)(test.duration);
-        lines.push(`- ${statusText} ${testName} (${duration})`);
-    });
-    return lines.join("\n");
-};
-exports.formatSummaryTests = formatSummaryTests;
 const generateSummaryMarkdownTable = (summaries) => {
     const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
     const delimiter = `|-|-|-|-|-|-|-|-|`;
