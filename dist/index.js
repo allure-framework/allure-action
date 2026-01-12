@@ -4112,7 +4112,7 @@ exports["default"] = SyncProvider;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const events_1 = __nccwpck_require__(4434);
 const fsScandir = __nccwpck_require__(7198);
-const fastq = __nccwpck_require__(8230);
+const fastq = __nccwpck_require__(3281);
 const common = __nccwpck_require__(4449);
 const reader_1 = __nccwpck_require__(5903);
 class AsyncReader extends reader_1.default {
@@ -9219,56 +9219,6 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
-/***/ 8188:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var isGlob = __nccwpck_require__(1925);
-var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
-var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
-
-var slash = '/';
-var backslash = /\\/g;
-var enclosure = /[\{\[].*[\}\]]$/;
-var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
-var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
-
-/**
- * @param {string} str
- * @param {Object} opts
- * @param {boolean} [opts.flipBackslashes=true]
- * @returns {string}
- */
-module.exports = function globParent(str, opts) {
-  var options = Object.assign({ flipBackslashes: true }, opts);
-
-  // flip windows path separators
-  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
-    str = str.replace(backslash, slash);
-  }
-
-  // special case for strings ending in enclosure containing path separator
-  if (enclosure.test(str)) {
-    str += slash;
-  }
-
-  // preserves full path in case of trailing path separator
-  str += 'a';
-
-  // remove path parts that are globby
-  do {
-    str = pathPosixDirname(str);
-  } while (isGlob(str) || globby.test(str));
-
-  // remove escape chars and return result
-  return str.replace(escaped, '$1');
-};
-
-
-/***/ }),
-
 /***/ 5648:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -10419,7 +10369,7 @@ exports.convertPosixPathToPattern = convertPosixPathToPattern;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isAbsolute = exports.partitionAbsoluteAndRelative = exports.removeDuplicateSlashes = exports.matchAny = exports.convertPatternsToRe = exports.makeRe = exports.getPatternParts = exports.expandBraceExpansion = exports.expandPatternsWithBraceExpansion = exports.isAffectDepthOfReadingPattern = exports.endsWithSlashGlobStar = exports.hasGlobStar = exports.getBaseDirectory = exports.isPatternRelatedToParentDirectory = exports.getPatternsOutsideCurrentDirectory = exports.getPatternsInsideCurrentDirectory = exports.getPositivePatterns = exports.getNegativePatterns = exports.isPositivePattern = exports.isNegativePattern = exports.convertToNegativePattern = exports.convertToPositivePattern = exports.isDynamicPattern = exports.isStaticPattern = void 0;
 const path = __nccwpck_require__(6928);
-const globParent = __nccwpck_require__(8188);
+const globParent = __nccwpck_require__(8505);
 const micromatch = __nccwpck_require__(8785);
 const GLOBSTAR = '**';
 const ESCAPE_SYMBOL = '\\';
@@ -10665,325 +10615,6 @@ function isEmpty(input) {
     return input === '';
 }
 exports.isEmpty = isEmpty;
-
-
-/***/ }),
-
-/***/ 8230:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-/* eslint-disable no-var */
-
-var reusify = __nccwpck_require__(844)
-
-function fastqueue (context, worker, _concurrency) {
-  if (typeof context === 'function') {
-    _concurrency = worker
-    worker = context
-    context = null
-  }
-
-  if (!(_concurrency >= 1)) {
-    throw new Error('fastqueue concurrency must be equal to or greater than 1')
-  }
-
-  var cache = reusify(Task)
-  var queueHead = null
-  var queueTail = null
-  var _running = 0
-  var errorHandler = null
-
-  var self = {
-    push: push,
-    drain: noop,
-    saturated: noop,
-    pause: pause,
-    paused: false,
-
-    get concurrency () {
-      return _concurrency
-    },
-    set concurrency (value) {
-      if (!(value >= 1)) {
-        throw new Error('fastqueue concurrency must be equal to or greater than 1')
-      }
-      _concurrency = value
-
-      if (self.paused) return
-      for (; queueHead && _running < _concurrency;) {
-        _running++
-        release()
-      }
-    },
-
-    running: running,
-    resume: resume,
-    idle: idle,
-    length: length,
-    getQueue: getQueue,
-    unshift: unshift,
-    empty: noop,
-    kill: kill,
-    killAndDrain: killAndDrain,
-    error: error
-  }
-
-  return self
-
-  function running () {
-    return _running
-  }
-
-  function pause () {
-    self.paused = true
-  }
-
-  function length () {
-    var current = queueHead
-    var counter = 0
-
-    while (current) {
-      current = current.next
-      counter++
-    }
-
-    return counter
-  }
-
-  function getQueue () {
-    var current = queueHead
-    var tasks = []
-
-    while (current) {
-      tasks.push(current.value)
-      current = current.next
-    }
-
-    return tasks
-  }
-
-  function resume () {
-    if (!self.paused) return
-    self.paused = false
-    if (queueHead === null) {
-      _running++
-      release()
-      return
-    }
-    for (; queueHead && _running < _concurrency;) {
-      _running++
-      release()
-    }
-  }
-
-  function idle () {
-    return _running === 0 && self.length() === 0
-  }
-
-  function push (value, done) {
-    var current = cache.get()
-
-    current.context = context
-    current.release = release
-    current.value = value
-    current.callback = done || noop
-    current.errorHandler = errorHandler
-
-    if (_running >= _concurrency || self.paused) {
-      if (queueTail) {
-        queueTail.next = current
-        queueTail = current
-      } else {
-        queueHead = current
-        queueTail = current
-        self.saturated()
-      }
-    } else {
-      _running++
-      worker.call(context, current.value, current.worked)
-    }
-  }
-
-  function unshift (value, done) {
-    var current = cache.get()
-
-    current.context = context
-    current.release = release
-    current.value = value
-    current.callback = done || noop
-    current.errorHandler = errorHandler
-
-    if (_running >= _concurrency || self.paused) {
-      if (queueHead) {
-        current.next = queueHead
-        queueHead = current
-      } else {
-        queueHead = current
-        queueTail = current
-        self.saturated()
-      }
-    } else {
-      _running++
-      worker.call(context, current.value, current.worked)
-    }
-  }
-
-  function release (holder) {
-    if (holder) {
-      cache.release(holder)
-    }
-    var next = queueHead
-    if (next && _running <= _concurrency) {
-      if (!self.paused) {
-        if (queueTail === queueHead) {
-          queueTail = null
-        }
-        queueHead = next.next
-        next.next = null
-        worker.call(context, next.value, next.worked)
-        if (queueTail === null) {
-          self.empty()
-        }
-      } else {
-        _running--
-      }
-    } else if (--_running === 0) {
-      self.drain()
-    }
-  }
-
-  function kill () {
-    queueHead = null
-    queueTail = null
-    self.drain = noop
-  }
-
-  function killAndDrain () {
-    queueHead = null
-    queueTail = null
-    self.drain()
-    self.drain = noop
-  }
-
-  function error (handler) {
-    errorHandler = handler
-  }
-}
-
-function noop () {}
-
-function Task () {
-  this.value = null
-  this.callback = noop
-  this.next = null
-  this.release = noop
-  this.context = null
-  this.errorHandler = null
-
-  var self = this
-
-  this.worked = function worked (err, result) {
-    var callback = self.callback
-    var errorHandler = self.errorHandler
-    var val = self.value
-    self.value = null
-    self.callback = noop
-    if (self.errorHandler) {
-      errorHandler(err, val)
-    }
-    callback.call(self.context, err, result)
-    self.release(self)
-  }
-}
-
-function queueAsPromised (context, worker, _concurrency) {
-  if (typeof context === 'function') {
-    _concurrency = worker
-    worker = context
-    context = null
-  }
-
-  function asyncWrapper (arg, cb) {
-    worker.call(this, arg)
-      .then(function (res) {
-        cb(null, res)
-      }, cb)
-  }
-
-  var queue = fastqueue(context, asyncWrapper, _concurrency)
-
-  var pushCb = queue.push
-  var unshiftCb = queue.unshift
-
-  queue.push = push
-  queue.unshift = unshift
-  queue.drained = drained
-
-  return queue
-
-  function push (value) {
-    var p = new Promise(function (resolve, reject) {
-      pushCb(value, function (err, result) {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(result)
-      })
-    })
-
-    // Let's fork the promise chain to
-    // make the error bubble up to the user but
-    // not lead to a unhandledRejection
-    p.catch(noop)
-
-    return p
-  }
-
-  function unshift (value) {
-    var p = new Promise(function (resolve, reject) {
-      unshiftCb(value, function (err, result) {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(result)
-      })
-    })
-
-    // Let's fork the promise chain to
-    // make the error bubble up to the user but
-    // not lead to a unhandledRejection
-    p.catch(noop)
-
-    return p
-  }
-
-  function drained () {
-    var p = new Promise(function (resolve) {
-      process.nextTick(function () {
-        if (queue.idle()) {
-          resolve()
-        } else {
-          var previousDrain = queue.drain
-          queue.drain = function () {
-            if (typeof previousDrain === 'function') previousDrain()
-            resolve()
-            queue.drain = previousDrain
-          }
-        }
-      })
-    })
-
-    return p
-  }
-}
-
-module.exports = fastqueue
-module.exports.promise = queueAsPromised
 
 
 /***/ }),
@@ -11240,6 +10871,56 @@ const fill = (start, end, step, options = {}) => {
 };
 
 module.exports = fill;
+
+
+/***/ }),
+
+/***/ 8505:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var isGlob = __nccwpck_require__(1925);
+var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
+var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
+
+var slash = '/';
+var backslash = /\\/g;
+var enclosure = /[\{\[].*[\}\]]$/;
+var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
+var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
+
+/**
+ * @param {string} str
+ * @param {Object} opts
+ * @param {boolean} [opts.flipBackslashes=true]
+ * @returns {string}
+ */
+module.exports = function globParent(str, opts) {
+  var options = Object.assign({ flipBackslashes: true }, opts);
+
+  // flip windows path separators
+  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
+    str = str.replace(backslash, slash);
+  }
+
+  // special case for strings ending in enclosure containing path separator
+  if (enclosure.test(str)) {
+    str += slash;
+  }
+
+  // preserves full path in case of trailing path separator
+  str += 'a';
+
+  // remove path parts that are globby
+  do {
+    str = pathPosixDirname(str);
+  } while (isGlob(str) || globby.test(str));
+
+  // remove escape chars and return result
+  return str.replace(escaped, '$1');
+};
 
 
 /***/ }),
@@ -39361,6 +39042,360 @@ function parseParams (str) {
 }
 
 module.exports = parseParams
+
+
+/***/ }),
+
+/***/ 3281:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+/* eslint-disable no-var */
+
+var reusify = __nccwpck_require__(844)
+
+function fastqueue (context, worker, _concurrency) {
+  if (typeof context === 'function') {
+    _concurrency = worker
+    worker = context
+    context = null
+  }
+
+  if (!(_concurrency >= 1)) {
+    throw new Error('fastqueue concurrency must be equal to or greater than 1')
+  }
+
+  var cache = reusify(Task)
+  var queueHead = null
+  var queueTail = null
+  var _running = 0
+  var errorHandler = null
+
+  var self = {
+    push: push,
+    drain: noop,
+    saturated: noop,
+    pause: pause,
+    paused: false,
+
+    get concurrency () {
+      return _concurrency
+    },
+    set concurrency (value) {
+      if (!(value >= 1)) {
+        throw new Error('fastqueue concurrency must be equal to or greater than 1')
+      }
+      _concurrency = value
+
+      if (self.paused) return
+      for (; queueHead && _running < _concurrency;) {
+        _running++
+        release()
+      }
+    },
+
+    running: running,
+    resume: resume,
+    idle: idle,
+    length: length,
+    getQueue: getQueue,
+    unshift: unshift,
+    empty: noop,
+    kill: kill,
+    killAndDrain: killAndDrain,
+    error: error,
+    abort: abort
+  }
+
+  return self
+
+  function running () {
+    return _running
+  }
+
+  function pause () {
+    self.paused = true
+  }
+
+  function length () {
+    var current = queueHead
+    var counter = 0
+
+    while (current) {
+      current = current.next
+      counter++
+    }
+
+    return counter
+  }
+
+  function getQueue () {
+    var current = queueHead
+    var tasks = []
+
+    while (current) {
+      tasks.push(current.value)
+      current = current.next
+    }
+
+    return tasks
+  }
+
+  function resume () {
+    if (!self.paused) return
+    self.paused = false
+    if (queueHead === null) {
+      _running++
+      release()
+      return
+    }
+    for (; queueHead && _running < _concurrency;) {
+      _running++
+      release()
+    }
+  }
+
+  function idle () {
+    return _running === 0 && self.length() === 0
+  }
+
+  function push (value, done) {
+    var current = cache.get()
+
+    current.context = context
+    current.release = release
+    current.value = value
+    current.callback = done || noop
+    current.errorHandler = errorHandler
+
+    if (_running >= _concurrency || self.paused) {
+      if (queueTail) {
+        queueTail.next = current
+        queueTail = current
+      } else {
+        queueHead = current
+        queueTail = current
+        self.saturated()
+      }
+    } else {
+      _running++
+      worker.call(context, current.value, current.worked)
+    }
+  }
+
+  function unshift (value, done) {
+    var current = cache.get()
+
+    current.context = context
+    current.release = release
+    current.value = value
+    current.callback = done || noop
+    current.errorHandler = errorHandler
+
+    if (_running >= _concurrency || self.paused) {
+      if (queueHead) {
+        current.next = queueHead
+        queueHead = current
+      } else {
+        queueHead = current
+        queueTail = current
+        self.saturated()
+      }
+    } else {
+      _running++
+      worker.call(context, current.value, current.worked)
+    }
+  }
+
+  function release (holder) {
+    if (holder) {
+      cache.release(holder)
+    }
+    var next = queueHead
+    if (next && _running <= _concurrency) {
+      if (!self.paused) {
+        if (queueTail === queueHead) {
+          queueTail = null
+        }
+        queueHead = next.next
+        next.next = null
+        worker.call(context, next.value, next.worked)
+        if (queueTail === null) {
+          self.empty()
+        }
+      } else {
+        _running--
+      }
+    } else if (--_running === 0) {
+      self.drain()
+    }
+  }
+
+  function kill () {
+    queueHead = null
+    queueTail = null
+    self.drain = noop
+  }
+
+  function killAndDrain () {
+    queueHead = null
+    queueTail = null
+    self.drain()
+    self.drain = noop
+  }
+
+  function abort () {
+    var current = queueHead
+    queueHead = null
+    queueTail = null
+
+    while (current) {
+      var next = current.next
+      var callback = current.callback
+      var errorHandler = current.errorHandler
+      var val = current.value
+      var context = current.context
+
+      // Reset the task state
+      current.value = null
+      current.callback = noop
+      current.errorHandler = null
+
+      // Call error handler if present
+      if (errorHandler) {
+        errorHandler(new Error('abort'), val)
+      }
+
+      // Call callback with error
+      callback.call(context, new Error('abort'))
+
+      // Release the task back to the pool
+      current.release(current)
+
+      current = next
+    }
+
+    self.drain = noop
+  }
+
+  function error (handler) {
+    errorHandler = handler
+  }
+}
+
+function noop () {}
+
+function Task () {
+  this.value = null
+  this.callback = noop
+  this.next = null
+  this.release = noop
+  this.context = null
+  this.errorHandler = null
+
+  var self = this
+
+  this.worked = function worked (err, result) {
+    var callback = self.callback
+    var errorHandler = self.errorHandler
+    var val = self.value
+    self.value = null
+    self.callback = noop
+    if (self.errorHandler) {
+      errorHandler(err, val)
+    }
+    callback.call(self.context, err, result)
+    self.release(self)
+  }
+}
+
+function queueAsPromised (context, worker, _concurrency) {
+  if (typeof context === 'function') {
+    _concurrency = worker
+    worker = context
+    context = null
+  }
+
+  function asyncWrapper (arg, cb) {
+    worker.call(this, arg)
+      .then(function (res) {
+        cb(null, res)
+      }, cb)
+  }
+
+  var queue = fastqueue(context, asyncWrapper, _concurrency)
+
+  var pushCb = queue.push
+  var unshiftCb = queue.unshift
+
+  queue.push = push
+  queue.unshift = unshift
+  queue.drained = drained
+
+  return queue
+
+  function push (value) {
+    var p = new Promise(function (resolve, reject) {
+      pushCb(value, function (err, result) {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(result)
+      })
+    })
+
+    // Let's fork the promise chain to
+    // make the error bubble up to the user but
+    // not lead to a unhandledRejection
+    p.catch(noop)
+
+    return p
+  }
+
+  function unshift (value) {
+    var p = new Promise(function (resolve, reject) {
+      unshiftCb(value, function (err, result) {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(result)
+      })
+    })
+
+    // Let's fork the promise chain to
+    // make the error bubble up to the user but
+    // not lead to a unhandledRejection
+    p.catch(noop)
+
+    return p
+  }
+
+  function drained () {
+    var p = new Promise(function (resolve) {
+      process.nextTick(function () {
+        if (queue.idle()) {
+          resolve()
+        } else {
+          var previousDrain = queue.drain
+          queue.drain = function () {
+            if (typeof previousDrain === 'function') previousDrain()
+            resolve()
+            queue.drain = previousDrain
+          }
+        }
+      })
+    })
+
+    return p
+  }
+}
+
+module.exports = fastqueue
+module.exports.promise = queueAsPromised
 
 
 /***/ })
