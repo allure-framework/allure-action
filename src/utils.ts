@@ -27,13 +27,7 @@ export const findOrCreateComment = async (params: {
     repo,
     issue_number,
   });
-  const existingComment = existingComments.find((comment, i) => {
-    console.log(`comment #${i}`, comment);
-
-    return comment.body?.includes(marker);
-  });
-
-  console.log(existingComment);
+  const existingComment = existingComments.find((comment) => comment.body?.includes(marker));
 
   if (existingComment) {
     await octokit.rest.issues.updateComment({
@@ -122,9 +116,21 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       cells.push(retryCount.toString());
       cells.push("");
     } else {
-      cells.push(`<a href="${summary.remoteHref}?filter=new" target="_blank">${newCount}</a>`);
-      cells.push(`<a href="${summary.remoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`);
-      cells.push(`<a href="${summary.remoteHref}?filter=retry" target="_blank">${retryCount}</a>`);
+      cells.push(
+        newCount > 0
+          ? `<a href="${summary.remoteHref}?filter=new" target="_blank">${newCount}</a>`
+          : newCount.toString(),
+      );
+      cells.push(
+        flakyCount > 0
+          ? `<a href="${summary.remoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`
+          : flakyCount.toString(),
+      );
+      cells.push(
+        retryCount > 0
+          ? `<a href="${summary.remoteHref}?filter=retry" target="_blank">${retryCount}</a>`
+          : retryCount.toString(),
+      );
       cells.push(`<a href="${summary.remoteHref}" target="_blank">View</a>`);
     }
 

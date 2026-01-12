@@ -1,7 +1,8 @@
+/* eslint max-lines: off */
 import type { PluginSummary } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
 import type { RemoteSummaryTestResult } from "../../src/model.js";
-import { formatDuration, formatSummaryTests, generateSummaryMarkdownTable } from "../../src/utils.js";
+import { formatDuration, formatSummaryTests, generateSummaryMarkdownTable, stripAnsiCodes } from "../../src/utils.js";
 
 describe("utils", () => {
   describe("formatDuration", () => {
@@ -360,6 +361,117 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
+    it("shouldn't display link for non-existing new tests", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
+            unknown: 0,
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/report/",
+          newTests: [],
+          flakyTests: [
+            {
+              id: "test-2",
+              name: "Flaky test 1",
+              status: "failed",
+              duration: 150,
+            },
+          ],
+          retryTests: [
+            {
+              id: "test-3",
+              name: "Retry test 1",
+              status: "passed",
+              duration: 120,
+            },
+          ],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("shouldn't display link for non-existing flaky tests", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
+            unknown: 0,
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/report/",
+          newTests: [
+            {
+              id: "test-1",
+              name: "New test 1",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [
+            {
+              id: "test-3",
+              name: "Retry test 1",
+              status: "passed",
+              duration: 120,
+            },
+          ],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("shouldn't display link for non-existing retry tests", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
+            unknown: 0,
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/report/",
+          newTests: [
+            {
+              id: "test-1",
+              name: "New test 1",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [
+            {
+              id: "test-2",
+              name: "Flaky test 1",
+              status: "failed",
+              duration: 150,
+            },
+          ],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
     it("should display tests without remoteHref in table format", () => {
       const summaries = [
         {
@@ -535,6 +647,60 @@ describe("utils", () => {
       const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
+    });
+  });
+
+  describe("stripAnsiCodes", () => {
+    it("should return the same string when there are no ANSI codes", () => {
+      const input = "This is a plain string";
+
+      expect(stripAnsiCodes(input)).toBe("This is a plain string");
+    });
+
+    it("should strip ANSI color codes from string", () => {
+      const input = "\u001b[31mRed text\u001b[0m";
+
+      expect(stripAnsiCodes(input)).toBe("Red text");
+    });
+
+    it("should strip multiple ANSI codes from string", () => {
+      const input = "\u001b[31mRed\u001b[0m and \u001b[32mGreen\u001b[0m text";
+
+      expect(stripAnsiCodes(input)).toBe("Red and Green text");
+    });
+
+    it("should strip various ANSI codes (bold, underline, etc.)", () => {
+      const input = "\u001b[1mBold\u001b[0m \u001b[4mUnderline\u001b[0m \u001b[7mReverse\u001b[0m";
+
+      expect(stripAnsiCodes(input)).toBe("Bold Underline Reverse");
+    });
+
+    it("should replace ANSI codes with custom replacement", () => {
+      const input = "\u001b[31mRed\u001b[0m text";
+
+      expect(stripAnsiCodes(input, " ")).toBe(" Red  text");
+    });
+
+    it("should handle empty string", () => {
+      expect(stripAnsiCodes("")).toBe("");
+    });
+
+    it("should handle string with only ANSI codes", () => {
+      const input = "\u001b[31m\u001b[0m";
+
+      expect(stripAnsiCodes(input)).toBe("");
+    });
+
+    it("should strip ANSI codes from multi-line string", () => {
+      const input = "\u001b[31mLine 1\u001b[0m\n\u001b[32mLine 2\u001b[0m";
+
+      expect(stripAnsiCodes(input)).toBe("Line 1\nLine 2");
+    });
+
+    it("should handle ANSI codes with different number sequences", () => {
+      const input = "\u001b[38mCustom\u001b[0m \u001b[91mBright Red\u001b[0m \u001b[100mBackground\u001b[0m";
+
+      expect(stripAnsiCodes(input)).toBe("Custom Bright Red Background");
     });
   });
 });
