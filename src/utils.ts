@@ -88,16 +88,16 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
   const delimiter = `|-|-|-|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
     const stats = {
-      unknown: summary.stats.unknown ?? 0,
-      passed: summary.stats.passed ?? 0,
-      failed: summary.stats.failed ?? 0,
-      broken: summary.stats.broken ?? 0,
-      skipped: summary.stats.skipped ?? 0,
+      unknown: summary?.stats?.unknown ?? 0,
+      passed: summary?.stats?.passed ?? 0,
+      failed: summary?.stats?.failed ?? 0,
+      broken: summary?.stats?.broken ?? 0,
+      skipped: summary?.stats?.skipped ?? 0,
       ...summary.stats,
     };
     const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-    const name = summary.name;
-    const duration = formatDuration(summary.duration);
+    const name = summary?.name ?? "Allure Report";
+    const duration = formatDuration(summary?.duration ?? 0);
     const statsLabels = [
       `<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`,
       `<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`,
@@ -105,12 +105,12 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       `<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`,
       `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
     ].join("&nbsp;&nbsp;&nbsp;");
-    const newCount = summary.newTests?.length ?? 0;
-    const flakyCount = summary.flakyTests?.length ?? 0;
-    const retryCount = summary.retryTests?.length ?? 0;
+    const newCount = summary?.newTests?.length ?? 0;
+    const flakyCount = summary?.flakyTests?.length ?? 0;
+    const retryCount = summary?.retryTests?.length ?? 0;
     const cells: string[] = [img, name, duration, statsLabels];
 
-    if (!summary.remoteHref) {
+    if (!summary?.remoteHref) {
       cells.push(newCount.toString());
       cells.push(flakyCount.toString());
       cells.push(retryCount.toString());

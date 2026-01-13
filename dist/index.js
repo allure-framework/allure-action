@@ -9219,6 +9219,56 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 8188:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var isGlob = __nccwpck_require__(1925);
+var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
+var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
+
+var slash = '/';
+var backslash = /\\/g;
+var enclosure = /[\{\[].*[\}\]]$/;
+var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
+var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
+
+/**
+ * @param {string} str
+ * @param {Object} opts
+ * @param {boolean} [opts.flipBackslashes=true]
+ * @returns {string}
+ */
+module.exports = function globParent(str, opts) {
+  var options = Object.assign({ flipBackslashes: true }, opts);
+
+  // flip windows path separators
+  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
+    str = str.replace(backslash, slash);
+  }
+
+  // special case for strings ending in enclosure containing path separator
+  if (enclosure.test(str)) {
+    str += slash;
+  }
+
+  // preserves full path in case of trailing path separator
+  str += 'a';
+
+  // remove path parts that are globby
+  do {
+    str = pathPosixDirname(str);
+  } while (isGlob(str) || globby.test(str));
+
+  // remove escape chars and return result
+  return str.replace(escaped, '$1');
+};
+
+
+/***/ }),
+
 /***/ 5648:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -10369,7 +10419,7 @@ exports.convertPosixPathToPattern = convertPosixPathToPattern;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isAbsolute = exports.partitionAbsoluteAndRelative = exports.removeDuplicateSlashes = exports.matchAny = exports.convertPatternsToRe = exports.makeRe = exports.getPatternParts = exports.expandBraceExpansion = exports.expandPatternsWithBraceExpansion = exports.isAffectDepthOfReadingPattern = exports.endsWithSlashGlobStar = exports.hasGlobStar = exports.getBaseDirectory = exports.isPatternRelatedToParentDirectory = exports.getPatternsOutsideCurrentDirectory = exports.getPatternsInsideCurrentDirectory = exports.getPositivePatterns = exports.getNegativePatterns = exports.isPositivePattern = exports.isNegativePattern = exports.convertToNegativePattern = exports.convertToPositivePattern = exports.isDynamicPattern = exports.isStaticPattern = void 0;
 const path = __nccwpck_require__(6928);
-const globParent = __nccwpck_require__(8505);
+const globParent = __nccwpck_require__(8188);
 const micromatch = __nccwpck_require__(8785);
 const GLOBSTAR = '**';
 const ESCAPE_SYMBOL = '\\';
@@ -10871,56 +10921,6 @@ const fill = (start, end, step, options = {}) => {
 };
 
 module.exports = fill;
-
-
-/***/ }),
-
-/***/ 8505:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var isGlob = __nccwpck_require__(1925);
-var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
-var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
-
-var slash = '/';
-var backslash = /\\/g;
-var enclosure = /[\{\[].*[\}\]]$/;
-var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
-var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
-
-/**
- * @param {string} str
- * @param {Object} opts
- * @param {boolean} [opts.flipBackslashes=true]
- * @returns {string}
- */
-module.exports = function globParent(str, opts) {
-  var options = Object.assign({ flipBackslashes: true }, opts);
-
-  // flip windows path separators
-  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
-    str = str.replace(backslash, slash);
-  }
-
-  // special case for strings ending in enclosure containing path separator
-  if (enclosure.test(str)) {
-    str += slash;
-  }
-
-  // preserves full path in case of trailing path separator
-  str += 'a';
-
-  // remove path parts that are globby
-  do {
-    str = pathPosixDirname(str);
-  } while (isGlob(str) || globby.test(str));
-
-  // remove escape chars and return result
-  return str.replace(escaped, '$1');
-};
 
 
 /***/ }),
@@ -37096,16 +37096,16 @@ const generateSummaryMarkdownTable = (summaries) => {
     const delimiter = `|-|-|-|-|-|-|-|-|`;
     const rows = summaries.map((summary) => {
         const stats = {
-            unknown: summary.stats.unknown ?? 0,
-            passed: summary.stats.passed ?? 0,
-            failed: summary.stats.failed ?? 0,
-            broken: summary.stats.broken ?? 0,
-            skipped: summary.stats.skipped ?? 0,
+            unknown: summary?.stats?.unknown ?? 0,
+            passed: summary?.stats?.passed ?? 0,
+            failed: summary?.stats?.failed ?? 0,
+            broken: summary?.stats?.broken ?? 0,
+            skipped: summary?.stats?.skipped ?? 0,
             ...summary.stats,
         };
         const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-        const name = summary.name;
-        const duration = (0, exports.formatDuration)(summary.duration);
+        const name = summary?.name ?? "Allure Report";
+        const duration = (0, exports.formatDuration)(summary?.duration ?? 0);
         const statsLabels = [
             `<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`,
             `<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`,
@@ -37113,11 +37113,11 @@ const generateSummaryMarkdownTable = (summaries) => {
             `<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`,
             `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
         ].join("&nbsp;&nbsp;&nbsp;");
-        const newCount = summary.newTests?.length ?? 0;
-        const flakyCount = summary.flakyTests?.length ?? 0;
-        const retryCount = summary.retryTests?.length ?? 0;
+        const newCount = summary?.newTests?.length ?? 0;
+        const flakyCount = summary?.flakyTests?.length ?? 0;
+        const retryCount = summary?.retryTests?.length ?? 0;
         const cells = [img, name, duration, statsLabels];
-        if (!summary.remoteHref) {
+        if (!summary?.remoteHref) {
             cells.push(newCount.toString());
             cells.push(flakyCount.toString());
             cells.push(retryCount.toString());
