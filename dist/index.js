@@ -36962,7 +36962,7 @@ const run = async () => {
                 },
         });
     }
-    if (summaryFilesContent.length === 0) {
+    if (!summaryFilesContent?.length) {
         core.info("No published reports found");
         return;
     }
