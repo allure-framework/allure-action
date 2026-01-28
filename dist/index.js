@@ -42337,7 +42337,7 @@ const generateSummaryMarkdownTable = (summaries) => {
             statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
         }
         if (stats.unknown > 0) {
-            statsLabels.push(`<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>${stats.unknown}</span>`);
+            statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
         }
         const newCount = summary?.newTests?.length ?? 0;
         const flakyCount = summary?.flakyTests?.length ?? 0;
