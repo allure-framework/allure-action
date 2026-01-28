@@ -2,39 +2,9 @@
 import type { PluginSummary } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
 import type { RemoteSummaryTestResult } from "../../src/model.js";
-import { formatDuration, formatSummaryTests, generateSummaryMarkdownTable, stripAnsiCodes } from "../../src/utils.js";
+import { formatSummaryTests, generateSummaryMarkdownTable, stripAnsiCodes } from "../../src/utils.js";
 
 describe("utils", () => {
-  describe("formatDuration", () => {
-    it("should return 0ms for 0", () => {
-      expect(formatDuration(0)).toBe("0ms");
-    });
-
-    it("should return 1ms for 1", () => {
-      expect(formatDuration(1)).toBe("1ms");
-    });
-
-    it("should return 1s for 1000", () => {
-      expect(formatDuration(1000)).toBe("1s");
-    });
-
-    it("should return 1m for 60000", () => {
-      expect(formatDuration(60000)).toBe("1m");
-    });
-
-    it("should return 1h for 3600000", () => {
-      expect(formatDuration(3600000)).toBe("1h");
-    });
-
-    it("should return 1h 1m 1s for 3661000", () => {
-      expect(formatDuration(3661000)).toBe("1h 1m 1s");
-    });
-
-    it("should return 1h 1m 1s 1ms for 3661001", () => {
-      expect(formatDuration(3661001)).toBe("1h 1m 1s 1ms");
-    });
-  });
-
   describe("generateSummaryMarkdownTable", () => {
     it("should return a table with header only for empty array", () => {
       const result = generateSummaryMarkdownTable([]);
@@ -124,17 +94,89 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
-    it("should handle missing stats properties", () => {
+    it("should handle zero passed stats", () => {
       const summaries = [
         {
           name: "Test Suite 3",
           stats: {
-            passed: 10,
+            passed: 0,
+            failed: 1,
+            broken: 1,
+            skipped: 1,
+            unknown: 1,
           },
-          duration: 2000,
-          newTests: [],
-          flakyTests: [],
-          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should handle zero failed stats", () => {
+      const summaries = [
+        {
+          name: "Test Suite 3",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 1,
+            skipped: 1,
+            unknown: 1,
+          },
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should handle zero broken stats", () => {
+      const summaries = [
+        {
+          name: "Test Suite 3",
+          stats: {
+            passed: 1,
+            failed: 1,
+            broken: 0,
+            skipped: 1,
+            unknown: 1,
+          },
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should handle zero skipped stats", () => {
+      const summaries = [
+        {
+          name: "Test Suite 3",
+          stats: {
+            passed: 1,
+            failed: 1,
+            broken: 1,
+            skipped: 0,
+            unknown: 1,
+          },
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should handle zero unknown stats", () => {
+      const summaries = [
+        {
+          name: "Test Suite 3",
+          stats: {
+            passed: 1,
+            failed: 1,
+            broken: 1,
+            skipped: 1,
+            unknown: 0,
+          },
         },
       ] as unknown as PluginSummary[];
       const result = generateSummaryMarkdownTable(summaries);
