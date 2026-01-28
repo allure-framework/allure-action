@@ -1,5 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import { formatDuration } from "@allurereport/core-api";
 import type { PluginSummary } from "@allurereport/plugin-api";
 import type { RemoteSummaryTestResult } from "./model.js";
 
@@ -46,24 +47,6 @@ export const findOrCreateComment = async (params: {
   }
 };
 
-export const formatDuration = (ms?: number): string => {
-  if (!ms || ms < 0) return "0ms";
-
-  const h = Math.floor(ms / 3_600_000);
-  const m = Math.floor((ms % 3_600_000) / 60_000);
-  const s = Math.floor((ms % 60_000) / 1000);
-  const msLeft = ms % 1000;
-  const parts: string[] = [];
-
-  if (h) parts.push(`${h}h`);
-  if (m) parts.push(`${m}m`);
-  if (s) parts.push(`${s}s`);
-  // include ms when present
-  if (msLeft) parts.push(`${msLeft}ms`);
-
-  return parts.join(" ");
-};
-
 export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => {
   const lines: string[] = [];
 
@@ -98,17 +81,42 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
     const name = summary?.name ?? "Allure Report";
     const duration = formatDuration(summary?.duration ?? 0);
-    const statsLabels = [
-      `<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`,
-      `<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`,
-      `<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`,
-      `<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`,
-      `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
-    ].join("&nbsp;&nbsp;&nbsp;");
+    const statsLabels: string[] = [];
+
+    if (stats.passed > 0) {
+      statsLabels.push(
+        `<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`,
+      );
+    }
+
+    if (stats.failed > 0) {
+      statsLabels.push(
+        `<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`,
+      );
+    }
+
+    if (stats.broken > 0) {
+      statsLabels.push(
+        `<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`,
+      );
+    }
+
+    if (stats.skipped > 0) {
+      statsLabels.push(
+        `<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`,
+      );
+    }
+
+    if (stats.unknown > 0) {
+      statsLabels.push(
+        `<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>${stats.unknown}</span>`,
+      );
+    }
+
     const newCount = summary?.newTests?.length ?? 0;
     const flakyCount = summary?.flakyTests?.length ?? 0;
     const retryCount = summary?.retryTests?.length ?? 0;
-    const cells: string[] = [img, name, duration, statsLabels];
+    const cells: string[] = [img, name, duration, statsLabels.join("&nbsp;&nbsp;&nbsp;")];
 
     if (!summary?.remoteHref) {
       cells.push(newCount.toString());

@@ -46,6 +46,7 @@
     "lodash.chunk": "^4.2.0"
   },
   "devDependencies": {
+    "@allurereport/core-api": "^3.0.1",
     "@allurereport/plugin-api": "^3.0.1",
     "@stylistic/eslint-plugin": "^4.4.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
