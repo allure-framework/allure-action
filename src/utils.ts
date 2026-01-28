@@ -109,7 +109,7 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
 
     if (stats.unknown > 0) {
       statsLabels.push(
-        `<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>${stats.unknown}</span>`,
+        `<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`,
       );
     }
 
