@@ -109,28 +109,28 @@ exports[`utils > generateSummaryMarkdownTable > should handle zero broken stats 
 "# Allure Report Summary
 |  | Name | Duration | Stats | New | Flaky | Retry | Report |
 |-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=1&failed=1&broken=0&skipped=1&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=1&failed=1&broken=0&skipped=1&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
 `;
 
 exports[`utils > generateSummaryMarkdownTable > should handle zero failed stats 1`] = `
 "# Allure Report Summary
 |  | Name | Duration | Stats | New | Flaky | Retry | Report |
 |-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=1&failed=0&broken=1&skipped=1&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=1&failed=0&broken=1&skipped=1&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
 `;
 
 exports[`utils > generateSummaryMarkdownTable > should handle zero passed stats 1`] = `
 "# Allure Report Summary
 |  | Name | Duration | Stats | New | Flaky | Retry | Report |
 |-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=0&failed=1&broken=1&skipped=1&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=0&failed=1&broken=1&skipped=1&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
 `;
 
 exports[`utils > generateSummaryMarkdownTable > should handle zero skipped stats 1`] = `
 "# Allure Report Summary
 |  | Name | Duration | Stats | New | Flaky | Retry | Report |
 |-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=1&failed=1&broken=1&skipped=0&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Pending tests" src="https://allurecharts.qameta.workers.dev/dot?type=pending&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=1&failed=1&broken=1&skipped=0&unknown=1&size=32" width="28px" height="28px" /> | Test Suite 3 | 0s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>1</span>&nbsp;&nbsp;&nbsp;<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 |  |"
 `;
 
 exports[`utils > generateSummaryMarkdownTable > should handle zero unknown stats 1`] = `
