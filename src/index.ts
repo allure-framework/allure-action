@@ -1,16 +1,18 @@
 import * as core from "@actions/core";
-import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
+import type { PluginSummary } from "@allurereport/plugin-api";
 import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import type { QualityGateResultsContent } from "./model.js";
 import {
   findOrCreateComment,
+  formatQualityGateResults,
   generateSummaryMarkdownTable,
   getGithubContext,
   getGithubInput,
   getOctokit,
-  stripAnsiCodes,
+  isQualityGateFailed,
 } from "./utils.js";
 
 const run = async (): Promise<void> => {
@@ -37,29 +39,20 @@ const run = async (): Promise<void> => {
       return JSON.parse(content) as PluginSummary;
     }),
   );
-  let qualityGateResults: QualityGateValidationResult[] | undefined;
+  let qualityGateResults: QualityGateResultsContent | undefined;
 
   if (existsSync(qualityGateFile)) {
     const qualityGateContentRaw = await fs.readFile(qualityGateFile, "utf-8");
 
     try {
-      qualityGateResults = JSON.parse(qualityGateContentRaw) as QualityGateValidationResult[];
+      qualityGateResults = JSON.parse(qualityGateContentRaw) as QualityGateResultsContent;
     } catch {}
   }
 
   const octokit = getOctokit(token);
 
   if (qualityGateResults) {
-    const summaryLines: string[] = [];
-    const qualityGateFailed = qualityGateResults.length > 0;
-
-    qualityGateResults.forEach((result) => {
-      summaryLines.push(`**${result.rule}** has failed:`);
-      summaryLines.push("```shell");
-      summaryLines.push(stripAnsiCodes(result.message));
-      summaryLines.push("```");
-      summaryLines.push("");
-    });
+    const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 
     octokit.rest.checks.create({
       owner: repo.owner,
@@ -72,7 +65,7 @@ const run = async (): Promise<void> => {
         ? undefined
         : {
             title: "Quality Gate",
-            summary: summaryLines.join("\n"),
+            summary: formatQualityGateResults(qualityGateResults),
           },
     });
   }
