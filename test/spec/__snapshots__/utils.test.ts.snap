@@ -1,5 +1,75 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`utils > formatQualityGareResultsList > should format a single violation 1`] = `
+"**Failed tests threshold** has failed:
+\`\`\`shell
+Failed tests: 2 exceeds threshold of 0
+\`\`\`
+"
+`;
+
+exports[`utils > formatQualityGareResultsList > should format multiple violations 1`] = `
+"**Failed tests threshold** has failed:
+\`\`\`shell
+Failed tests: 2 exceeds threshold of 0
+\`\`\`
+
+**Broken tests threshold** has failed:
+\`\`\`shell
+Broken tests: 1 exceeds threshold of 0
+\`\`\`
+"
+`;
+
+exports[`utils > formatQualityGateResults > should format array content (legacy format) 1`] = `
+"**Failed tests threshold** has failed:
+\`\`\`shell
+Failed tests: 2 exceeds threshold of 0
+\`\`\`
+"
+`;
+
+exports[`utils > formatQualityGateResults > should format record content with multiple environments 1`] = `
+"**Environment**: "chrome"
+**Failed tests threshold** has failed:
+\`\`\`shell
+Failed tests: 2 exceeds threshold of 0
+\`\`\`
+
+
+---
+
+**Environment**: "firefox"
+**Broken tests threshold** has failed:
+\`\`\`shell
+Broken tests: 1 exceeds threshold of 0
+\`\`\`
+"
+`;
+
+exports[`utils > formatQualityGateResults > should format record content with multiple violations per environment 1`] = `
+"**Environment**: "chrome"
+**Failed tests threshold** has failed:
+\`\`\`shell
+Failed tests: 5 exceeds threshold of 0
+\`\`\`
+
+**Broken tests threshold** has failed:
+\`\`\`shell
+Broken tests: 2 exceeds threshold of 0
+\`\`\`
+"
+`;
+
+exports[`utils > formatQualityGateResults > should format record content with single environment 1`] = `
+"**Environment**: "chrome"
+**Failed tests threshold** has failed:
+\`\`\`shell
+Failed tests: 2 exceeds threshold of 0
+\`\`\`
+"
+`;
+
 exports[`utils > formatSummaryTests > should format tests with different statuses 1`] = `
 "- <img src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" /> passed [passed test](https://example.com/report/#test-1) (100ms)
 - <img src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" /> failed [failed test](https://example.com/report/#test-2) (150ms)

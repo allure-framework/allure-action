@@ -1144,5 +1144,182 @@ describe("action", () => {
       expect(summaryOutput).toContain("Failed tests threshold");
       expect(summaryOutput).toContain("Broken tests threshold");
     });
+
+    it("should handle quality gate in per-environment record format", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 8,
+                failed: 2,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateContent: JSON.stringify({
+          chrome: [
+            {
+              rule: "Failed tests threshold",
+              message: "Failed tests: 2 exceeds threshold of 0",
+            },
+          ],
+        }),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure Quality Gate",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "failure",
+        output: {
+          title: "Quality Gate",
+          summary: expect.stringContaining("Failed tests threshold"),
+        },
+      });
+
+      const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
+
+      expect(summaryOutput).toContain('**Environment**: "chrome"');
+      expect(summaryOutput).toContain("Failed tests: 2 exceeds threshold of 0");
+    });
+
+    it("should handle quality gate in per-environment record format with multiple environments", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 5,
+                failed: 3,
+                broken: 1,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateContent: JSON.stringify({
+          chrome: [
+            {
+              rule: "Failed tests threshold",
+              message: "Failed tests: 3 exceeds threshold of 0",
+            },
+          ],
+          firefox: [
+            {
+              rule: "Broken tests threshold",
+              message: "Broken tests: 1 exceeds threshold of 0",
+            },
+          ],
+        }),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure Quality Gate",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "failure",
+        output: {
+          title: "Quality Gate",
+          summary: expect.stringContaining("chrome"),
+        },
+      });
+
+      const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
+
+      expect(summaryOutput).toContain('**Environment**: "chrome"');
+      expect(summaryOutput).toContain('**Environment**: "firefox"');
+      expect(summaryOutput).toContain("Failed tests threshold");
+      expect(summaryOutput).toContain("Broken tests threshold");
+      expect(summaryOutput).toContain("---");
+    });
+
+    it("should create a successful check when per-environment record has empty arrays", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateContent: JSON.stringify({
+          chrome: [],
+          firefox: [],
+        }),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure Quality Gate",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+        output: undefined,
+      });
+    });
   });
 });
