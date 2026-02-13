@@ -9219,6 +9219,56 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 8188:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var isGlob = __nccwpck_require__(1925);
+var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
+var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
+
+var slash = '/';
+var backslash = /\\/g;
+var enclosure = /[\{\[].*[\}\]]$/;
+var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
+var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
+
+/**
+ * @param {string} str
+ * @param {Object} opts
+ * @param {boolean} [opts.flipBackslashes=true]
+ * @returns {string}
+ */
+module.exports = function globParent(str, opts) {
+  var options = Object.assign({ flipBackslashes: true }, opts);
+
+  // flip windows path separators
+  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
+    str = str.replace(backslash, slash);
+  }
+
+  // special case for strings ending in enclosure containing path separator
+  if (enclosure.test(str)) {
+    str += slash;
+  }
+
+  // preserves full path in case of trailing path separator
+  str += 'a';
+
+  // remove path parts that are globby
+  do {
+    str = pathPosixDirname(str);
+  } while (isGlob(str) || globby.test(str));
+
+  // remove escape chars and return result
+  return str.replace(escaped, '$1');
+};
+
+
+/***/ }),
+
 /***/ 5648:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -10369,7 +10419,7 @@ exports.convertPosixPathToPattern = convertPosixPathToPattern;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isAbsolute = exports.partitionAbsoluteAndRelative = exports.removeDuplicateSlashes = exports.matchAny = exports.convertPatternsToRe = exports.makeRe = exports.getPatternParts = exports.expandBraceExpansion = exports.expandPatternsWithBraceExpansion = exports.isAffectDepthOfReadingPattern = exports.endsWithSlashGlobStar = exports.hasGlobStar = exports.getBaseDirectory = exports.isPatternRelatedToParentDirectory = exports.getPatternsOutsideCurrentDirectory = exports.getPatternsInsideCurrentDirectory = exports.getPositivePatterns = exports.getNegativePatterns = exports.isPositivePattern = exports.isNegativePattern = exports.convertToNegativePattern = exports.convertToPositivePattern = exports.isDynamicPattern = exports.isStaticPattern = void 0;
 const path = __nccwpck_require__(6928);
-const globParent = __nccwpck_require__(8505);
+const globParent = __nccwpck_require__(8188);
 const micromatch = __nccwpck_require__(8785);
 const GLOBSTAR = '**';
 const ESCAPE_SYMBOL = '\\';
@@ -10871,56 +10921,6 @@ const fill = (start, end, step, options = {}) => {
 };
 
 module.exports = fill;
-
-
-/***/ }),
-
-/***/ 8505:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var isGlob = __nccwpck_require__(1925);
-var pathPosixDirname = (__nccwpck_require__(6928).posix).dirname;
-var isWin32 = (__nccwpck_require__(857).platform)() === 'win32';
-
-var slash = '/';
-var backslash = /\\/g;
-var enclosure = /[\{\[].*[\}\]]$/;
-var globby = /(^|[^\\])([\{\[]|\([^\)]+$)/;
-var escaped = /\\([\!\*\?\|\[\]\(\)\{\}])/g;
-
-/**
- * @param {string} str
- * @param {Object} opts
- * @param {boolean} [opts.flipBackslashes=true]
- * @returns {string}
- */
-module.exports = function globParent(str, opts) {
-  var options = Object.assign({ flipBackslashes: true }, opts);
-
-  // flip windows path separators
-  if (options.flipBackslashes && isWin32 && str.indexOf(slash) < 0) {
-    str = str.replace(backslash, slash);
-  }
-
-  // special case for strings ending in enclosure containing path separator
-  if (enclosure.test(str)) {
-    str += slash;
-  }
-
-  // preserves full path in case of trailing path separator
-  str += 'a';
-
-  // remove path parts that are globby
-  do {
-    str = pathPosixDirname(str);
-  } while (isGlob(str) || globby.test(str));
-
-  // remove escape chars and return result
-  return str.replace(escaped, '$1');
-};
 
 
 /***/ }),
@@ -42173,15 +42173,7 @@ const run = async () => {
     }
     const octokit = (0, utils_js_1.getOctokit)(token);
     if (qualityGateResults) {
-        const summaryLines = [];
-        const qualityGateFailed = qualityGateResults.length > 0;
-        qualityGateResults.forEach((result) => {
-            summaryLines.push(`**${result.rule}** has failed:`);
-            summaryLines.push("```shell");
-            summaryLines.push((0, utils_js_1.stripAnsiCodes)(result.message));
-            summaryLines.push("```");
-            summaryLines.push("");
-        });
+        const qualityGateFailed = (0, utils_js_1.isQualityGateFailed)(qualityGateResults);
         octokit.rest.checks.create({
             owner: repo.owner,
             repo: repo.repo,
@@ -42193,7 +42185,7 @@ const run = async () => {
                 ? undefined
                 : {
                     title: "Quality Gate",
-                    summary: summaryLines.join("\n"),
+                    summary: (0, utils_js_1.formatQualityGateResults)(qualityGateResults),
                 },
         });
     }
@@ -42259,7 +42251,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stripAnsiCodes = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.findOrCreateComment = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
+exports.formatQualityGateResults = exports.formatQualityGareResultsList = exports.isQualityGateFailed = exports.stripAnsiCodes = exports.generateSummaryMarkdownTable = exports.formatSummaryTests = exports.findOrCreateComment = exports.getOctokit = exports.getGithubContext = exports.getGithubInput = void 0;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const core_api_1 = __nccwpck_require__(2165);
@@ -42371,6 +42363,39 @@ const stripAnsiCodes = (str, replacement) => {
     return str.replace(/\u001b\[\d+m/g, replacement ?? "");
 };
 exports.stripAnsiCodes = stripAnsiCodes;
+const isQualityGateFailed = (qualityGateResultsContent) => {
+    if (!qualityGateResultsContent) {
+        return false;
+    }
+    if (Array.isArray(qualityGateResultsContent)) {
+        return qualityGateResultsContent.length > 0;
+    }
+    return Object.values(qualityGateResultsContent).flat().length > 0;
+};
+exports.isQualityGateFailed = isQualityGateFailed;
+const formatQualityGareResultsList = (qualityGateResults) => {
+    const commentLines = [];
+    qualityGateResults.forEach((result) => {
+        commentLines.push(`**${result.rule}** has failed:`);
+        commentLines.push("```shell");
+        commentLines.push((0, exports.stripAnsiCodes)(result.message));
+        commentLines.push("```");
+        commentLines.push("");
+    });
+    return commentLines.join("\n");
+};
+exports.formatQualityGareResultsList = formatQualityGareResultsList;
+const formatQualityGateResults = (qualityGateResultsContent) => {
+    if (Array.isArray(qualityGateResultsContent)) {
+        return (0, exports.formatQualityGareResultsList)(qualityGateResultsContent);
+    }
+    const comments = [];
+    Object.entries(qualityGateResultsContent).forEach(([env, results]) => {
+        comments.push([`**Environment**: "${env}"`, (0, exports.formatQualityGareResultsList)(results)].join("\n"));
+    });
+    return comments.join("\n\n---\n\n");
+};
+exports.formatQualityGateResults = formatQualityGateResults;
 
 
 /***/ }),

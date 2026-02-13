@@ -1,8 +1,15 @@
 /* eslint max-lines: off */
-import type { PluginSummary } from "@allurereport/plugin-api";
+import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
-import type { RemoteSummaryTestResult } from "../../src/model.js";
-import { formatSummaryTests, generateSummaryMarkdownTable, stripAnsiCodes } from "../../src/utils.js";
+import type { QualityGateResultsContent, RemoteSummaryTestResult } from "../../src/model.js";
+import {
+  formatQualityGareResultsList,
+  formatQualityGateResults,
+  formatSummaryTests,
+  generateSummaryMarkdownTable,
+  isQualityGateFailed,
+  stripAnsiCodes,
+} from "../../src/utils.js";
 
 describe("utils", () => {
   describe("generateSummaryMarkdownTable", () => {
@@ -743,6 +750,191 @@ describe("utils", () => {
       const input = "\u001b[38mCustom\u001b[0m \u001b[91mBright Red\u001b[0m \u001b[100mBackground\u001b[0m";
 
       expect(stripAnsiCodes(input)).toBe("Custom Bright Red Background");
+    });
+  });
+
+  describe("isQualityGateFailed", () => {
+    it("should return false for undefined input", () => {
+      expect(isQualityGateFailed(undefined)).toBe(false);
+    });
+
+    it("should return false for an empty array", () => {
+      expect(isQualityGateFailed([])).toBe(false);
+    });
+
+    it("should return false for an empty object", () => {
+      expect(isQualityGateFailed({})).toBe(false);
+    });
+
+    it("should return true for a non-empty array", () => {
+      const results: QualityGateResultsContent = [
+        {
+          rule: "Failed tests threshold",
+          message: "Failed tests: 2 exceeds threshold of 0",
+        } as QualityGateValidationResult,
+      ];
+
+      expect(isQualityGateFailed(results)).toBe(true);
+    });
+
+    it("should return false for an empty record", () => {
+      const results: QualityGateResultsContent = {};
+
+      expect(isQualityGateFailed(results)).toBe(false);
+    });
+
+    it("should return false for a record with empty arrays", () => {
+      const results: QualityGateResultsContent = {
+        chrome: [],
+        firefox: [],
+      };
+
+      expect(isQualityGateFailed(results)).toBe(false);
+    });
+
+    it("should return true for a record with non-empty arrays", () => {
+      const results: QualityGateResultsContent = {
+        chrome: [
+          {
+            rule: "Failed tests threshold",
+            message: "Failed tests: 2 exceeds threshold of 0",
+          } as QualityGateValidationResult,
+        ],
+        firefox: [],
+      };
+
+      expect(isQualityGateFailed(results)).toBe(true);
+    });
+
+    it("should return true for a record with multiple non-empty environments", () => {
+      const results: QualityGateResultsContent = {
+        chrome: [{ rule: "Failed tests threshold", message: "Failed" } as QualityGateValidationResult],
+        firefox: [{ rule: "Broken tests threshold", message: "Broken" } as QualityGateValidationResult],
+      };
+
+      expect(isQualityGateFailed(results)).toBe(true);
+    });
+  });
+
+  describe("formatQualityGareResultsList", () => {
+    it("should format a single violation", () => {
+      const result = formatQualityGareResultsList([
+        {
+          rule: "Failed tests threshold",
+          message: "Failed tests: 2 exceeds threshold of 0",
+        } as QualityGateValidationResult,
+      ]);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should format multiple violations", () => {
+      const result = formatQualityGareResultsList([
+        {
+          rule: "Failed tests threshold",
+          message: "Failed tests: 2 exceeds threshold of 0",
+        } as QualityGateValidationResult,
+        {
+          rule: "Broken tests threshold",
+          message: "Broken tests: 1 exceeds threshold of 0",
+        } as QualityGateValidationResult,
+      ]);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should strip ANSI codes from messages", () => {
+      const result = formatQualityGareResultsList([
+        {
+          rule: "Failed tests threshold",
+          message: "\u001b[31mFailed tests: 2 exceeds threshold of 0\u001b[0m",
+        } as QualityGateValidationResult,
+      ]);
+
+      expect(result).not.toContain("\u001b[31m");
+      expect(result).not.toContain("\u001b[0m");
+      expect(result).toContain("Failed tests: 2 exceeds threshold of 0");
+    });
+
+    it("should return empty string for empty array", () => {
+      expect(formatQualityGareResultsList([])).toBe("");
+    });
+  });
+
+  describe("formatQualityGateResults", () => {
+    it("should format array content (legacy format)", () => {
+      const content: QualityGateResultsContent = [
+        {
+          rule: "Failed tests threshold",
+          message: "Failed tests: 2 exceeds threshold of 0",
+        } as QualityGateValidationResult,
+      ];
+
+      const result = formatQualityGateResults(content);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should format record content with single environment", () => {
+      const content: QualityGateResultsContent = {
+        chrome: [
+          {
+            rule: "Failed tests threshold",
+            message: "Failed tests: 2 exceeds threshold of 0",
+          } as QualityGateValidationResult,
+        ],
+      };
+
+      const result = formatQualityGateResults(content);
+
+      expect(result).toContain('**Environment**: "chrome"');
+      expect(result).toContain("Failed tests threshold");
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should format record content with multiple environments", () => {
+      const content: QualityGateResultsContent = {
+        chrome: [
+          {
+            rule: "Failed tests threshold",
+            message: "Failed tests: 2 exceeds threshold of 0",
+          } as QualityGateValidationResult,
+        ],
+        firefox: [
+          {
+            rule: "Broken tests threshold",
+            message: "Broken tests: 1 exceeds threshold of 0",
+          } as QualityGateValidationResult,
+        ],
+      };
+
+      const result = formatQualityGateResults(content);
+
+      expect(result).toContain('**Environment**: "chrome"');
+      expect(result).toContain('**Environment**: "firefox"');
+      expect(result).toContain("---");
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should format record content with multiple violations per environment", () => {
+      const content: QualityGateResultsContent = {
+        chrome: [
+          {
+            rule: "Failed tests threshold",
+            message: "Failed tests: 5 exceeds threshold of 0",
+          } as QualityGateValidationResult,
+          {
+            rule: "Broken tests threshold",
+            message: "Broken tests: 2 exceeds threshold of 0",
+          } as QualityGateValidationResult,
+        ],
+      };
+
+      const result = formatQualityGateResults(content);
+
+      expect(result).toContain("Failed tests threshold");
+      expect(result).toContain("Broken tests threshold");
+      expect(result).toMatchSnapshot();
     });
   });
 });
