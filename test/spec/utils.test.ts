@@ -1,4 +1,3 @@
-/* eslint max-lines: off */
 import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
 import type { QualityGateResultsContent, RemoteSummaryTestResult } from "../../src/model.js";
