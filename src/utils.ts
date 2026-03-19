@@ -150,7 +150,6 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
 };
 
 export const stripAnsiCodes = (str: string, replacement?: string): string => {
-  // eslint-disable-next-line no-control-regex
   return str.replace(/\u001b\[\d+m/g, replacement ?? "");
 };
 

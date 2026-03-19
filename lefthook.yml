@@ -1,0 +1,35 @@
+pre-commit:
+  parallel: false
+  commands:
+    format:
+      priority: 1
+      glob:
+        - "src/**/*.json"
+        - "src/**/*.js"
+        - "src/**/*.ts"
+        - "src/**/*.tsx"
+        - "test/**/*.json"
+        - "test/**/*.js"
+        - "test/**/*.ts"
+        - "test/**/*.tsx"
+      run: oxfmt {staged_files}
+      stage_fixed: true
+    format-package-json:
+      priority: 2
+      glob:
+        - "package.json"
+      run: oxfmt {staged_files}
+      stage_fixed: true
+    lint:
+      priority: 3
+      glob:
+        - "src/**/*.json"
+        - "src/**/*.js"
+        - "src/**/*.ts"
+        - "src/**/*.tsx"
+        - "test/**/*.json"
+        - "test/**/*.js"
+        - "test/**/*.ts"
+        - "test/**/*.tsx"
+      run: oxlint --fix {staged_files}
+      stage_fixed: true

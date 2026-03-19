@@ -1,0 +1,25 @@
+{
+  "trailingComma": "all",
+  "singleQuote": false,
+  "arrowParens": "always",
+  "printWidth": 120,
+  "importOrder": [
+    "<THIRD_PARTY_MODULES>",
+    "^@/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": false,
+  "importOrderSortSpecifiers": true,
+  "importOrderParserPlugins": [
+    "typescript",
+    "jsx",
+    "decorators-legacy"
+  ],
+  "quoteProps": "consistent",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "**/dist/**/*",
+    "**/.yarn/**/*",
+    "**/.pnp.*"
+  ]
+}
