@@ -16,7 +16,6 @@
     "lint:oxlint": "oxlint './{src,test}/**/*.{js,ts}'",
     "format:oxlint": "oxlint --fix './{src,test}/**/*.{js,ts}'",
     "package": "yarn clean && yarn build",
-    "prepare": "test -z \"$CI\" && lefthook install || true",
     "lint:oxfmt": "oxfmt --check './{src,test}/**/*.{json,js,ts,tsx}' package.json",
     "format:oxfmt": "oxfmt './{src,test}/**/*.{json,js,ts,tsx}' package.json",
     "test": "yarn allure run -- vitest run"
@@ -36,19 +35,18 @@
     "@types/d3-shape": "^3",
     "@types/lodash.chunk": "^4",
     "@types/node": "^24.0.0",
-    "@vercel/ncc": "^0.38.4",
-    "@vitest/runner": "^4.1.0",
-    "@vitest/snapshot": "^4.1.0",
+    "@vitest/runner": "^4.1.2",
+    "@vitest/snapshot": "^4.1.2",
     "allure": "^3.3.1",
     "allure-vitest": "^3.6.0",
-    "lefthook": "^1.12.14",
+    "lefthook": "^2.1.4",
     "npm-run-all2": "^8.0.4",
-    "oxfmt": "^0.41.0",
+    "oxfmt": "^0.42.0",
     "oxlint": "^1.56.0",
     "rollup-plugin-license": "^3.7.0",
-    "tsdown": "^0.21.4",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "tsdown": "^0.21.7",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "packageManager": "yarn@4.13.0"
 }
