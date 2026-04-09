@@ -71,6 +71,7 @@ export const generateSummaryMarkdownTable = (
   options: { remoteHref?: string } = {},
 ): string => {
   const { remoteHref: inputRemoteHref } = options;
+  const isMultiSummary = summaries.length > 1;
   const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
   const delimiter = `|-|-|-|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
@@ -118,7 +119,7 @@ export const generateSummaryMarkdownTable = (
     }
 
     const effectiveRemoteHref = inputRemoteHref
-      ? summary.pluginId
+      ? isMultiSummary && summary.pluginId
         ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}`
         : inputRemoteHref
       : summary.remoteHref;

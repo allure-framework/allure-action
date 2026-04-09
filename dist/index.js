@@ -25019,6 +25019,7 @@ const findOrCreateComment = async (params) => {
 */
 const generateSummaryMarkdownTable = (summaries, options = {}) => {
 	const { remoteHref: inputRemoteHref } = options;
+	const isMultiSummary = summaries.length > 1;
 	return [
 		"# Allure Report Summary",
 		`|  | Name | Duration | Stats | New | Flaky | Retry | Report |`,
@@ -25041,7 +25042,7 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 			if (stats.broken > 0) statsLabels.push(`<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`);
 			if (stats.skipped > 0) statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
 			if (stats.unknown > 0) statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
-			const effectiveRemoteHref = inputRemoteHref ? summary.pluginId ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}` : inputRemoteHref : summary.remoteHref;
+			const effectiveRemoteHref = inputRemoteHref ? isMultiSummary && summary.pluginId ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}` : inputRemoteHref : summary.remoteHref;
 			const newCount = summary?.newTests?.length ?? 0;
 			const flakyCount = summary?.flakyTests?.length ?? 0;
 			const retryCount = summary?.retryTests?.length ?? 0;

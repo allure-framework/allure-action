@@ -592,7 +592,7 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
-    it("should append pluginId to remote-href when summary has pluginId", () => {
+    it("should append pluginId to remote-href when there are multiple summaries with pluginId", () => {
       const summaries = [
         {
           name: "Behaviors",
@@ -605,6 +605,21 @@ describe("utils", () => {
             unknown: 0,
           },
           duration: 1500,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+        {
+          name: "Awesome",
+          pluginId: "awesome",
+          stats: {
+            passed: 3,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
           newTests: [],
           flakyTests: [],
           retryTests: [],
@@ -632,8 +647,46 @@ describe("utils", () => {
           flakyTests: [],
           retryTests: [],
         },
+        {
+          name: "Awesome",
+          pluginId: "awesome",
+          stats: {
+            passed: 3,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
       ] as unknown as PluginSummary[];
       const result = generateSummaryMarkdownTable(summaries, { remoteHref: "https://pages.example.com/report/" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should not append pluginId when there is only one summary", () => {
+      const summaries = [
+        {
+          name: "Behaviors",
+          pluginId: "behaviors",
+          stats: {
+            passed: 4,
+            failed: 1,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1500,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries, { remoteHref: "https://pages.example.com/report" });
 
       expect(result).toMatchSnapshot();
     });

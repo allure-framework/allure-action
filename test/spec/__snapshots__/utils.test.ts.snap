@@ -90,11 +90,12 @@ exports[`utils > formatSummaryTests > should format tests without remoteHref 1`]
 
 exports[`utils > formatSummaryTests > should handle empty tests array 1`] = `""`;
 
-exports[`utils > generateSummaryMarkdownTable > should append pluginId to remote-href when summary has pluginId 1`] = `
+exports[`utils > generateSummaryMarkdownTable > should append pluginId to remote-href when there are multiple summaries with pluginId 1`] = `
 "# Allure Report Summary
 |  | Name | Duration | Stats | New | Flaky | Retry | Report |
 |-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=4&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Behaviors | 1s 500ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>4</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report/behaviors" target="_blank">View</a> |"
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=4&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Behaviors | 1s 500ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>4</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report/behaviors" target="_blank">View</a> |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=3&failed=0&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Awesome | 1s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>3</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report/awesome" target="_blank">View</a> |"
 `;
 
 exports[`utils > generateSummaryMarkdownTable > should display all test types together in table format 1`] = `
@@ -228,7 +229,15 @@ exports[`utils > generateSummaryMarkdownTable > should normalize trailing slash 
 "# Allure Report Summary
 |  | Name | Duration | Stats | New | Flaky | Retry | Report |
 |-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=4&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Behaviors | 1s 500ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>4</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report/behaviors" target="_blank">View</a> |"
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=4&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Behaviors | 1s 500ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>4</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report/behaviors" target="_blank">View</a> |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=3&failed=0&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Awesome | 1s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>3</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report/awesome" target="_blank">View</a> |"
+`;
+
+exports[`utils > generateSummaryMarkdownTable > should not append pluginId when there is only one summary 1`] = `
+"# Allure Report Summary
+|  | Name | Duration | Stats | New | Flaky | Retry | Report |
+|-|-|-|-|-|-|-|-|
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=4&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Behaviors | 1s 500ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>4</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | 0 | 0 | 0 | <a href="https://pages.example.com/report" target="_blank">View</a> |"
 `;
 
 exports[`utils > generateSummaryMarkdownTable > should not render View link when neither remote-href option nor summary.remoteHref is set 1`] = `
