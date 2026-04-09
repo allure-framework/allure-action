@@ -10,9 +10,11 @@ on:
 permissions:
   pull-requests: write
   checks: write
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
+
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -22,6 +24,15 @@ jobs:
       ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Compute publish subpath
+        id: path
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "subdir=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "subdir=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Enable Corepack
         run: corepack enable
@@ -48,24 +59,15 @@ jobs:
         uses: ./
         with:
           report-directory: "./out/allure-report"
-          remote-href: "https://allure-framework.github.io/allure-action/"
+          remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out/allure-report
-
-  deploy:
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    name: Deploy to GitHub Pages
-    steps:
       - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./allure-report
+          publish_dir: ./out/allure-report
           publish_branch: gh-pages
+          destination_dir: ${{ steps.path.outputs.subdir }}
+          keep_files: true
