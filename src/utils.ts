@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { formatDuration } from "@allurereport/core-api";
-import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
+import type { QualityGateValidationResult, PluginSummary } from "@allurereport/plugin-api";
 import type { QualityGateResultsContent, RemoteSummaryTestResult } from "./model.js";
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
@@ -66,7 +66,11 @@ export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => 
  * Generates a markdown table based on information from all available Allure Reports
  * Doesn't include certaion informatino about every test to keep the table compact
  */
-export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string => {
+export const generateSummaryMarkdownTable = (
+  summaries: PluginSummary[],
+  options: { remoteHref?: string } = {},
+): string => {
+  const { remoteHref: inputRemoteHref } = options;
   const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
   const delimiter = `|-|-|-|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
@@ -113,12 +117,17 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
       );
     }
 
+    const effectiveRemoteHref = inputRemoteHref
+      ? summary.pluginId
+        ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}`
+        : inputRemoteHref
+      : summary.remoteHref;
     const newCount = summary?.newTests?.length ?? 0;
     const flakyCount = summary?.flakyTests?.length ?? 0;
     const retryCount = summary?.retryTests?.length ?? 0;
     const cells: string[] = [img, name, duration, statsLabels.join("&nbsp;&nbsp;&nbsp;")];
 
-    if (!summary?.remoteHref) {
+    if (!effectiveRemoteHref) {
       cells.push(newCount.toString());
       cells.push(flakyCount.toString());
       cells.push(retryCount.toString());
@@ -126,20 +135,20 @@ export const generateSummaryMarkdownTable = (summaries: PluginSummary[]): string
     } else {
       cells.push(
         newCount > 0
-          ? `<a href="${summary.remoteHref}?filter=new" target="_blank">${newCount}</a>`
+          ? `<a href="${effectiveRemoteHref}?filter=new" target="_blank">${newCount}</a>`
           : newCount.toString(),
       );
       cells.push(
         flakyCount > 0
-          ? `<a href="${summary.remoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`
+          ? `<a href="${effectiveRemoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`
           : flakyCount.toString(),
       );
       cells.push(
         retryCount > 0
-          ? `<a href="${summary.remoteHref}?filter=retry" target="_blank">${retryCount}</a>`
+          ? `<a href="${effectiveRemoteHref}?filter=retry" target="_blank">${retryCount}</a>`
           : retryCount.toString(),
       );
-      cells.push(`<a href="${summary.remoteHref}" target="_blank">View</a>`);
+      cells.push(`<a href="${effectiveRemoteHref}" target="_blank">View</a>`);
     }
 
     return `| ${cells.join(" | ")} |`;

@@ -549,6 +549,163 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
+    it("should render View link from remote-href option for every row", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 3,
+            unknown: 0,
+          },
+          duration: 5000,
+          newTests: [
+            {
+              id: "test-1",
+              name: "New test 1",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [],
+        },
+        {
+          name: "Test Suite 2",
+          stats: {
+            passed: 5,
+            failed: 0,
+            broken: 0,
+            skipped: 1,
+            unknown: 0,
+          },
+          duration: 3000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries, { remoteHref: "https://pages.example.com/report" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should append pluginId to remote-href when summary has pluginId", () => {
+      const summaries = [
+        {
+          name: "Behaviors",
+          pluginId: "behaviors",
+          stats: {
+            passed: 4,
+            failed: 1,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1500,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries, { remoteHref: "https://pages.example.com/report" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should normalize trailing slash when appending pluginId to remote-href", () => {
+      const summaries = [
+        {
+          name: "Behaviors",
+          pluginId: "behaviors",
+          stats: {
+            passed: 4,
+            failed: 1,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1500,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries, { remoteHref: "https://pages.example.com/report/" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should prefer remote-href option over summary.remoteHref", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: "https://example.com/report/",
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries, { remoteHref: "https://pages.example.com/report" });
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should fall back to summary.remoteHref when remote-href option is missing", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: "https://example.com/report/",
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
+    it("should not render View link when neither remote-href option nor summary.remoteHref is set", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toMatchSnapshot();
+    });
+
     it("should display tests with all possible statuses (passed, failed, broken, skipped, unknown)", () => {
       const summaries = [
         {

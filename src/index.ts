@@ -28,6 +28,7 @@ const run = async (): Promise<void> => {
   }
 
   const reportDir = getGithubInput("report-directory") || path.join(process.cwd(), "allure-report");
+  const remoteHref = getGithubInput("remote-href") || undefined;
   const qualityGateFile = path.join(reportDir, "quality-gate.json");
   const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
@@ -75,7 +76,7 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+  const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent, { remoteHref });
   const issue_number = payload.pull_request.number;
 
   await findOrCreateComment({

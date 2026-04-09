@@ -26,6 +26,13 @@ let os = require("os");
 os = __toESM(os);
 let fs = require("fs");
 fs = __toESM(fs);
+let path = require("path");
+path = __toESM(path);
+let events = require("events");
+events = __toESM(events);
+let child_process = require("child_process");
+child_process = __toESM(child_process);
+require("timers");
 let node_fs = require("node:fs");
 let node_fs_promises = require("node:fs/promises");
 node_fs_promises = __toESM(node_fs_promises);
@@ -15819,10 +15826,191 @@ var Summary = class {
 	}
 };
 new Summary();
+//#endregion
+//#region node_modules/@actions/io/lib/io-util.js
+var __awaiter$6 = function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
 const { chmod, copyFile, lstat, mkdir, open, readdir, rename, rm, rmdir, stat, symlink, unlink } = fs.promises;
-process.platform;
+const IS_WINDOWS$1 = process.platform === "win32";
 fs.constants.O_RDONLY;
+/**
+* On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
+* \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
+*/
+function isRooted(p) {
+	p = normalizeSeparators(p);
+	if (!p) throw new Error("isRooted() parameter \"p\" cannot be empty");
+	if (IS_WINDOWS$1) return p.startsWith("\\") || /^[A-Z]:/i.test(p);
+	return p.startsWith("/");
+}
+/**
+* Best effort attempt to determine whether a file exists and is executable.
+* @param filePath    file path to check
+* @param extensions  additional file extensions to try
+* @return if file exists and is executable, returns the file path. otherwise empty string.
+*/
+function tryGetExecutablePath(filePath, extensions) {
+	return __awaiter$6(this, void 0, void 0, function* () {
+		let stats = void 0;
+		try {
+			stats = yield stat(filePath);
+		} catch (err) {
+			if (err.code !== "ENOENT") console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+		}
+		if (stats && stats.isFile()) {
+			if (IS_WINDOWS$1) {
+				const upperExt = path.extname(filePath).toUpperCase();
+				if (extensions.some((validExt) => validExt.toUpperCase() === upperExt)) return filePath;
+			} else if (isUnixExecutable(stats)) return filePath;
+		}
+		const originalFilePath = filePath;
+		for (const extension of extensions) {
+			filePath = originalFilePath + extension;
+			stats = void 0;
+			try {
+				stats = yield stat(filePath);
+			} catch (err) {
+				if (err.code !== "ENOENT") console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+			}
+			if (stats && stats.isFile()) {
+				if (IS_WINDOWS$1) {
+					try {
+						const directory = path.dirname(filePath);
+						const upperName = path.basename(filePath).toUpperCase();
+						for (const actualName of yield readdir(directory)) if (upperName === actualName.toUpperCase()) {
+							filePath = path.join(directory, actualName);
+							break;
+						}
+					} catch (err) {
+						console.log(`Unexpected error attempting to determine the actual case of the file '${filePath}': ${err}`);
+					}
+					return filePath;
+				} else if (isUnixExecutable(stats)) return filePath;
+			}
+		}
+		return "";
+	});
+}
+function normalizeSeparators(p) {
+	p = p || "";
+	if (IS_WINDOWS$1) {
+		p = p.replace(/\//g, "\\");
+		return p.replace(/\\\\+/g, "\\");
+	}
+	return p.replace(/\/\/+/g, "/");
+}
+function isUnixExecutable(stats) {
+	return (stats.mode & 1) > 0 || (stats.mode & 8) > 0 && process.getgid !== void 0 && stats.gid === process.getgid() || (stats.mode & 64) > 0 && process.getuid !== void 0 && stats.uid === process.getuid();
+}
+//#endregion
+//#region node_modules/@actions/io/lib/io.js
+var __awaiter$5 = function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
+/**
+* Returns path of a tool had the tool actually been invoked.  Resolves via paths.
+* If you check and the tool does not exist, it will throw.
+*
+* @param     tool              name of the tool
+* @param     check             whether to check if tool exists
+* @returns   Promise<string>   path to tool
+*/
+function which(tool, check) {
+	return __awaiter$5(this, void 0, void 0, function* () {
+		if (!tool) throw new Error("parameter 'tool' is required");
+		if (check) {
+			const result = yield which(tool, false);
+			if (!result) if (IS_WINDOWS$1) throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
+			else throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
+			return result;
+		}
+		const matches = yield findInPath(tool);
+		if (matches && matches.length > 0) return matches[0];
+		return "";
+	});
+}
+/**
+* Returns a list of all occurrences of the given tool on the system path.
+*
+* @returns   Promise<string[]>  the paths of the tool
+*/
+function findInPath(tool) {
+	return __awaiter$5(this, void 0, void 0, function* () {
+		if (!tool) throw new Error("parameter 'tool' is required");
+		const extensions = [];
+		if (IS_WINDOWS$1 && process.env["PATHEXT"]) {
+			for (const extension of process.env["PATHEXT"].split(path.delimiter)) if (extension) extensions.push(extension);
+		}
+		if (isRooted(tool)) {
+			const filePath = yield tryGetExecutablePath(tool, extensions);
+			if (filePath) return [filePath];
+			return [];
+		}
+		if (tool.includes(path.sep)) return [];
+		const directories = [];
+		if (process.env.PATH) {
+			for (const p of process.env.PATH.split(path.delimiter)) if (p) directories.push(p);
+		}
+		const matches = [];
+		for (const directory of directories) {
+			const filePath = yield tryGetExecutablePath(path.join(directory, tool), extensions);
+			if (filePath) matches.push(filePath);
+		}
+		return matches;
+	});
+}
 process.platform;
+events.EventEmitter;
+events.EventEmitter;
 os.default.platform();
 os.default.arch();
 /**
@@ -17203,6 +17391,7 @@ var require_constants$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const path$8 = require("path");
 	const WIN_SLASH = "\\\\/";
 	const WIN_NO_SLASH = `[^${WIN_SLASH}]`;
+	const DEFAULT_MAX_EXTGLOB_RECURSION = 0;
 	/**
 	* Posix glob regex
 	*/
@@ -17250,8 +17439,10 @@ var require_constants$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		END_ANCHOR: `(?:[${WIN_SLASH}]|$)`
 	};
 	module.exports = {
+		DEFAULT_MAX_EXTGLOB_RECURSION,
 		MAX_LENGTH: 1024 * 64,
 		POSIX_REGEX_SOURCE: {
+			__proto__: null,
 			alnum: "a-zA-Z0-9",
 			alpha: "a-zA-Z",
 			ascii: "\\x00-\\x7F",
@@ -17274,6 +17465,7 @@ var require_constants$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		REGEX_SPECIAL_CHARS_GLOBAL: /([-*+?.^${}(|)[\]])/g,
 		REGEX_REMOVE_BACKSLASH: /(?:\[.*?[^\\]\]|\\(?=.))/g,
 		REPLACEMENTS: {
+			__proto__: null,
 			"***": "*",
 			"**/**": "**",
 			"**/**/**": "**"
@@ -17717,6 +17909,177 @@ var require_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const syntaxError = (type, char) => {
 		return `Missing ${type}: "${char}" - use "\\\\${char}" to match literal characters`;
 	};
+	const splitTopLevel = (input) => {
+		const parts = [];
+		let bracket = 0;
+		let paren = 0;
+		let quote = 0;
+		let value = "";
+		let escaped = false;
+		for (const ch of input) {
+			if (escaped === true) {
+				value += ch;
+				escaped = false;
+				continue;
+			}
+			if (ch === "\\") {
+				value += ch;
+				escaped = true;
+				continue;
+			}
+			if (ch === "\"") {
+				quote = quote === 1 ? 0 : 1;
+				value += ch;
+				continue;
+			}
+			if (quote === 0) {
+				if (ch === "[") bracket++;
+				else if (ch === "]" && bracket > 0) bracket--;
+				else if (bracket === 0) {
+					if (ch === "(") paren++;
+					else if (ch === ")" && paren > 0) paren--;
+					else if (ch === "|" && paren === 0) {
+						parts.push(value);
+						value = "";
+						continue;
+					}
+				}
+			}
+			value += ch;
+		}
+		parts.push(value);
+		return parts;
+	};
+	const isPlainBranch = (branch) => {
+		let escaped = false;
+		for (const ch of branch) {
+			if (escaped === true) {
+				escaped = false;
+				continue;
+			}
+			if (ch === "\\") {
+				escaped = true;
+				continue;
+			}
+			if (/[?*+@!()[\]{}]/.test(ch)) return false;
+		}
+		return true;
+	};
+	const normalizeSimpleBranch = (branch) => {
+		let value = branch.trim();
+		let changed = true;
+		while (changed === true) {
+			changed = false;
+			if (/^@\([^\\()[\]{}|]+\)$/.test(value)) {
+				value = value.slice(2, -1);
+				changed = true;
+			}
+		}
+		if (!isPlainBranch(value)) return;
+		return value.replace(/\\(.)/g, "$1");
+	};
+	const hasRepeatedCharPrefixOverlap = (branches) => {
+		const values = branches.map(normalizeSimpleBranch).filter(Boolean);
+		for (let i = 0; i < values.length; i++) for (let j = i + 1; j < values.length; j++) {
+			const a = values[i];
+			const b = values[j];
+			const char = a[0];
+			if (!char || a !== char.repeat(a.length) || b !== char.repeat(b.length)) continue;
+			if (a === b || a.startsWith(b) || b.startsWith(a)) return true;
+		}
+		return false;
+	};
+	const parseRepeatedExtglob = (pattern, requireEnd = true) => {
+		if (pattern[0] !== "+" && pattern[0] !== "*" || pattern[1] !== "(") return;
+		let bracket = 0;
+		let paren = 0;
+		let quote = 0;
+		let escaped = false;
+		for (let i = 1; i < pattern.length; i++) {
+			const ch = pattern[i];
+			if (escaped === true) {
+				escaped = false;
+				continue;
+			}
+			if (ch === "\\") {
+				escaped = true;
+				continue;
+			}
+			if (ch === "\"") {
+				quote = quote === 1 ? 0 : 1;
+				continue;
+			}
+			if (quote === 1) continue;
+			if (ch === "[") {
+				bracket++;
+				continue;
+			}
+			if (ch === "]" && bracket > 0) {
+				bracket--;
+				continue;
+			}
+			if (bracket > 0) continue;
+			if (ch === "(") {
+				paren++;
+				continue;
+			}
+			if (ch === ")") {
+				paren--;
+				if (paren === 0) {
+					if (requireEnd === true && i !== pattern.length - 1) return;
+					return {
+						type: pattern[0],
+						body: pattern.slice(2, i),
+						end: i
+					};
+				}
+			}
+		}
+	};
+	const getStarExtglobSequenceOutput = (pattern) => {
+		let index = 0;
+		const chars = [];
+		while (index < pattern.length) {
+			const match = parseRepeatedExtglob(pattern.slice(index), false);
+			if (!match || match.type !== "*") return;
+			const branches = splitTopLevel(match.body).map((branch) => branch.trim());
+			if (branches.length !== 1) return;
+			const branch = normalizeSimpleBranch(branches[0]);
+			if (!branch || branch.length !== 1) return;
+			chars.push(branch);
+			index += match.end + 1;
+		}
+		if (chars.length < 1) return;
+		return `${chars.length === 1 ? utils.escapeRegex(chars[0]) : `[${chars.map((ch) => utils.escapeRegex(ch)).join("")}]`}*`;
+	};
+	const repeatedExtglobRecursion = (pattern) => {
+		let depth = 0;
+		let value = pattern.trim();
+		let match = parseRepeatedExtglob(value);
+		while (match) {
+			depth++;
+			value = match.body.trim();
+			match = parseRepeatedExtglob(value);
+		}
+		return depth;
+	};
+	const analyzeRepeatedExtglob = (body, options) => {
+		if (options.maxExtglobRecursion === false) return { risky: false };
+		const max = typeof options.maxExtglobRecursion === "number" ? options.maxExtglobRecursion : constants.DEFAULT_MAX_EXTGLOB_RECURSION;
+		const branches = splitTopLevel(body).map((branch) => branch.trim());
+		if (branches.length > 1) {
+			if (branches.some((branch) => branch === "") || branches.some((branch) => /^[*?]+$/.test(branch)) || hasRepeatedCharPrefixOverlap(branches)) return { risky: true };
+		}
+		for (const branch of branches) {
+			const safeOutput = getStarExtglobSequenceOutput(branch);
+			if (safeOutput) return {
+				risky: true,
+				safeOutput
+			};
+			if (repeatedExtglobRecursion(branch) > max) return { risky: true };
+		}
+		return { risky: false };
+	};
 	/**
 	* Parse the given input string.
 	* @param {String} input
@@ -17847,6 +18210,8 @@ var require_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			token.prev = prev;
 			token.parens = state.parens;
 			token.output = state.output;
+			token.startIndex = state.index;
+			token.tokensIndex = tokens.length;
 			const output = (opts.capture ? "(" : "") + token.open;
 			increment("parens");
 			push({
@@ -17863,6 +18228,30 @@ var require_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			extglobs.push(token);
 		};
 		const extglobClose = (token) => {
+			const literal = input.slice(token.startIndex, state.index + 1);
+			const analysis = analyzeRepeatedExtglob(input.slice(token.startIndex + 2, state.index), opts);
+			if ((token.type === "plus" || token.type === "star") && analysis.risky) {
+				const safeOutput = analysis.safeOutput ? (token.output ? "" : ONE_CHAR) + (opts.capture ? `(${analysis.safeOutput})` : analysis.safeOutput) : void 0;
+				const open = tokens[token.tokensIndex];
+				open.type = "text";
+				open.value = literal;
+				open.output = safeOutput || utils.escapeRegex(literal);
+				for (let i = token.tokensIndex + 1; i < tokens.length; i++) {
+					tokens[i].value = "";
+					tokens[i].output = "";
+					delete tokens[i].suffix;
+				}
+				state.output = token.output + open.output;
+				state.backtrack = true;
+				push({
+					type: "paren",
+					extglob: true,
+					value,
+					output: ""
+				});
+				decrement("parens");
+				return;
+			}
 			let output = token.close + (opts.capture ? ")" : "");
 			let rest;
 			if (token.type === "negate") {
@@ -24628,7 +25017,8 @@ const findOrCreateComment = async (params) => {
 * Generates a markdown table based on information from all available Allure Reports
 * Doesn't include certaion informatino about every test to keep the table compact
 */
-const generateSummaryMarkdownTable = (summaries) => {
+const generateSummaryMarkdownTable = (summaries, options = {}) => {
+	const { remoteHref: inputRemoteHref } = options;
 	return [
 		"# Allure Report Summary",
 		`|  | Name | Duration | Stats | New | Flaky | Retry | Report |`,
@@ -24651,6 +25041,7 @@ const generateSummaryMarkdownTable = (summaries) => {
 			if (stats.broken > 0) statsLabels.push(`<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`);
 			if (stats.skipped > 0) statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
 			if (stats.unknown > 0) statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
+			const effectiveRemoteHref = inputRemoteHref ? summary.pluginId ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}` : inputRemoteHref : summary.remoteHref;
 			const newCount = summary?.newTests?.length ?? 0;
 			const flakyCount = summary?.flakyTests?.length ?? 0;
 			const retryCount = summary?.retryTests?.length ?? 0;
@@ -24660,16 +25051,16 @@ const generateSummaryMarkdownTable = (summaries) => {
 				duration,
 				statsLabels.join("&nbsp;&nbsp;&nbsp;")
 			];
-			if (!summary?.remoteHref) {
+			if (!effectiveRemoteHref) {
 				cells.push(newCount.toString());
 				cells.push(flakyCount.toString());
 				cells.push(retryCount.toString());
 				cells.push("");
 			} else {
-				cells.push(newCount > 0 ? `<a href="${summary.remoteHref}?filter=new" target="_blank">${newCount}</a>` : newCount.toString());
-				cells.push(flakyCount > 0 ? `<a href="${summary.remoteHref}?filter=flaky" target="_blank">${flakyCount}</a>` : flakyCount.toString());
-				cells.push(retryCount > 0 ? `<a href="${summary.remoteHref}?filter=retry" target="_blank">${retryCount}</a>` : retryCount.toString());
-				cells.push(`<a href="${summary.remoteHref}" target="_blank">View</a>`);
+				cells.push(newCount > 0 ? `<a href="${effectiveRemoteHref}?filter=new" target="_blank">${newCount}</a>` : newCount.toString());
+				cells.push(flakyCount > 0 ? `<a href="${effectiveRemoteHref}?filter=flaky" target="_blank">${flakyCount}</a>` : flakyCount.toString());
+				cells.push(retryCount > 0 ? `<a href="${effectiveRemoteHref}?filter=retry" target="_blank">${retryCount}</a>` : retryCount.toString());
+				cells.push(`<a href="${effectiveRemoteHref}" target="_blank">View</a>`);
 			}
 			return `| ${cells.join(" | ")} |`;
 		})
@@ -24710,6 +25101,7 @@ const run = async () => {
 	if (!token) return;
 	if (eventName !== "pull_request" || !payload.pull_request) return;
 	const reportDir = getGithubInput("report-directory") || node_path.join(process.cwd(), "allure-report");
+	const remoteHref = getGithubInput("remote-href") || void 0;
 	const qualityGateFile = node_path.join(reportDir, "quality-gate.json");
 	const summaryFiles = await (0, import_out.default)([node_path.join(reportDir, "**", "summary.json")], { onlyFiles: true });
 	const summaryFilesContent = await Promise.all(summaryFiles.map(async (file) => {
@@ -24743,7 +25135,7 @@ const run = async () => {
 		info("No published reports found");
 		return;
 	}
-	const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+	const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent, { remoteHref });
 	const issue_number = payload.pull_request.number;
 	await findOrCreateComment({
 		octokit,

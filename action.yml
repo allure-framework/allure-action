@@ -10,6 +10,10 @@ inputs:
     description: "The report directory to scan for files"
     required: false
     default: "./allure-report"
+  remote-href:
+    description: "Base URL where the published Allure report is hosted (e.g. GitHub Pages). Used to render `View` links in the summary table."
+    required: false
+    default: ""
   github-token:
     description: "GitHub token for creating comments"
     required: false
