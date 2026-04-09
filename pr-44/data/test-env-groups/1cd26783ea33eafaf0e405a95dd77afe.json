@@ -1,0 +1,1 @@
+{"id":"1cd26783ea33eafaf0e405a95dd77afe","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should append pluginId to remote-href when summary has pluginId","name":"should append pluginId to remote-href when summary has pluginId","status":"passed","testResultsByEnv":{"default":"23aef9073cb0b4d82ea8052efbcb5350"}}

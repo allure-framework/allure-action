@@ -1,0 +1,1 @@
+{"id":"b739fc491be6a693aec0c768ba47499b","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should normalize trailing slash when appending pluginId to remote-href","name":"should normalize trailing slash when appending pluginId to remote-href","status":"passed","testResultsByEnv":{"default":"6788d03d18b7df593c82be9739038ba6"}}

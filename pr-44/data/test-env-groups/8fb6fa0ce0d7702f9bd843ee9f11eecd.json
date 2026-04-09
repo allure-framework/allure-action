@@ -1,0 +1,1 @@
+{"id":"8fb6fa0ce0d7702f9bd843ee9f11eecd","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should return the same string when there are no ANSI codes","name":"should return the same string when there are no ANSI codes","status":"passed","testResultsByEnv":{"default":"a6c9c70959ffee49c345f87f382f2044"}}
