@@ -1,16 +1,254 @@
 import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
-import type { QualityGateResultsContent, RemoteSummaryTestResult } from "../../src/model.js";
+import type { ActionSummary, QualityGateResultsContent, RemoteSummaryTestResult } from "../../src/model.js";
 import {
   formatQualityGareResultsList,
   formatQualityGateResults,
   formatSummaryTests,
   generateSummaryMarkdownTable,
+  generateSummarySectionComments,
+  getSummarySectionMarker,
   isQualityGateFailed,
+  parseSummarySections,
   stripAnsiCodes,
 } from "../../src/utils.js";
 
 describe("utils", () => {
+  describe("parseSummarySections", () => {
+    it("should parse comma and newline separated values in canonical order", () => {
+      const result = parseSummarySections(`
+        retry,
+        "new"
+      `);
+
+      expect(result).toEqual(["new", "retry"]);
+    });
+
+    it("should support the all shortcut", () => {
+      const result = parseSummarySections("all");
+
+      expect(result).toEqual(["new", "flaky", "retry"]);
+    });
+
+    it("should support legacy section aliases", () => {
+      const result = parseSummarySections("new-tests,flaky-tests,retry-tests");
+
+      expect(result).toEqual(["new", "flaky", "retry"]);
+    });
+  });
+
+  describe("generateSummarySectionComments", () => {
+    it("should create separate collapsible comments for enabled sections", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 10,
+            failed: 1,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 5000,
+          remoteHref: "https://example.com/suite-a/",
+          meta: {
+            withTestResultsLinks: true,
+          },
+          newTests: [
+            {
+              id: "suite-a-new-1",
+              name: "Suite A new test",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [
+            {
+              id: "suite-a-flaky-1",
+              name: "Suite A flaky test",
+              status: "failed",
+              duration: 150,
+            },
+          ],
+          retryTests: [],
+        },
+        {
+          summaryId: "suite-b/summary.json",
+          name: "Suite B",
+          stats: {
+            passed: 5,
+            failed: 0,
+            broken: 0,
+            skipped: 1,
+            unknown: 0,
+          },
+          duration: 3000,
+          remoteHref: "https://example.com/suite-b/",
+          meta: {
+            withTestResultsLinks: true,
+          },
+          newTests: [
+            {
+              id: "suite-b-new-1",
+              name: "Suite B new test",
+              status: "passed",
+              duration: 120,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [
+            {
+              id: "suite-b-retry-1",
+              name: "Suite B retry test",
+              status: "passed",
+              duration: 130,
+            },
+          ],
+        },
+      ] as unknown as ActionSummary[];
+      const result = generateSummarySectionComments(summaries, ["new", "flaky", "retry"]);
+
+      expect(result).toHaveLength(4);
+      expect(result[0]).toMatchObject({
+        marker: getSummarySectionMarker("suite-a/summary.json", "new"),
+      });
+      expect(result[0].body).toContain("<details>");
+      expect(result[0].body).toContain("<summary>New Tests in Suite A (1)</summary>");
+      expect(result[0].body).toContain("[Suite A new test](https://example.com/suite-a/#suite-a-new-1)");
+      expect(result[1]).toMatchObject({
+        marker: getSummarySectionMarker("suite-b/summary.json", "new"),
+      });
+      expect(result[1].body).toContain("[Suite B new test](https://example.com/suite-b/#suite-b-new-1)");
+      expect(result[2]).toMatchObject({
+        marker: getSummarySectionMarker("suite-a/summary.json", "flaky"),
+      });
+      expect(result[2].body).toContain("[Suite A flaky test](https://example.com/suite-a/#suite-a-flaky-1)");
+      expect(result[3]).toMatchObject({
+        marker: getSummarySectionMarker("suite-b/summary.json", "retry"),
+      });
+      expect(result[3].body).toContain("[Suite B retry test](https://example.com/suite-b/#suite-b-retry-1)");
+    });
+
+    it("should omit comments for sections without matching tests", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as ActionSummary[];
+      const result = generateSummarySectionComments(summaries, ["new"]);
+
+      expect(result).toEqual([]);
+    });
+
+    it("should truncate oversized section comments and append More link", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 3,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: "https://example.com/suite-a/",
+          meta: {
+            withTestResultsLinks: true,
+          },
+          newTests: [
+            {
+              id: "test-1",
+              name: "Very long new test name 1",
+              status: "passed",
+              duration: 100,
+            },
+            {
+              id: "test-2",
+              name: "Very long new test name 2",
+              status: "passed",
+              duration: 100,
+            },
+            {
+              id: "test-3",
+              name: "Very long new test name 3",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as ActionSummary[];
+      const [result] = generateSummarySectionComments(summaries, ["new"], {
+        maxCommentBodyLength: 260,
+      });
+
+      expect(result.body.length).toBeLessThanOrEqual(260);
+      expect(result.body).toContain("[More](https://example.com/suite-a/?filter=new)");
+      expect(result.body).not.toContain("Very long new test name 3");
+    });
+
+    it("should render a truncation note when remote report link is unavailable", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 3,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [
+            {
+              id: "test-1",
+              name: "Very long new test name 1",
+              status: "passed",
+              duration: 100,
+            },
+            {
+              id: "test-2",
+              name: "Very long new test name 2",
+              status: "passed",
+              duration: 100,
+            },
+            {
+              id: "test-3",
+              name: "Very long new test name 3",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as ActionSummary[];
+      const [result] = generateSummarySectionComments(summaries, ["new"], {
+        maxCommentBodyLength: 220,
+      });
+
+      expect(result.body.length).toBeLessThanOrEqual(220);
+      expect(result.body).toContain("_List truncated due to comment size limit._");
+    });
+  });
+
   describe("generateSummaryMarkdownTable", () => {
     it("should return a table with header only for empty array", () => {
       const result = generateSummaryMarkdownTable([]);
