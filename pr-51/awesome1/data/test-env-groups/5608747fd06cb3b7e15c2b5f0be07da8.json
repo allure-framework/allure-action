@@ -1,0 +1,1 @@
+{"id":"5608747fd06cb3b7e15c2b5f0be07da8","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should preserve trailing slash in remote-href option when pluginId is ignored","name":"should preserve trailing slash in remote-href option when pluginId is ignored","status":"passed","testResultsByEnv":{"default":"9250628c30888a87430df832a5befcd3"}}
