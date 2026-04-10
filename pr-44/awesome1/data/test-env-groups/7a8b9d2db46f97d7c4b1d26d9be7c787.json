@@ -1,0 +1,1 @@
+{"id":"7a8b9d2db46f97d7c4b1d26d9be7c787","fullName":"test/spec/action.test.ts#action quality gate should strip ANSI codes from quality gate messages","name":"should strip ANSI codes from quality gate messages","status":"passed","testResultsByEnv":{"default":"1fdd10915a4342acff8c8406b4f45c03"}}
