@@ -1,0 +1,1 @@
+{"id":"a0acf9f505190dc9a9cf0fe4fc045f69","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI color codes from string","name":"should strip ANSI color codes from string","status":"passed","testResultsByEnv":{"default":"d1a03a400602265aa0de690bfffa8df6"}}

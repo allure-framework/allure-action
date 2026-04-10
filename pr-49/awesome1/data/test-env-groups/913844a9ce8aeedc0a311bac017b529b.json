@@ -1,0 +1,1 @@
+{"id":"913844a9ce8aeedc0a311bac017b529b","fullName":"test/spec/action.test.ts#action when actions should be skipped should not run action when there's no github token","name":"should not run action when there's no github token","status":"passed","testResultsByEnv":{"default":"2522c83d5f7dbba5e1f462dd725bc641"}}

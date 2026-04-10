@@ -1,0 +1,1 @@
+{"id":"0104e7972d1f000f71adfe2098683e76","fullName":"test/spec/action.test.ts#action when the action should be run should handle summary files without remoteHref","name":"should handle summary files without remoteHref","status":"passed","testResultsByEnv":{"default":"5fc7f6f85efe3237976f7d15ddfaa95d"}}

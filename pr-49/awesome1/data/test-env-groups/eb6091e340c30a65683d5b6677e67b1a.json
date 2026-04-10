@@ -1,0 +1,1 @@
+{"id":"eb6091e340c30a65683d5b6677e67b1a","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should ignore pluginId when there is only one summary","name":"should ignore pluginId when there is only one summary","status":"passed","testResultsByEnv":{"default":"d8af8cc4acb31f665f6adff94ac09d3a"}}
