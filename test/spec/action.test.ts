@@ -551,6 +551,128 @@ describe("action", () => {
       );
     });
 
+    it("should suffix remote-href with the summary directory when index.html is present", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          case "remote-href":
+            return "https://pages.example.com/report";
+          default:
+            return "";
+        }
+      });
+
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/action/smoke/summary.json",
+            content: JSON.stringify({
+              name: "Smoke",
+              stats: {
+                passed: 4,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 1000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+          {
+            path: "test/fixtures/action/e2e/chrome/summary.json",
+            content: JSON.stringify({
+              name: "E2E Chrome",
+              stats: {
+                passed: 3,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 2000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return (
+          filePath === "test/fixtures/action/smoke/index.html" ||
+          filePath === "test/fixtures/action/e2e/chrome/index.html"
+        );
+      });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+
+      expect(body).toContain('href="https://pages.example.com/report/smoke"');
+      expect(body).toContain('href="https://pages.example.com/report/e2e/chrome"');
+    });
+
+    it("should use the base remote-href when the summary directory does not contain index.html", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          case "remote-href":
+            return "https://pages.example.com/report";
+          default:
+            return "";
+        }
+      });
+
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/action/report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 4,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 1000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+
+      expect(body).toContain('href="https://pages.example.com/report"');
+      expect(body).not.toContain('href="https://pages.example.com/report/report1"');
+    });
+
     it("should handle multiple summaries with mixed test types", async () => {
       const fixtures = {
         summaryFiles: [

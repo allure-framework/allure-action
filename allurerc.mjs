@@ -9,11 +9,22 @@ const { ALLURE_SERVICE_ACCESS_TOKEN } = env;
 const config = {
   output: "./out/allure-report",
   plugins: {
-    awesome: {
+    awesome1: {
+      import: "@allurereport/plugin-awesome",
       options: {
         singleFile: false,
         reportLanguage: "en",
         reportName: "Allure Action",
+        open: false,
+        publish: true,
+      },
+    },
+    awesome2: {
+      import: "@allurereport/plugin-awesome",
+      options: {
+        singleFile: true,
+        reportLanguage: "en",
+        reportName: "Allure Action (single mode)",
         open: false,
         publish: true,
       },

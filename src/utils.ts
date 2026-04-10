@@ -1,8 +1,11 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { formatDuration } from "@allurereport/core-api";
+import * as path from "node:path";
 import type { QualityGateValidationResult, PluginSummary } from "@allurereport/plugin-api";
 import type { QualityGateResultsContent, RemoteSummaryTestResult } from "./model.js";
+
+export const normalizePathForUrl = (value: string): string => value.split(path.sep).join("/");
 
 export const getGithubInput = (name: string) => core.getInput(name, { required: false });
 
@@ -71,7 +74,6 @@ export const generateSummaryMarkdownTable = (
   options: { remoteHref?: string } = {},
 ): string => {
   const { remoteHref: inputRemoteHref } = options;
-  const isMultiSummary = summaries.length > 1;
   const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
   const delimiter = `|-|-|-|-|-|-|-|-|`;
   const rows = summaries.map((summary) => {
@@ -118,11 +120,7 @@ export const generateSummaryMarkdownTable = (
       );
     }
 
-    const effectiveRemoteHref = inputRemoteHref
-      ? isMultiSummary && summary.pluginId
-        ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}`
-        : inputRemoteHref
-      : summary.remoteHref;
+    const effectiveRemoteHref = inputRemoteHref ?? summary.remoteHref;
     const newCount = summary?.newTests?.length ?? 0;
     const flakyCount = summary?.flakyTests?.length ?? 0;
     const retryCount = summary?.retryTests?.length ?? 0;

@@ -24985,6 +24985,7 @@ const formatDuration = (duration) => {
 };
 //#endregion
 //#region src/utils.ts
+const normalizePathForUrl = (value) => value.split(node_path.sep).join("/");
 const getGithubInput = (name) => getInput(name, { required: false });
 const getGithubContext = () => context;
 const getOctokit = (token) => getOctokit$1(token);
@@ -25019,7 +25020,6 @@ const findOrCreateComment = async (params) => {
 */
 const generateSummaryMarkdownTable = (summaries, options = {}) => {
 	const { remoteHref: inputRemoteHref } = options;
-	const isMultiSummary = summaries.length > 1;
 	return [
 		"# Allure Report Summary",
 		`|  | Name | Duration | Stats | New | Flaky | Retry | Report |`,
@@ -25042,7 +25042,7 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 			if (stats.broken > 0) statsLabels.push(`<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`);
 			if (stats.skipped > 0) statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
 			if (stats.unknown > 0) statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
-			const effectiveRemoteHref = inputRemoteHref ? isMultiSummary && summary.pluginId ? `${inputRemoteHref.replace(/\/$/, "")}/${summary.pluginId}` : inputRemoteHref : summary.remoteHref;
+			const effectiveRemoteHref = inputRemoteHref ?? summary.remoteHref;
 			const newCount = summary?.newTests?.length ?? 0;
 			const flakyCount = summary?.flakyTests?.length ?? 0;
 			const retryCount = summary?.retryTests?.length ?? 0;
@@ -25096,6 +25096,35 @@ const formatQualityGateResults = (qualityGateResultsContent) => {
 };
 //#endregion
 //#region src/index.ts
+const getSummaryDirSuffix = (reportDir, summaryFile) => {
+	const summaryDir = node_path.dirname(summaryFile);
+	const normalizedReportDir = node_path.normalize(reportDir);
+	const normalizedSummaryDir = node_path.normalize(summaryDir);
+	const resolvedReportDir = node_path.resolve(reportDir);
+	const resolvedSummaryDir = node_path.resolve(summaryDir);
+	const candidates = [{
+		baseDir: normalizedReportDir,
+		targetDir: normalizedSummaryDir
+	}, {
+		baseDir: resolvedReportDir,
+		targetDir: resolvedSummaryDir
+	}];
+	for (const { baseDir, targetDir } of candidates) {
+		if (targetDir === baseDir) return "";
+		if (targetDir.startsWith(`${baseDir}${node_path.sep}`)) return normalizePathForUrl(node_path.relative(baseDir, targetDir));
+	}
+	if (normalizedSummaryDir === ".") return "";
+	return normalizePathForUrl(normalizedSummaryDir);
+};
+const resolveSummaryRemoteHref = (params) => {
+	const { reportDir, summaryFile, inputRemoteHref, summaryRemoteHref } = params;
+	if (!inputRemoteHref) return summaryRemoteHref;
+	const summaryDir = node_path.dirname(summaryFile);
+	if (!(0, node_fs.existsSync)(node_path.join(summaryDir, "index.html"))) return inputRemoteHref;
+	const suffix = getSummaryDirSuffix(reportDir, summaryFile);
+	if (!suffix) return inputRemoteHref;
+	return `${inputRemoteHref.replace(/\/$/, "")}/${suffix}`;
+};
 const run = async () => {
 	const token = getGithubInput("github-token");
 	const { eventName, repo, payload } = getGithubContext();
@@ -25107,7 +25136,16 @@ const run = async () => {
 	const summaryFiles = await (0, import_out.default)([node_path.join(reportDir, "**", "summary.json")], { onlyFiles: true });
 	const summaryFilesContent = await Promise.all(summaryFiles.map(async (file) => {
 		const content = await node_fs_promises.readFile(file, "utf-8");
-		return JSON.parse(content);
+		const summary = JSON.parse(content);
+		return {
+			...summary,
+			remoteHref: resolveSummaryRemoteHref({
+				reportDir,
+				summaryFile: file,
+				inputRemoteHref: remoteHref,
+				summaryRemoteHref: summary.remoteHref
+			})
+		};
 	}));
 	let qualityGateResults;
 	if ((0, node_fs.existsSync)(qualityGateFile)) {
@@ -25136,7 +25174,7 @@ const run = async () => {
 		info("No published reports found");
 		return;
 	}
-	const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent, { remoteHref });
+	const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
 	const issue_number = payload.pull_request.number;
 	await findOrCreateComment({
 		octokit,

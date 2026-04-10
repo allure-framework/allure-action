@@ -175,7 +175,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/plugin-awesome@npm:3.4.1":
+"@allurereport/plugin-awesome@npm:3.4.1, @allurereport/plugin-awesome@npm:^3.4.1":
   version: 3.4.1
   resolution: "@allurereport/plugin-awesome@npm:3.4.1"
   dependencies:
@@ -1950,6 +1950,7 @@ __metadata:
     "@actions/io": "npm:^3.0.2"
     "@allurereport/core-api": "npm:^3.4.1"
     "@allurereport/plugin-api": "npm:^3.4.1"
+    "@allurereport/plugin-awesome": "npm:^3.4.1"
     "@types/d3-shape": "npm:^3"
     "@types/lodash.chunk": "npm:^4"
     "@types/node": "npm:^24.0.0"

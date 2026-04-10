@@ -592,7 +592,7 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
-    it("should append pluginId to remote-href when there are multiple summaries with pluginId", () => {
+    it("should ignore pluginId when remote-href option is provided for multiple summaries", () => {
       const summaries = [
         {
           name: "Behaviors",
@@ -630,7 +630,7 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
-    it("should normalize trailing slash when appending pluginId to remote-href", () => {
+    it("should preserve trailing slash in remote-href option when pluginId is ignored", () => {
       const summaries = [
         {
           name: "Behaviors",
@@ -668,7 +668,7 @@ describe("utils", () => {
       expect(result).toMatchSnapshot();
     });
 
-    it("should not append pluginId when there is only one summary", () => {
+    it("should ignore pluginId when there is only one summary", () => {
       const summaries = [
         {
           name: "Behaviors",
