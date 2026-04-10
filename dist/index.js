@@ -24922,6 +24922,95 @@ function getOctokit$1(token, options, ...additionalPlugins) {
 	return new (GitHub.plugin(...additionalPlugins))(getOctokitOptions(token, options));
 }
 //#endregion
+//#region src/github.ts
+const getGithubInput = (name) => getInput(name, { required: false });
+const getGithubContext = () => context;
+const getOctokit = (token) => getOctokit$1(token);
+const getCommentMarker = (body) => {
+	return body?.split("\n", 1)[0];
+};
+const findCommentByMarker = (comments, marker) => {
+	return comments.find((comment) => comment.body?.includes(marker));
+};
+/**
+* Finds an existing comment with the given marker and updates it, or creates a new one
+*/
+const findOrCreateComment = async (params) => {
+	const { octokit, owner, repo, issue_number, marker, body, existingComments } = params;
+	const commentBody = `${marker}\n${body}`;
+	const existingComment = findCommentByMarker(existingComments ?? (await octokit.rest.issues.listComments({
+		owner,
+		repo,
+		issue_number
+	})).data, marker);
+	if (existingComment) {
+		await octokit.rest.issues.updateComment({
+			owner,
+			repo,
+			comment_id: existingComment.id,
+			body: commentBody
+		});
+		return;
+	}
+	await octokit.rest.issues.createComment({
+		owner,
+		repo,
+		issue_number,
+		body: commentBody
+	});
+};
+const deleteCommentsByMarkerPrefix = async (params) => {
+	const { octokit, owner, repo, existingComments, prefix, keepMarkers = /* @__PURE__ */ new Set() } = params;
+	const commentsToDelete = existingComments.filter((comment) => {
+		const marker = getCommentMarker(comment.body);
+		return Boolean(marker?.startsWith(prefix) && !keepMarkers.has(marker));
+	});
+	await Promise.all(commentsToDelete.map((comment) => octokit.rest.issues.deleteComment({
+		owner,
+		repo,
+		comment_id: comment.id
+	})));
+};
+//#endregion
+//#region src/path.ts
+const normalizePathForUrl = (value) => value.split(node_path.sep).join("/");
+//#endregion
+//#region src/quality-gate.ts
+const stripAnsiCodes = (str, replacement) => {
+	return str.replace(/\u001b\[\d+m/g, replacement ?? "");
+};
+const isQualityGateFailed = (qualityGateResultsContent) => {
+	if (!qualityGateResultsContent) return false;
+	if (Array.isArray(qualityGateResultsContent)) return qualityGateResultsContent.length > 0;
+	return Object.values(qualityGateResultsContent).flat().length > 0;
+};
+const formatQualityGareResultsList = (qualityGateResults) => {
+	const commentLines = [];
+	qualityGateResults.forEach((result) => {
+		commentLines.push(`**${result.rule}** has failed:`);
+		commentLines.push("```shell");
+		commentLines.push(stripAnsiCodes(result.message));
+		commentLines.push("```");
+		commentLines.push("");
+	});
+	return commentLines.join("\n");
+};
+const formatQualityGateResults = (qualityGateResultsContent) => {
+	if (Array.isArray(qualityGateResultsContent)) return formatQualityGareResultsList(qualityGateResultsContent);
+	const comments = [];
+	Object.entries(qualityGateResultsContent).forEach(([env, results]) => {
+		comments.push([`**Environment**: "${env}"`, formatQualityGareResultsList(results)].join("\n"));
+	});
+	return comments.join("\n\n---\n\n");
+};
+//#endregion
+//#region src/model.ts
+const SUMMARY_SECTIONS = [
+	"new",
+	"flaky",
+	"retry"
+];
+//#endregion
 //#region node_modules/@allurereport/core-api/dist/constants.js
 const unsuccessfulStatuses = new Set(["failed", "broken"]);
 const successfulStatuses = new Set(["passed"]);
@@ -24984,39 +25073,13 @@ const formatDuration = (duration) => {
 	return res.join(" ");
 };
 //#endregion
-//#region src/utils.ts
-const normalizePathForUrl = (value) => value.split(node_path.sep).join("/");
-const getGithubInput = (name) => getInput(name, { required: false });
-const getGithubContext = () => context;
-const getOctokit = (token) => getOctokit$1(token);
-/**
-* Finds an existing comment with the given marker and updates it, or creates a new one
-*/
-const findOrCreateComment = async (params) => {
-	const { octokit, owner, repo, issue_number, marker, body } = params;
-	const commentBody = `${marker}\n${body}`;
-	const { data: existingComments } = await octokit.rest.issues.listComments({
-		owner,
-		repo,
-		issue_number
-	});
-	const existingComment = existingComments.find((comment) => comment.body?.includes(marker));
-	if (existingComment) await octokit.rest.issues.updateComment({
-		owner,
-		repo,
-		comment_id: existingComment.id,
-		body: commentBody
-	});
-	else await octokit.rest.issues.createComment({
-		owner,
-		repo,
-		issue_number,
-		body: commentBody
-	});
+//#region src/table.ts
+const formatSummaryTest = (test) => {
+	return `- ${`${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`} ${test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name} (${formatDuration(test.duration)})`;
 };
 /**
 * Generates a markdown table based on information from all available Allure Reports
-* Doesn't include certaion informatino about every test to keep the table compact
+* Doesn't include certain information about every test to keep the table compact
 */
 const generateSummaryMarkdownTable = (summaries, options = {}) => {
 	const { remoteHref: inputRemoteHref } = options;
@@ -25067,32 +25130,128 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 		})
 	].join("\n");
 };
-const stripAnsiCodes = (str, replacement) => {
-	return str.replace(/\u001b\[\d+m/g, replacement ?? "");
+//#endregion
+//#region src/sections.ts
+const SUMMARY_SECTION_DEFINITIONS = {
+	new: {
+		filter: "new",
+		title: "New Tests",
+		testsKey: "newTests"
+	},
+	flaky: {
+		filter: "flaky",
+		title: "Flaky Tests",
+		testsKey: "flakyTests"
+	},
+	retry: {
+		filter: "retry",
+		title: "Retry Tests",
+		testsKey: "retryTests"
+	}
 };
-const isQualityGateFailed = (qualityGateResultsContent) => {
-	if (!qualityGateResultsContent) return false;
-	if (Array.isArray(qualityGateResultsContent)) return qualityGateResultsContent.length > 0;
-	return Object.values(qualityGateResultsContent).flat().length > 0;
+const SUMMARY_SECTION_ALIASES = {
+	"new": "new",
+	"new-tests": "new",
+	"flaky": "flaky",
+	"flaky-tests": "flaky",
+	"retry": "retry",
+	"retry-tests": "retry"
 };
-const formatQualityGareResultsList = (qualityGateResults) => {
-	const commentLines = [];
-	qualityGateResults.forEach((result) => {
-		commentLines.push(`**${result.rule}** has failed:`);
-		commentLines.push("```shell");
-		commentLines.push(stripAnsiCodes(result.message));
-		commentLines.push("```");
-		commentLines.push("");
+const SUMMARY_SECTION_MARKER_PREFIX = "<!-- allure-report-section:";
+const MAX_SECTION_COMMENT_BODY_LENGTH = 6e4;
+const normalizeSummarySection = (value) => {
+	return value.trim().toLowerCase().replace(/^[\s[\]"']+|[\s\]"']+$/g, "");
+};
+const getSummaryDisplayName = (summary) => {
+	return summary?.name ?? "Allure Report";
+};
+const getSummaryTestResultsLinksFlag = (summary) => {
+	const { meta } = summary;
+	return Boolean(meta?.withTestResultsLinks);
+};
+const createSummaryTestRemoteHref = (summary, testId) => {
+	if (!summary.remoteHref || !getSummaryTestResultsLinksFlag(summary)) return;
+	return `${summary.remoteHref}#${testId}`;
+};
+const getSummarySectionTests = (summary, section) => {
+	return (summary[SUMMARY_SECTION_DEFINITIONS[section].testsKey] ?? []).map((test) => ({
+		...test,
+		remoteHref: createSummaryTestRemoteHref(summary, test.id)
+	}));
+};
+const parseSummarySections = (value) => {
+	const normalizedRequestedSections = value.split(/[\n,]/).map(normalizeSummarySection).filter(Boolean);
+	if (normalizedRequestedSections.includes("all")) return [...SUMMARY_SECTIONS];
+	const requestedSections = new Set(normalizedRequestedSections.map((section) => SUMMARY_SECTION_ALIASES[section]).filter((section) => Boolean(section)));
+	return SUMMARY_SECTIONS.filter((section) => requestedSections.has(section));
+};
+const getSummarySectionMarker = (summaryId, section) => {
+	return `${SUMMARY_SECTION_MARKER_PREFIX}${section}:${summaryId} -->`;
+};
+const getSummarySectionFilterHref = (summary, section) => {
+	if (!summary.remoteHref) return;
+	return `${summary.remoteHref}?filter=${SUMMARY_SECTION_DEFINITIONS[section].filter}`;
+};
+const formatSummarySectionToggleLabel = (section, testsCount) => {
+	return `Show ${testsCount} ${section} ${testsCount === 1 ? "test" : "tests"}`;
+};
+const renderSummarySectionCommentBody = (titleLine, summaryLine, contentLines) => {
+	return [
+		titleLine,
+		"",
+		"<details>",
+		`<summary>${summaryLine}</summary>`,
+		"",
+		...contentLines,
+		"</details>"
+	].join("\n");
+};
+const getTruncatedSummarySectionLines = (summary, section) => {
+	const moreHref = getSummarySectionFilterHref(summary, section);
+	if (!moreHref) return [
+		"",
+		"_List truncated due to comment size limit._",
+		""
+	];
+	return [
+		"",
+		`[More](${moreHref})`,
+		""
+	];
+};
+const generateSummarySectionCommentBody = (summary, section, options = {}) => {
+	const { maxCommentBodyLength = MAX_SECTION_COMMENT_BODY_LENGTH } = options;
+	const tests = getSummarySectionTests(summary, section);
+	if (!tests.length) return;
+	const titleLine = `### ${SUMMARY_SECTION_DEFINITIONS[section].title} in ${getSummaryDisplayName(summary)}`;
+	const summaryLine = formatSummarySectionToggleLabel(section, tests.length);
+	const formattedTestLines = tests.map((test) => formatSummaryTest(test));
+	const fullBody = renderSummarySectionCommentBody(titleLine, summaryLine, [...formattedTestLines, ""]);
+	if (fullBody.length <= maxCommentBodyLength) return fullBody;
+	const truncatedTailLines = getTruncatedSummarySectionLines(summary, section);
+	const keptTestLines = [];
+	formattedTestLines.forEach((line) => {
+		if (renderSummarySectionCommentBody(titleLine, summaryLine, [
+			...keptTestLines,
+			line,
+			...truncatedTailLines
+		]).length <= maxCommentBodyLength) keptTestLines.push(line);
 	});
-	return commentLines.join("\n");
+	return renderSummarySectionCommentBody(titleLine, summaryLine, [...keptTestLines, ...truncatedTailLines]);
 };
-const formatQualityGateResults = (qualityGateResultsContent) => {
-	if (Array.isArray(qualityGateResultsContent)) return formatQualityGareResultsList(qualityGateResultsContent);
+const generateSummarySectionComments = (summaries, sections, options = {}) => {
 	const comments = [];
-	Object.entries(qualityGateResultsContent).forEach(([env, results]) => {
-		comments.push([`**Environment**: "${env}"`, formatQualityGareResultsList(results)].join("\n"));
+	sections.forEach((section) => {
+		summaries.forEach((summary) => {
+			const body = generateSummarySectionCommentBody(summary, section, options);
+			if (!body) return;
+			comments.push({
+				marker: getSummarySectionMarker(summary.summaryId, section),
+				body
+			});
+		});
 	});
-	return comments.join("\n\n---\n\n");
+	return comments;
 };
 //#endregion
 //#region src/index.ts
@@ -25116,6 +25275,12 @@ const getSummaryDirSuffix = (reportDir, summaryFile) => {
 	if (normalizedSummaryDir === ".") return "";
 	return normalizePathForUrl(normalizedSummaryDir);
 };
+const getSummaryId = (reportDir, summaryFile) => {
+	const resolvedReportDir = node_path.resolve(reportDir);
+	const resolvedSummaryFile = node_path.resolve(summaryFile);
+	if (resolvedSummaryFile.startsWith(`${resolvedReportDir}${node_path.sep}`)) return normalizePathForUrl(node_path.relative(resolvedReportDir, resolvedSummaryFile));
+	return normalizePathForUrl(node_path.normalize(summaryFile));
+};
 const resolveSummaryRemoteHref = (params) => {
 	const { reportDir, summaryFile, inputRemoteHref, summaryRemoteHref } = params;
 	if (!inputRemoteHref) return summaryRemoteHref;
@@ -25132,6 +25297,7 @@ const run = async () => {
 	if (eventName !== "pull_request" || !payload.pull_request) return;
 	const reportDir = getGithubInput("report-directory") || node_path.join(process.cwd(), "allure-report");
 	const remoteHref = getGithubInput("remote-href") || void 0;
+	const enabledSections = parseSummarySections(getGithubInput("sections"));
 	const qualityGateFile = node_path.join(reportDir, "quality-gate.json");
 	const summaryFiles = await (0, import_out.default)([node_path.join(reportDir, "**", "summary.json")], { onlyFiles: true });
 	const summaryFilesContent = await Promise.all(summaryFiles.map(async (file) => {
@@ -25139,6 +25305,7 @@ const run = async () => {
 		const summary = JSON.parse(content);
 		return {
 			...summary,
+			summaryId: getSummaryId(reportDir, file),
 			remoteHref: resolveSummaryRemoteHref({
 				reportDir,
 				summaryFile: file,
@@ -25174,15 +25341,39 @@ const run = async () => {
 		info("No published reports found");
 		return;
 	}
-	const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
 	const issue_number = payload.pull_request.number;
+	const { data: existingComments } = await octokit.rest.issues.listComments({
+		owner: repo.owner,
+		repo: repo.repo,
+		issue_number
+	});
+	const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+	const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections);
 	await findOrCreateComment({
 		octokit,
 		owner: repo.owner,
 		repo: repo.repo,
 		issue_number,
+		existingComments,
 		marker: "<!-- allure-report-summary -->",
-		body: tableMarkdown
+		body: summaryCommentMarkdown
+	});
+	await Promise.all(sectionComments.map((comment) => findOrCreateComment({
+		octokit,
+		owner: repo.owner,
+		repo: repo.repo,
+		issue_number,
+		existingComments,
+		marker: comment.marker,
+		body: comment.body
+	})));
+	await deleteCommentsByMarkerPrefix({
+		octokit,
+		owner: repo.owner,
+		repo: repo.repo,
+		existingComments,
+		prefix: SUMMARY_SECTION_MARKER_PREFIX,
+		keepMarkers: new Set(sectionComments.map((comment) => comment.marker))
 	});
 };
 if (require.main === module) run();

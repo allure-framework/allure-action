@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { run } from "../../src/index.js";
-import { getGithubContext, getGithubInput, getOctokit } from "../../src/utils.js";
+import { getGithubContext, getGithubInput, getOctokit, getSummarySectionMarker } from "../../src/utils.js";
 import { octokitMock } from "../utils.js";
 
 vi.mock("fast-glob", () => ({
@@ -200,6 +200,7 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).not.toContain("## New Tests");
     });
 
     it("should create comments for flaky tests", async () => {
@@ -351,6 +352,102 @@ describe("action", () => {
       expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+    });
+
+    it("should publish enabled sections as separate collapsible comments", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        if (input === "sections") {
+          return "new,retry";
+        }
+
+        return "";
+      });
+
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 1,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/report/",
+              meta: {
+                withTestResultsLinks: true,
+              },
+              newTests: [
+                {
+                  id: "test-1",
+                  name: "should be a new test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              flakyTests: [
+                {
+                  id: "test-2",
+                  name: "should be a flaky test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+              retryTests: [
+                {
+                  id: "test-3",
+                  name: "should be a retry test",
+                  status: "passed",
+                  duration: 100,
+                },
+              ],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).not.toContain("<details>");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        getSummarySectionMarker("report1/summary.json", "new"),
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("### New Tests in Test Suite 1");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<details>");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        "<summary>Show 1 new test</summary>",
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        "[should be a new test](https://example.com/report/#test-1)",
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
+        getSummarySectionMarker("report1/summary.json", "retry"),
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("### Retry Tests in Test Suite 1");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
+        "<summary>Show 1 retry test</summary>",
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
+        "[should be a retry test](https://example.com/report/#test-3)",
+      );
     });
 
     it("should handle multiple summary files", async () => {
@@ -747,7 +844,23 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
     });
 
-    it("should not create test detail comments for summaries without withTestResultsLinks flag", async () => {
+    it("should render enabled sections without per-test links when summaries do not expose them", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        if (input === "sections") {
+          return "new";
+        }
+
+        return "";
+      });
+
       const fixtures = {
         summaryFiles: [
           {
@@ -785,11 +898,33 @@ describe("action", () => {
       await run();
 
       expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
-      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        getSummarySectionMarker("report1/summary.json", "new"),
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("should be a new test");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain(
+        "[should be a new test](https://example.com/report/#test-1)",
+      );
     });
 
     it("should post separate comments for each summary with withTestResultsLinks flag", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        if (input === "sections") {
+          return "new";
+        }
+
+        return "";
+      });
+
       const fixtures = {
         summaryFiles: [
           {
@@ -860,10 +995,38 @@ describe("action", () => {
       await run();
 
       expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
-      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        getSummarySectionMarker("report1/summary.json", "new"),
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        "[Suite A new test](https://example.com/suite-a/#suite-a-test-1)",
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
+        getSummarySectionMarker("report2/summary.json", "new"),
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
+        "[Suite B new test](https://example.com/suite-b/#suite-b-test-1)",
+      );
     });
 
     it("should handle mixed summaries with and without withTestResultsLinks flag", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        if (input === "sections") {
+          return "new";
+        }
+
+        return "";
+      });
+
       const fixtures = {
         summaryFiles: [
           {
@@ -931,7 +1094,61 @@ describe("action", () => {
       await run();
 
       expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        "[should post comment](https://example.com/mixed-a/#test-1)",
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("should NOT post comment");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).not.toContain(
+        "[should NOT post comment](https://example.com/without-links/#test-2)",
+      );
+    });
+
+    it("should delete stale section comments when no section comments should be published", async () => {
+      const staleSectionCommentId = 333;
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+        data: [
+          {
+            id: staleSectionCommentId,
+            body: `${getSummarySectionMarker("report1/summary.json", "new")}\n<details>\n<summary>Old</summary>\n</details>`,
+          },
+        ],
+      });
+
+      await run();
+
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.deleteComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.deleteComment).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        comment_id: staleSectionCommentId,
+      });
     });
 
     it("should update existing comment instead of creating new one when marker is found", async () => {
@@ -983,8 +1200,25 @@ describe("action", () => {
       expect(octokitMock.rest.issues.updateComment.mock.calls[0][0].body).toContain("Test Suite 1");
     });
 
-    it("should update existing summary comment and create new test detail comments", async () => {
+    it("should update existing summary and section comments when their markers already exist", async () => {
+      const existingSectionCommentId = 222;
       const existingSummaryCommentId = 111;
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        if (input === "sections") {
+          return "new";
+        }
+
+        return "";
+      });
+
       const fixtures = {
         summaryFiles: [
           {
@@ -1020,26 +1254,35 @@ describe("action", () => {
 
       (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
       (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
-      (octokitMock.rest.issues.listComments as unknown as Mock)
-        .mockResolvedValueOnce({
-          data: [
-            {
-              id: existingSummaryCommentId,
-              body: "<!-- allure-report-summary -->\n# Old Summary",
-            },
-          ],
-        })
-        .mockResolvedValueOnce({ data: [] });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+        data: [
+          {
+            id: existingSummaryCommentId,
+            body: "<!-- allure-report-summary -->\n# Old Summary",
+          },
+          {
+            id: existingSectionCommentId,
+            body: `${getSummarySectionMarker("report1/summary.json", "new")}\n<details>\n<summary>Old</summary>\n</details>`,
+          },
+        ],
+      });
 
       await run();
 
       expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
-      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledTimes(2);
       expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledWith({
         owner: "owner",
         repo: "repo",
         comment_id: existingSummaryCommentId,
         body: expect.stringContaining("<!-- allure-report-summary -->"),
+      });
+      expect(octokitMock.rest.issues.updateComment).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        comment_id: existingSectionCommentId,
+        body: expect.stringContaining(getSummarySectionMarker("report1/summary.json", "new")),
       });
     });
   });

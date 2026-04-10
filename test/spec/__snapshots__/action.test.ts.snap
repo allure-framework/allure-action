@@ -56,11 +56,3 @@ exports[`action > when the action should be run > should handle summary files wi
 |-|-|-|-|-|-|-|-|
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>10</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | 1 | 0 | 0 |  |"
 `;
-
-exports[`action > when the action should be run > should not create test detail comments for summaries without withTestResultsLinks flag 1`] = `
-"<!-- allure-report-summary -->
-# Allure Report Summary
-|  | Name | Duration | Stats | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" /> | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>10</span>&nbsp;&nbsp;&nbsp;<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>1</span> | <a href="https://example.com/report/?filter=new" target="_blank">1</a> | 0 | 0 | <a href="https://example.com/report/" target="_blank">View</a> |"
-`;
