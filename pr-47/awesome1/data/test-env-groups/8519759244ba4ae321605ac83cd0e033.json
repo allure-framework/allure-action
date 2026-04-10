@@ -1,0 +1,1 @@
+{"id":"8519759244ba4ae321605ac83cd0e033","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should strip various ANSI codes (bold, underline, etc.)","name":"should strip various ANSI codes (bold, underline, etc.)","status":"passed","testResultsByEnv":{"default":"fb9e0fe19fb6b73983bd0d5c51eb3dc2"}}

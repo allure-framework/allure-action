@@ -1,0 +1,1 @@
+{"id":"2647c79e23d009a7fc37ff3ace075c76","fullName":"test/spec/utils.test.ts#utils formatQualityGateResults should format record content with multiple violations per environment","name":"should format record content with multiple violations per environment","status":"passed","testResultsByEnv":{"default":"e242485f9bdbfcc0d5612ed76e398b9b"}}

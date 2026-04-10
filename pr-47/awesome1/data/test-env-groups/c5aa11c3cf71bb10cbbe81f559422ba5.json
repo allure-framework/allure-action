@@ -1,0 +1,1 @@
+{"id":"c5aa11c3cf71bb10cbbe81f559422ba5","fullName":"test/spec/action.test.ts#action when the action should be run should suffix remote-href with the summary directory when index.html is present","name":"should suffix remote-href with the summary directory when index.html is present","status":"passed","testResultsByEnv":{"default":"0abc2e05eb53cf9863e1cbfb6aa96e01"}}
