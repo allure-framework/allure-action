@@ -107,8 +107,16 @@ const getSummarySectionFilterHref = (summary: PluginSummary, section: SummarySec
   return `${summary.remoteHref}?filter=${SUMMARY_SECTION_DEFINITIONS[section].filter}`;
 };
 
-const renderSummarySectionCommentBody = (summaryLine: string, contentLines: string[]): string => {
-  return ["<details>", `<summary>${summaryLine}</summary>`, "", ...contentLines, "</details>"].join("\n");
+const formatSummarySectionToggleLabel = (section: SummarySection, testsCount: number): string => {
+  const testLabel = testsCount === 1 ? "test" : "tests";
+
+  return `Show ${testsCount} ${section} ${testLabel}`;
+};
+
+const renderSummarySectionCommentBody = (titleLine: string, summaryLine: string, contentLines: string[]): string => {
+  return [titleLine, "", "<details>", `<summary>${summaryLine}</summary>`, "", ...contentLines, "</details>"].join(
+    "\n",
+  );
 };
 
 const getTruncatedSummarySectionLines = (summary: PluginSummary, section: SummarySection): string[] => {
@@ -134,9 +142,10 @@ const generateSummarySectionCommentBody = (
   }
 
   const definition = SUMMARY_SECTION_DEFINITIONS[section];
-  const summaryLine = `${definition.title} in ${getSummaryDisplayName(summary)} (${tests.length})`;
+  const titleLine = `### ${definition.title} in ${getSummaryDisplayName(summary)}`;
+  const summaryLine = formatSummarySectionToggleLabel(section, tests.length);
   const formattedTestLines = tests.map((test) => formatSummaryTest(test));
-  const fullBody = renderSummarySectionCommentBody(summaryLine, [...formattedTestLines, ""]);
+  const fullBody = renderSummarySectionCommentBody(titleLine, summaryLine, [...formattedTestLines, ""]);
 
   if (fullBody.length <= maxCommentBodyLength) {
     return fullBody;
@@ -146,14 +155,18 @@ const generateSummarySectionCommentBody = (
   const keptTestLines: string[] = [];
 
   formattedTestLines.forEach((line) => {
-    const candidate = renderSummarySectionCommentBody(summaryLine, [...keptTestLines, line, ...truncatedTailLines]);
+    const candidate = renderSummarySectionCommentBody(titleLine, summaryLine, [
+      ...keptTestLines,
+      line,
+      ...truncatedTailLines,
+    ]);
 
     if (candidate.length <= maxCommentBodyLength) {
       keptTestLines.push(line);
     }
   });
 
-  return renderSummarySectionCommentBody(summaryLine, [...keptTestLines, ...truncatedTailLines]);
+  return renderSummarySectionCommentBody(titleLine, summaryLine, [...keptTestLines, ...truncatedTailLines]);
 };
 
 export const generateSummarySectionComments = (

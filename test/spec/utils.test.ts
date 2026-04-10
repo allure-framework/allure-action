@@ -113,20 +113,26 @@ describe("utils", () => {
       expect(result[0]).toMatchObject({
         marker: getSummarySectionMarker("suite-a/summary.json", "new"),
       });
+      expect(result[0].body).toContain("### New Tests in Suite A");
       expect(result[0].body).toContain("<details>");
-      expect(result[0].body).toContain("<summary>New Tests in Suite A (1)</summary>");
+      expect(result[0].body).toContain("<summary>Show 1 new test</summary>");
       expect(result[0].body).toContain("[Suite A new test](https://example.com/suite-a/#suite-a-new-1)");
       expect(result[1]).toMatchObject({
         marker: getSummarySectionMarker("suite-b/summary.json", "new"),
       });
+      expect(result[1].body).toContain("<summary>Show 1 new test</summary>");
       expect(result[1].body).toContain("[Suite B new test](https://example.com/suite-b/#suite-b-new-1)");
       expect(result[2]).toMatchObject({
         marker: getSummarySectionMarker("suite-a/summary.json", "flaky"),
       });
+      expect(result[2].body).toContain("### Flaky Tests in Suite A");
+      expect(result[2].body).toContain("<summary>Show 1 flaky test</summary>");
       expect(result[2].body).toContain("[Suite A flaky test](https://example.com/suite-a/#suite-a-flaky-1)");
       expect(result[3]).toMatchObject({
         marker: getSummarySectionMarker("suite-b/summary.json", "retry"),
       });
+      expect(result[3].body).toContain("### Retry Tests in Suite B");
+      expect(result[3].body).toContain("<summary>Show 1 retry test</summary>");
       expect(result[3].body).toContain("[Suite B retry test](https://example.com/suite-b/#suite-b-retry-1)");
     });
 

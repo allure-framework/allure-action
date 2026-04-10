@@ -430,12 +430,20 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
         getSummarySectionMarker("report1/summary.json", "new"),
       );
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("### New Tests in Test Suite 1");
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<details>");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        "<summary>Show 1 new test</summary>",
+      );
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
         "[should be a new test](https://example.com/report/#test-1)",
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
         getSummarySectionMarker("report1/summary.json", "retry"),
+      );
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("### Retry Tests in Test Suite 1");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
+        "<summary>Show 1 retry test</summary>",
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
         "[should be a retry test](https://example.com/report/#test-3)",
