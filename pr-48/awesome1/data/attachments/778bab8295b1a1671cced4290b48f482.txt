@@ -1,0 +1,1 @@
+Sourcemap for "/home/runner/work/allure-action/allure-action/node_modules/allure-vitest/dist/setup.js" points to missing source files
