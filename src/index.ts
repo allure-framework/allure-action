@@ -13,7 +13,64 @@ import {
   getGithubInput,
   getOctokit,
   isQualityGateFailed,
+  normalizePathForUrl,
 } from "./utils.js";
+
+const getSummaryDirSuffix = (reportDir: string, summaryFile: string): string => {
+  const summaryDir = path.dirname(summaryFile);
+  const normalizedReportDir = path.normalize(reportDir);
+  const normalizedSummaryDir = path.normalize(summaryDir);
+  const resolvedReportDir = path.resolve(reportDir);
+  const resolvedSummaryDir = path.resolve(summaryDir);
+  const candidates = [
+    { baseDir: normalizedReportDir, targetDir: normalizedSummaryDir },
+    { baseDir: resolvedReportDir, targetDir: resolvedSummaryDir },
+  ];
+
+  for (const { baseDir, targetDir } of candidates) {
+    if (targetDir === baseDir) {
+      return "";
+    }
+
+    if (targetDir.startsWith(`${baseDir}${path.sep}`)) {
+      return normalizePathForUrl(path.relative(baseDir, targetDir));
+    }
+  }
+
+  if (normalizedSummaryDir === ".") {
+    return "";
+  }
+
+  return normalizePathForUrl(normalizedSummaryDir);
+};
+
+const resolveSummaryRemoteHref = (params: {
+  reportDir: string;
+  summaryFile: string;
+  inputRemoteHref?: string;
+  summaryRemoteHref?: string;
+}): string | undefined => {
+  const { reportDir, summaryFile, inputRemoteHref, summaryRemoteHref } = params;
+
+  if (!inputRemoteHref) {
+    return summaryRemoteHref;
+  }
+
+  const summaryDir = path.dirname(summaryFile);
+  const indexFile = path.join(summaryDir, "index.html");
+
+  if (!existsSync(indexFile)) {
+    return inputRemoteHref;
+  }
+
+  const suffix = getSummaryDirSuffix(reportDir, summaryFile);
+
+  if (!suffix) {
+    return inputRemoteHref;
+  }
+
+  return `${inputRemoteHref.replace(/\/$/, "")}/${suffix}`;
+};
 
 const run = async (): Promise<void> => {
   const token = getGithubInput("github-token");
@@ -28,6 +85,7 @@ const run = async (): Promise<void> => {
   }
 
   const reportDir = getGithubInput("report-directory") || path.join(process.cwd(), "allure-report");
+  const remoteHref = getGithubInput("remote-href") || undefined;
   const qualityGateFile = path.join(reportDir, "quality-gate.json");
   const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
@@ -35,8 +93,17 @@ const run = async (): Promise<void> => {
   const summaryFilesContent = await Promise.all(
     summaryFiles.map(async (file) => {
       const content = await fs.readFile(file, "utf-8");
+      const summary = JSON.parse(content) as PluginSummary;
 
-      return JSON.parse(content) as PluginSummary;
+      return {
+        ...summary,
+        remoteHref: resolveSummaryRemoteHref({
+          reportDir,
+          summaryFile: file,
+          inputRemoteHref: remoteHref,
+          summaryRemoteHref: summary.remoteHref,
+        }),
+      } as PluginSummary;
     }),
   );
   let qualityGateResults: QualityGateResultsContent | undefined;

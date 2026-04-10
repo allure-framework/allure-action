@@ -10,7 +10,11 @@ on:
 permissions:
   pull-requests: write
   checks: write
-  contents: read
+  contents: write
+
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -20,6 +24,15 @@ jobs:
       ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Compute publish subpath
+        id: path
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "subdir=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "subdir=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Enable Corepack
         run: corepack enable
@@ -46,4 +59,15 @@ jobs:
         uses: ./
         with:
           report-directory: "./out/allure-report"
+          remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out/allure-report
+          publish_branch: gh-pages
+          destination_dir: ${{ steps.path.outputs.subdir }}
+          keep_files: true

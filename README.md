@@ -41,8 +41,12 @@ Then, add the action to your workflow right after your tests, which produce Allu
   uses: allure-framework/allure-report@v0
   with:
     # Path to the generated report directory
-    # By default, it's set to `./allure-report`
+    # Default: "./allure-report"
     report-directory: "./"
+    # State path where the report is hosted on
+    # Useful when you publish your report to GitHub pages or any other hosting for static web-sites
+    # Default: ""
+    remote-href: "https://allure-framework.github.io/allure-action/"
     # Github Token that uses for posting the comments in Pull Requests
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
