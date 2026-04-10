@@ -1,0 +1,1 @@
+{"id":"fda6e96d6ddbd68c9e1aeee2c4ff20ed","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should ignore pluginId when remote-href option is provided for multiple summaries","name":"should ignore pluginId when remote-href option is provided for multiple summaries","status":"passed","testResultsByEnv":{"default":"f9d3a299949629202efe6f9b509c0a7e"}}

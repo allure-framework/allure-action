@@ -1,0 +1,1 @@
+{"id":"3a4b3d53475fe568e6e05da4c36740b8","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should fall back to summary.remoteHref when remote-href option is missing","name":"should fall back to summary.remoteHref when remote-href option is missing","status":"passed","testResultsByEnv":{"default":"ab963973de94a6c5f4dd38773e7dd1b5"}}

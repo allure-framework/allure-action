@@ -1,0 +1,1 @@
+{"id":"6586b80ca8e5f8c7394320b06c6dd170","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should return a table with header only for empty array","name":"should return a table with header only for empty array","status":"passed","testResultsByEnv":{"default":"fd2c52ff8ee5ea97411534f0f6c238ee"}}
