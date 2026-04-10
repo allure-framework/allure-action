@@ -1,0 +1,1 @@
+{"id":"663f78fba1fb3cd175166768fd368acd","fullName":"test/spec/utils.test.ts#utils formatQualityGareResultsList should strip ANSI codes from messages","name":"should strip ANSI codes from messages","status":"passed","testResultsByEnv":{"default":"ba51b066c5e8015fe553b2a82884c3e6"}}

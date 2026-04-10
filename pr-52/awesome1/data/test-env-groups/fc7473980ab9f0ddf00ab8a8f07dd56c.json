@@ -1,0 +1,1 @@
+{"id":"fc7473980ab9f0ddf00ab8a8f07dd56c","fullName":"test/spec/action.test.ts#action when the action should be run should delete stale section comments when no section comments should be published","name":"should delete stale section comments when no section comments should be published","status":"passed","testResultsByEnv":{"default":"49a55218f936c7b6161721a8113b7cab"}}
