@@ -1,0 +1,1 @@
+{"id":"4cec521b56093c59099ccc6bd6d7927a","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should generate a table for a single summary without remoteHref","name":"should generate a table for a single summary without remoteHref","status":"passed","testResultsByEnv":{"default":"787730dee2cb6a51715dd036e0799012"}}

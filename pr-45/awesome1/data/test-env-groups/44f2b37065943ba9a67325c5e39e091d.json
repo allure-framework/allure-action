@@ -1,0 +1,1 @@
+{"id":"44f2b37065943ba9a67325c5e39e091d","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should handle string with only ANSI codes","name":"should handle string with only ANSI codes","status":"passed","testResultsByEnv":{"default":"fad6262f079a7545847312e7e3ededdb"}}
