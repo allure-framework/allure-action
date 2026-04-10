@@ -20,6 +20,9 @@
     "format:oxfmt": "oxfmt './{src,test}/**/*.{json,js,ts,tsx}' package.json",
     "test": "yarn allure run -- vitest run"
   },
+  "resolutions": {
+    "axois": "^1.15.0"
+  },
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
