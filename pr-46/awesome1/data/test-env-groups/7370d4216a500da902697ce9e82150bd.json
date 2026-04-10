@@ -1,0 +1,1 @@
+{"id":"7370d4216a500da902697ce9e82150bd","fullName":"test/spec/utils.test.ts#utils isQualityGateFailed should return false for an empty record","name":"should return false for an empty record","status":"passed","testResultsByEnv":{"default":"1f44d7571225a7e39d1a7f834a8fa70e"}}
