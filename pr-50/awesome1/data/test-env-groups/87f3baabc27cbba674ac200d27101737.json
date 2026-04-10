@@ -1,0 +1,1 @@
+{"id":"87f3baabc27cbba674ac200d27101737","fullName":"test/spec/action.test.ts#action when actions should be skipped should not run action when there's no pull request","name":"should not run action when there's no pull request","status":"passed","testResultsByEnv":{"default":"e67bc55a80b2144a283f18df4b30c537"}}
