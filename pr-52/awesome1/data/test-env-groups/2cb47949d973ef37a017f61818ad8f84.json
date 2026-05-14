@@ -1,1 +1,1 @@
-{"id":"2cb47949d973ef37a017f61818ad8f84","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI codes from multi-line string","name":"should strip ANSI codes from multi-line string","status":"passed","testResultsByEnv":{"default":"36b57bde715cfb442de6289f3bc6f693"}}
+{"id":"2cb47949d973ef37a017f61818ad8f84","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI codes from multi-line string","name":"should strip ANSI codes from multi-line string","status":"passed","testResultsByEnv":{"default":"8d135ba228aa61430b45ab326f580d6f"}}

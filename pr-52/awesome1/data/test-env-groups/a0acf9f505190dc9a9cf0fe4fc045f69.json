@@ -1,1 +1,1 @@
-{"id":"a0acf9f505190dc9a9cf0fe4fc045f69","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI color codes from string","name":"should strip ANSI color codes from string","status":"passed","testResultsByEnv":{"default":"dd61b4a69302a67d81be073db0b2e120"}}
+{"id":"a0acf9f505190dc9a9cf0fe4fc045f69","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI color codes from string","name":"should strip ANSI color codes from string","status":"passed","testResultsByEnv":{"default":"ecafa3e2b835180a0c0456d801155987"}}
