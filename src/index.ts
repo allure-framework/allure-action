@@ -92,10 +92,12 @@ const run = async (): Promise<void> => {
   const { eventName, repo, payload } = getGithubContext();
 
   if (!token) {
+    core.error("No GitHub token provided");
     return;
   }
 
   if (eventName !== "pull_request" || !payload.pull_request) {
+    core.info("Not a pull request event, skipping");
     return;
   }
 
@@ -136,6 +138,8 @@ const run = async (): Promise<void> => {
   const octokit = getOctokit(token);
 
   if (qualityGateResults) {
+    core.info("Quality gate results found, checking status");
+
     const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 
     octokit.rest.checks.create({
