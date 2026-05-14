@@ -436,7 +436,7 @@ describe("action", () => {
         "<summary>Show 1 new test</summary>",
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
-        "[should be a new test](https://example.com/report/#test-1)",
+        '<a href="https://example.com/report/#test-1" target="_blank" rel="noopener noreferrer">should be a new test</a>',
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
         getSummarySectionMarker("report1/summary.json", "retry"),
@@ -446,7 +446,7 @@ describe("action", () => {
         "<summary>Show 1 retry test</summary>",
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
-        "[should be a retry test](https://example.com/report/#test-3)",
+        '<a href="https://example.com/report/#test-3" target="_blank" rel="noopener noreferrer">should be a retry test</a>',
       );
     });
 
@@ -904,7 +904,7 @@ describe("action", () => {
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("should be a new test");
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain(
-        "[should be a new test](https://example.com/report/#test-1)",
+        '<a href="https://example.com/report/#test-1" target="_blank" rel="noopener noreferrer">should be a new test</a>',
       );
     });
 
@@ -1000,13 +1000,13 @@ describe("action", () => {
         getSummarySectionMarker("report1/summary.json", "new"),
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
-        "[Suite A new test](https://example.com/suite-a/#suite-a-test-1)",
+        '<a href="https://example.com/suite-a/#suite-a-test-1" target="_blank" rel="noopener noreferrer">Suite A new test</a>',
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
         getSummarySectionMarker("report2/summary.json", "new"),
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
-        "[Suite B new test](https://example.com/suite-b/#suite-b-test-1)",
+        '<a href="https://example.com/suite-b/#suite-b-test-1" target="_blank" rel="noopener noreferrer">Suite B new test</a>',
       );
     });
 
@@ -1096,11 +1096,11 @@ describe("action", () => {
       expect(octokitMock.rest.issues.listComments).toHaveBeenCalledTimes(1);
       expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
-        "[should post comment](https://example.com/mixed-a/#test-1)",
+        '<a href="https://example.com/mixed-a/#test-1" target="_blank" rel="noopener noreferrer">should post comment</a>',
       );
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("should NOT post comment");
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).not.toContain(
-        "[should NOT post comment](https://example.com/without-links/#test-2)",
+        '<a href="https://example.com/without-links/#test-2" target="_blank" rel="noopener noreferrer">should NOT post comment</a>',
       );
     });
 

@@ -1,6 +1,6 @@
 import type { PluginSummary } from "@allurereport/plugin-api";
 import { type ActionSummary, SUMMARY_SECTIONS, type RemoteSummaryTestResult, type SummarySection } from "./model.js";
-import { formatSummaryTest } from "./table.js";
+import { createExternalLink, formatSummaryTest } from "./table.js";
 
 const SUMMARY_SECTION_DEFINITIONS: Record<
   SummarySection,
@@ -126,7 +126,7 @@ const getTruncatedSummarySectionLines = (summary: PluginSummary, section: Summar
     return ["", "_List truncated due to comment size limit._", ""];
   }
 
-  return ["", `[More](${moreHref})`, ""];
+  return ["", createExternalLink(moreHref, "More"), ""];
 };
 
 const generateSummarySectionCommentBody = (

@@ -116,24 +116,32 @@ describe("utils", () => {
       expect(result[0].body).toContain("### New Tests in Suite A");
       expect(result[0].body).toContain("<details>");
       expect(result[0].body).toContain("<summary>Show 1 new test</summary>");
-      expect(result[0].body).toContain("[Suite A new test](https://example.com/suite-a/#suite-a-new-1)");
+      expect(result[0].body).toContain(
+        '<a href="https://example.com/suite-a/#suite-a-new-1" target="_blank" rel="noopener noreferrer">Suite A new test</a>',
+      );
       expect(result[1]).toMatchObject({
         marker: getSummarySectionMarker("suite-b/summary.json", "new"),
       });
       expect(result[1].body).toContain("<summary>Show 1 new test</summary>");
-      expect(result[1].body).toContain("[Suite B new test](https://example.com/suite-b/#suite-b-new-1)");
+      expect(result[1].body).toContain(
+        '<a href="https://example.com/suite-b/#suite-b-new-1" target="_blank" rel="noopener noreferrer">Suite B new test</a>',
+      );
       expect(result[2]).toMatchObject({
         marker: getSummarySectionMarker("suite-a/summary.json", "flaky"),
       });
       expect(result[2].body).toContain("### Flaky Tests in Suite A");
       expect(result[2].body).toContain("<summary>Show 1 flaky test</summary>");
-      expect(result[2].body).toContain("[Suite A flaky test](https://example.com/suite-a/#suite-a-flaky-1)");
+      expect(result[2].body).toContain(
+        '<a href="https://example.com/suite-a/#suite-a-flaky-1" target="_blank" rel="noopener noreferrer">Suite A flaky test</a>',
+      );
       expect(result[3]).toMatchObject({
         marker: getSummarySectionMarker("suite-b/summary.json", "retry"),
       });
       expect(result[3].body).toContain("### Retry Tests in Suite B");
       expect(result[3].body).toContain("<summary>Show 1 retry test</summary>");
-      expect(result[3].body).toContain("[Suite B retry test](https://example.com/suite-b/#suite-b-retry-1)");
+      expect(result[3].body).toContain(
+        '<a href="https://example.com/suite-b/#suite-b-retry-1" target="_blank" rel="noopener noreferrer">Suite B retry test</a>',
+      );
     });
 
     it("should omit comments for sections without matching tests", () => {
@@ -205,8 +213,96 @@ describe("utils", () => {
       });
 
       expect(result.body.length).toBeLessThanOrEqual(260);
-      expect(result.body).toContain("[More](https://example.com/suite-a/?filter=new)");
+      expect(result.body).toContain(
+        '<a href="https://example.com/suite-a/?filter=new" target="_blank" rel="noopener noreferrer">More</a>',
+      );
       expect(result.body).not.toContain("Very long new test name 3");
+    });
+
+    it("should escape special characters in generated test links", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 2,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: 'https://example.com/suite?a=1&b=<tag>&c="quote"',
+          meta: {
+            withTestResultsLinks: true,
+          },
+          newTests: [
+            {
+              id: 'id-1"&<tag>',
+              name: 'Spec "A" & <B> > C',
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as ActionSummary[];
+      const [result] = generateSummarySectionComments(summaries, ["new"]);
+
+      expect(result.body).toContain(
+        '<a href="https://example.com/suite?a=1&amp;b=&lt;tag&gt;&amp;c=&quot;quote&quot;#id-1&quot;&amp;&lt;tag&gt;" target="_blank" rel="noopener noreferrer">Spec &quot;A&quot; &amp; &lt;B&gt; &gt; C</a>',
+      );
+    });
+
+    it("should escape special characters in generated More link", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 3,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: 'https://example.com/suite?a=1&b=<tag>&c="quote"',
+          meta: {
+            withTestResultsLinks: true,
+          },
+          newTests: [
+            {
+              id: "test-1",
+              name: "Very long new test name 1",
+              status: "passed",
+              duration: 100,
+            },
+            {
+              id: "test-2",
+              name: "Very long new test name 2",
+              status: "passed",
+              duration: 100,
+            },
+            {
+              id: "test-3",
+              name: "Very long new test name 3",
+              status: "passed",
+              duration: 100,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as ActionSummary[];
+      const [result] = generateSummarySectionComments(summaries, ["new"], {
+        maxCommentBodyLength: 260,
+      });
+
+      expect(result.body).toContain(
+        '<a href="https://example.com/suite?a=1&amp;b=&lt;tag&gt;&amp;c=&quot;quote&quot;?filter=new" target="_blank" rel="noopener noreferrer">More</a>',
+      );
     });
 
     it("should render a truncation note when remote report link is unavailable", () => {
@@ -305,6 +401,41 @@ describe("utils", () => {
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toMatchSnapshot();
+    });
+
+    it("should escape special characters in report links", () => {
+      const summaries = [
+        {
+          name: 'Suite "A"',
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: 'https://example.com/report?tab="overview"&q=<fast>&x=y',
+          newTests: [
+            {
+              id: "test-1",
+              name: "new",
+              status: "passed",
+              duration: 10,
+            },
+          ],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toContain(
+        '<a href="https://example.com/report?tab=&quot;overview&quot;&amp;q=&lt;fast&gt;&amp;x=y?filter=new" target="_blank" rel="noopener noreferrer">1</a>',
+      );
+      expect(result).toContain(
+        '<a href="https://example.com/report?tab=&quot;overview&quot;&amp;q=&lt;fast&gt;&amp;x=y" target="_blank" rel="noopener noreferrer">View</a>',
+      );
     });
 
     it("should generate a table for multiple summaries", () => {
@@ -1099,6 +1230,23 @@ describe("utils", () => {
       const result = formatSummaryTests(tests);
 
       expect(result).toMatchSnapshot();
+    });
+
+    it("should escape special characters in test names and remoteHref", () => {
+      const tests: RemoteSummaryTestResult[] = [
+        {
+          id: "test-1",
+          name: 'should "escape" & <render> > label',
+          status: "passed",
+          duration: 100,
+          remoteHref: 'https://example.com/report/#test-1?x="1"&y=<tag>',
+        },
+      ];
+      const result = formatSummaryTests(tests);
+
+      expect(result).toContain(
+        '<a href="https://example.com/report/#test-1?x=&quot;1&quot;&amp;y=&lt;tag&gt;" target="_blank" rel="noopener noreferrer">should &quot;escape&quot; &amp; &lt;render&gt; &gt; label</a>',
+      );
     });
 
     it("should format tests with different statuses", () => {

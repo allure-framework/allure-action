@@ -2,10 +2,23 @@ import { formatDuration } from "@allurereport/core-api";
 import type { PluginSummary } from "@allurereport/plugin-api";
 import type { RemoteSummaryTestResult } from "./model.js";
 
+const escapeHtml = (value: string): string => {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+};
+
+export const createExternalLink = (href: string, label: string): string => {
+  return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+};
+
 export const formatSummaryTest = (test: RemoteSummaryTestResult): string => {
   const statusIcon = `<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`;
   const statusText = `${statusIcon} ${test.status}`;
-  const testName = test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name;
+  const testName = test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name;
   const duration = formatDuration(test.duration);
 
   return `- ${statusText} ${testName} (${duration})`;
@@ -84,20 +97,20 @@ export const generateSummaryMarkdownTable = (
     } else {
       cells.push(
         newCount > 0
-          ? `<a href="${effectiveRemoteHref}?filter=new" target="_blank">${newCount}</a>`
+          ? createExternalLink(`${effectiveRemoteHref}?filter=new`, newCount.toString())
           : newCount.toString(),
       );
       cells.push(
         flakyCount > 0
-          ? `<a href="${effectiveRemoteHref}?filter=flaky" target="_blank">${flakyCount}</a>`
+          ? createExternalLink(`${effectiveRemoteHref}?filter=flaky`, flakyCount.toString())
           : flakyCount.toString(),
       );
       cells.push(
         retryCount > 0
-          ? `<a href="${effectiveRemoteHref}?filter=retry" target="_blank">${retryCount}</a>`
+          ? createExternalLink(`${effectiveRemoteHref}?filter=retry`, retryCount.toString())
           : retryCount.toString(),
       );
-      cells.push(`<a href="${effectiveRemoteHref}" target="_blank">View</a>`);
+      cells.push(createExternalLink(effectiveRemoteHref, "View"));
     }
 
     return `| ${cells.join(" | ")} |`;

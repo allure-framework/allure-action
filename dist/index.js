@@ -38,6 +38,105 @@ let node_fs_promises = require("node:fs/promises");
 node_fs_promises = __toESM(node_fs_promises);
 let node_path = require("node:path");
 node_path = __toESM(node_path);
+//#region node_modules/@actions/core/lib/utils.js
+/**
+* Sanitizes an input into a string so it can be passed into issueCommand safely
+* @param input input to sanitize into a string
+*/
+function toCommandValue(input) {
+	if (input === null || input === void 0) return "";
+	else if (typeof input === "string" || input instanceof String) return input;
+	return JSON.stringify(input);
+}
+/**
+*
+* @param annotationProperties
+* @returns The command properties to send with the actual annotation command
+* See IssueCommandProperties: https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs#L646
+*/
+function toCommandProperties(annotationProperties) {
+	if (!Object.keys(annotationProperties).length) return {};
+	return {
+		title: annotationProperties.title,
+		file: annotationProperties.file,
+		line: annotationProperties.startLine,
+		endLine: annotationProperties.endLine,
+		col: annotationProperties.startColumn,
+		endColumn: annotationProperties.endColumn
+	};
+}
+//#endregion
+//#region node_modules/@actions/core/lib/command.js
+/**
+* Issues a command to the GitHub Actions runner
+*
+* @param command - The command name to issue
+* @param properties - Additional properties for the command (key-value pairs)
+* @param message - The message to include with the command
+* @remarks
+* This function outputs a specially formatted string to stdout that the Actions
+* runner interprets as a command. These commands can control workflow behavior,
+* set outputs, create annotations, mask values, and more.
+*
+* Command Format:
+*   ::name key=value,key=value::message
+*
+* @example
+* ```typescript
+* // Issue a warning annotation
+* issueCommand('warning', {}, 'This is a warning message');
+* // Output: ::warning::This is a warning message
+*
+* // Set an environment variable
+* issueCommand('set-env', { name: 'MY_VAR' }, 'some value');
+* // Output: ::set-env name=MY_VAR::some value
+*
+* // Add a secret mask
+* issueCommand('add-mask', {}, 'secretValue123');
+* // Output: ::add-mask::secretValue123
+* ```
+*
+* @internal
+* This is an internal utility function that powers the public API functions
+* such as setSecret, warning, error, and exportVariable.
+*/
+function issueCommand(command, properties, message) {
+	const cmd = new Command(command, properties, message);
+	process.stdout.write(cmd.toString() + os.EOL);
+}
+const CMD_STRING = "::";
+var Command = class {
+	constructor(command, properties, message) {
+		if (!command) command = "missing.command";
+		this.command = command;
+		this.properties = properties;
+		this.message = message;
+	}
+	toString() {
+		let cmdStr = CMD_STRING + this.command;
+		if (this.properties && Object.keys(this.properties).length > 0) {
+			cmdStr += " ";
+			let first = true;
+			for (const key in this.properties) if (this.properties.hasOwnProperty(key)) {
+				const val = this.properties[key];
+				if (val) {
+					if (first) first = false;
+					else cmdStr += ",";
+					cmdStr += `${key}=${escapeProperty(val)}`;
+				}
+			}
+		}
+		cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+		return cmdStr;
+	}
+};
+function escapeData(s) {
+	return toCommandValue(s).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+}
+function escapeProperty(s) {
+	return toCommandValue(s).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A").replace(/:/g, "%3A").replace(/,/g, "%2C");
+}
+//#endregion
 //#region node_modules/tunnel/lib/tunnel.js
 var require_tunnel$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	require("net");
@@ -16043,6 +16142,14 @@ function getInput(name, options) {
 	return val.trim();
 }
 /**
+* Adds an error issue
+* @param message error issue message. Errors will be converted to string via toString()
+* @param properties optional properties to add to the annotation.
+*/
+function error(message, properties = {}) {
+	issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+/**
 * Writes info to log with console.log.
 * @param message info message
 */
@@ -25074,8 +25181,14 @@ const formatDuration = (duration) => {
 };
 //#endregion
 //#region src/table.ts
+const escapeHtml = (value) => {
+	return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
+};
+const createExternalLink = (href, label) => {
+	return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+};
 const formatSummaryTest = (test) => {
-	return `- ${`${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`} ${test.remoteHref ? `[${test.name}](${test.remoteHref})` : test.name} (${formatDuration(test.duration)})`;
+	return `- ${`${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`} ${test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name} (${formatDuration(test.duration)})`;
 };
 /**
 * Generates a markdown table based on information from all available Allure Reports
@@ -25121,10 +25234,10 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 				cells.push(retryCount.toString());
 				cells.push("");
 			} else {
-				cells.push(newCount > 0 ? `<a href="${effectiveRemoteHref}?filter=new" target="_blank">${newCount}</a>` : newCount.toString());
-				cells.push(flakyCount > 0 ? `<a href="${effectiveRemoteHref}?filter=flaky" target="_blank">${flakyCount}</a>` : flakyCount.toString());
-				cells.push(retryCount > 0 ? `<a href="${effectiveRemoteHref}?filter=retry" target="_blank">${retryCount}</a>` : retryCount.toString());
-				cells.push(`<a href="${effectiveRemoteHref}" target="_blank">View</a>`);
+				cells.push(newCount > 0 ? createExternalLink(`${effectiveRemoteHref}?filter=new`, newCount.toString()) : newCount.toString());
+				cells.push(flakyCount > 0 ? createExternalLink(`${effectiveRemoteHref}?filter=flaky`, flakyCount.toString()) : flakyCount.toString());
+				cells.push(retryCount > 0 ? createExternalLink(`${effectiveRemoteHref}?filter=retry`, retryCount.toString()) : retryCount.toString());
+				cells.push(createExternalLink(effectiveRemoteHref, "View"));
 			}
 			return `| ${cells.join(" | ")} |`;
 		})
@@ -25215,7 +25328,7 @@ const getTruncatedSummarySectionLines = (summary, section) => {
 	];
 	return [
 		"",
-		`[More](${moreHref})`,
+		createExternalLink(moreHref, "More"),
 		""
 	];
 };
@@ -25293,8 +25406,14 @@ const resolveSummaryRemoteHref = (params) => {
 const run = async () => {
 	const token = getGithubInput("github-token");
 	const { eventName, repo, payload } = getGithubContext();
-	if (!token) return;
-	if (eventName !== "pull_request" || !payload.pull_request) return;
+	if (!token) {
+		error("No GitHub token provided");
+		return;
+	}
+	if (eventName !== "pull_request" || !payload.pull_request) {
+		info("Not a pull request event, skipping");
+		return;
+	}
 	const reportDir = getGithubInput("report-directory") || node_path.join(process.cwd(), "allure-report");
 	const remoteHref = getGithubInput("remote-href") || void 0;
 	const enabledSections = parseSummarySections(getGithubInput("sections"));
@@ -25323,6 +25442,7 @@ const run = async () => {
 	}
 	const octokit = getOctokit(token);
 	if (qualityGateResults) {
+		info("Quality gate results found, checking status");
 		const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 		octokit.rest.checks.create({
 			owner: repo.owner,
