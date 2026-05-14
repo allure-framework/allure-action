@@ -1,1 +1,1 @@
-{"id":"663f78fba1fb3cd175166768fd368acd","fullName":"test/spec/utils.test.ts#utils formatQualityGareResultsList should strip ANSI codes from messages","name":"should strip ANSI codes from messages","status":"passed","testResultsByEnv":{"default":"041623448ad225a2b5892d0a40fdef48"}}
+{"id":"663f78fba1fb3cd175166768fd368acd","fullName":"test/spec/utils.test.ts#utils formatQualityGareResultsList should strip ANSI codes from messages","name":"should strip ANSI codes from messages","status":"passed","testResultsByEnv":{"default":"2a85012114eb8676f8494fe7bbbc7a1f"}}
