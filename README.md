@@ -17,7 +17,8 @@
 This actions scans given report directory for data and posts a summary comment that includes:
 
 - Summary statistics about all test results
-- New, flaky and retry tests
+- Counts for new, flaky and retry tests
+- Optional collapsible section comments for new, flaky and retry tests
 - Adds remote report link if the report has been published to the Allure Service
 
 ## Usage
@@ -49,6 +50,12 @@ Then, add the action to your workflow right after your tests, which produce Allu
     remote-href: "https://allure-framework.github.io/allure-action/"
     # Github Token that uses for posting the comments in Pull Requests
     github-token: ${{ secrets.GITHUB_TOKEN }}
+    # Optional extra section comments to publish alongside the summary table
+    # Supported values: new, flaky, retry, all
+    # Default: hidden
+    sections: |
+      new
+      flaky
 ```
 
 If everything is set up correctly and required reports data is present, the Action will post a comment with Allure Report summary to your Pull Request, like this:
@@ -58,6 +65,33 @@ If everything is set up correctly and required reports data is present, the Acti
 ## Configuration
 
 The action utilizes Allure 3 Runtime configuration file (`allurerc.js` or `allurerc.mjs`) and use `output` field as a path, where it should search for the generated reports.
+
+### Comment sections
+
+By default, the action posts the summary table only. You can enable additional section comments in the Pull Request with the `sections` input:
+
+```yaml
+with:
+  sections: |
+    new
+    flaky
+```
+
+Supported values:
+
+- `new`
+- `flaky`
+- `retry`
+- `all`
+
+The input accepts comma-separated or newline-separated values.
+
+When enabled:
+
+- each section is published as a separate comment
+- section comments are wrapped in a collapsible `<details>` block
+- comments are updated on the next run using dedicated markers
+- oversized test lists are truncated and include a `More` link to the filtered remote report when available
 
 ### Remote reports
 

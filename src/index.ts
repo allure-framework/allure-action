@@ -4,16 +4,20 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { QualityGateResultsContent } from "./model.js";
+import type { ActionSummary, QualityGateResultsContent } from "./model.js";
 import {
+  SUMMARY_SECTION_MARKER_PREFIX,
+  deleteCommentsByMarkerPrefix,
   findOrCreateComment,
   formatQualityGateResults,
   generateSummaryMarkdownTable,
+  generateSummarySectionComments,
   getGithubContext,
   getGithubInput,
   getOctokit,
   isQualityGateFailed,
   normalizePathForUrl,
+  parseSummarySections,
 } from "./utils.js";
 
 const getSummaryDirSuffix = (reportDir: string, summaryFile: string): string => {
@@ -42,6 +46,17 @@ const getSummaryDirSuffix = (reportDir: string, summaryFile: string): string => 
   }
 
   return normalizePathForUrl(normalizedSummaryDir);
+};
+
+const getSummaryId = (reportDir: string, summaryFile: string): string => {
+  const resolvedReportDir = path.resolve(reportDir);
+  const resolvedSummaryFile = path.resolve(summaryFile);
+
+  if (resolvedSummaryFile.startsWith(`${resolvedReportDir}${path.sep}`)) {
+    return normalizePathForUrl(path.relative(resolvedReportDir, resolvedSummaryFile));
+  }
+
+  return normalizePathForUrl(path.normalize(summaryFile));
 };
 
 const resolveSummaryRemoteHref = (params: {
@@ -77,35 +92,39 @@ const run = async (): Promise<void> => {
   const { eventName, repo, payload } = getGithubContext();
 
   if (!token) {
+    core.error("No GitHub token provided");
     return;
   }
 
   if (eventName !== "pull_request" || !payload.pull_request) {
+    core.info("Not a pull request event, skipping");
     return;
   }
 
   const reportDir = getGithubInput("report-directory") || path.join(process.cwd(), "allure-report");
   const remoteHref = getGithubInput("remote-href") || undefined;
+  const enabledSections = parseSummarySections(getGithubInput("sections"));
   const qualityGateFile = path.join(reportDir, "quality-gate.json");
   const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
   });
-  const summaryFilesContent = await Promise.all(
+  const summaryFilesContent = (await Promise.all(
     summaryFiles.map(async (file) => {
       const content = await fs.readFile(file, "utf-8");
       const summary = JSON.parse(content) as PluginSummary;
 
       return {
         ...summary,
+        summaryId: getSummaryId(reportDir, file),
         remoteHref: resolveSummaryRemoteHref({
           reportDir,
           summaryFile: file,
           inputRemoteHref: remoteHref,
           summaryRemoteHref: summary.remoteHref,
         }),
-      } as PluginSummary;
+      } as ActionSummary;
     }),
-  );
+  )) as ActionSummary[];
   let qualityGateResults: QualityGateResultsContent | undefined;
 
   if (existsSync(qualityGateFile)) {
@@ -119,6 +138,8 @@ const run = async (): Promise<void> => {
   const octokit = getOctokit(token);
 
   if (qualityGateResults) {
+    core.info("Quality gate results found, checking status");
+
     const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 
     octokit.rest.checks.create({
@@ -142,16 +163,46 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const tableMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
   const issue_number = payload.pull_request.number;
+  const { data: existingComments } = await octokit.rest.issues.listComments({
+    owner: repo.owner,
+    repo: repo.repo,
+    issue_number,
+  });
+  const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+  const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections);
 
   await findOrCreateComment({
     octokit,
     owner: repo.owner,
     repo: repo.repo,
     issue_number,
+    existingComments,
     marker: "<!-- allure-report-summary -->",
-    body: tableMarkdown,
+    body: summaryCommentMarkdown,
+  });
+
+  await Promise.all(
+    sectionComments.map((comment) =>
+      findOrCreateComment({
+        octokit,
+        owner: repo.owner,
+        repo: repo.repo,
+        issue_number,
+        existingComments,
+        marker: comment.marker,
+        body: comment.body,
+      }),
+    ),
+  );
+
+  await deleteCommentsByMarkerPrefix({
+    octokit,
+    owner: repo.owner,
+    repo: repo.repo,
+    existingComments,
+    prefix: SUMMARY_SECTION_MARKER_PREFIX,
+    keepMarkers: new Set(sectionComments.map((comment) => comment.marker)),
   });
 };
 

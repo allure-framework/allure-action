@@ -4,6 +4,7 @@ export const octokitMock = {
   rest: {
     issues: {
       createComment: vi.fn(),
+      deleteComment: vi.fn(),
       listComments: vi.fn(),
       updateComment: vi.fn(),
     },
