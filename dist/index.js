@@ -25144,6 +25144,13 @@ var CiType;
 	CiType["Local"] = "local";
 })(CiType || (CiType = {}));
 //#endregion
+//#region node_modules/@allurereport/core-api/dist/categories.js
+const DEFAULT_ERROR_CATEGORY_IDS = {
+	productErrors: "_product_errors_default_category",
+	testErrors: "_test_errors_default_category"
+};
+DEFAULT_ERROR_CATEGORY_IDS.productErrors, DEFAULT_ERROR_CATEGORY_IDS.testErrors;
+//#endregion
 //#region node_modules/@allurereport/core-api/dist/utils/time.js
 const times = [
 	{
