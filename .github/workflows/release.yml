@@ -29,6 +29,7 @@ jobs:
 
       - uses: actions/checkout@v6
         with:
+          ref: main
           token: ${{ secrets.QAMETA_CI }}
 
       - name: "Configure CI Git User"
@@ -56,10 +57,10 @@ jobs:
       - name: "Commit release version and create tag"
         run: |
           git add -A
-          git commit -am "release ${{ github.event.inputs.releaseVersion }}" --no-verify
+          git commit --allow-empty -m "release ${{ github.event.inputs.releaseVersion }}" --no-verify
           git tag ${{ github.event.inputs.releaseVersion }}
+          git push origin HEAD:main
           git push origin ${{ github.event.inputs.releaseVersion }}
-          git push origin ${GITHUB_REF}
 
       - name: "Publish Github Release"
         uses: octokit/request-action@v2.x
