@@ -1,1 +1,1 @@
-{"id":"8659fdd3b787f616199bf963f8e76b4a","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should handle empty string","name":"should handle empty string","status":"passed","testResultsByEnv":{"default":"8de69e3a7786c0db39d3fee41130b8bd"}}
+{"id":"8659fdd3b787f616199bf963f8e76b4a","fullName":"test/spec/utils.test.ts#utils stripAnsiCodes should handle empty string","name":"should handle empty string","status":"passed","testResultsByEnv":{"default":"13d208903f567a369cf4b67a0ae59e26"}}
