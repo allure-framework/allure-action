@@ -438,6 +438,28 @@ describe("utils", () => {
       );
     });
 
+    it("should escape pipe characters in report name cell", () => {
+      const summaries = [
+        {
+          name: "A | B",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as PluginSummary[];
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toContain("| A \\| B |");
+    });
+
     it("should generate a table for multiple summaries", () => {
       const summaries = [
         {

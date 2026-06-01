@@ -25191,6 +25191,9 @@ const formatDuration = (duration) => {
 const escapeHtml = (value) => {
 	return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
 };
+const escapeMarkdownTableCell = (value) => {
+	return value.split("|").join("\\|");
+};
 const createExternalLink = (href, label) => {
 	return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
 };
@@ -25217,7 +25220,7 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 				...summary.stats
 			};
 			const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-			const name = summary?.name ?? "Allure Report";
+			const name = escapeMarkdownTableCell(summary?.name ?? "Allure Report");
 			const duration = formatDuration(summary?.duration ?? 0);
 			const statsLabels = [];
 			if (stats.passed > 0) statsLabels.push(`<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`);
