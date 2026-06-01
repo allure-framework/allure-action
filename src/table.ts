@@ -11,6 +11,10 @@ const escapeHtml = (value: string): string => {
     .replaceAll("'", "&#39;");
 };
 
+const escapeMarkdownTableCell = (value: string): string => {
+  return value.split("|").join("\\|");
+};
+
 export const createExternalLink = (href: string, label: string): string => {
   return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
 };
@@ -49,7 +53,7 @@ export const generateSummaryMarkdownTable = (
       ...summary.stats,
     };
     const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-    const name = summary?.name ?? "Allure Report";
+    const name = escapeMarkdownTableCell(summary?.name ?? "Allure Report");
     const duration = formatDuration(summary?.duration ?? 0);
     const statsLabels: string[] = [];
 
