@@ -72,7 +72,7 @@ const resolveSummaryRemoteHref = (params: {
   }
 
   const summaryDir = path.dirname(summaryFile);
-  const indexFile = path.join(summaryDir, "index.html");
+  const indexFile = path.posix.join(summaryDir, "index.html");
 
   if (!existsSync(indexFile)) {
     return inputRemoteHref;
@@ -101,11 +101,11 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const reportDir = getGithubInput("report-directory") || path.join(process.cwd(), "allure-report");
+  const reportDir = getGithubInput("report-directory") || path.posix.join(process.cwd(), "allure-report");
   const remoteHref = getGithubInput("remote-href") || undefined;
   const enabledSections = parseSummarySections(getGithubInput("sections"));
-  const qualityGateFile = path.join(reportDir, "quality-gate.json");
-  const summaryFiles = await fg([path.join(reportDir, "**", "summary.json")], {
+  const qualityGateFile = path.posix.join(reportDir, "quality-gate.json");
+  const summaryFiles = await fg([path.posix.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
   });
   const summaryFilesContent = (await Promise.all(
