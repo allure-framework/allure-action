@@ -38,7 +38,7 @@
     "@allurereport/plugin-awesome": "^3.8.2",
     "@types/d3-shape": "^3",
     "@types/lodash.chunk": "^4",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.0.0",
     "@vitest/runner": "^4.1.2",
     "@vitest/snapshot": "^4.1.9",
     "allure": "^3.8.2",
