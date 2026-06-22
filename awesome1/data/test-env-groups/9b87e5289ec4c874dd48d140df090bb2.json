@@ -1,1 +1,1 @@
-{"id":"9b87e5289ec4c874dd48d140df090bb2","fullName":"test/spec/utils.test.ts#utils formatSummaryTests should format tests with different statuses","name":"should format tests with different statuses","status":"passed","testResultsByEnv":{"default":"6305845b06aaec91481dade2972ec63d"}}
+{"id":"9b87e5289ec4c874dd48d140df090bb2","fullName":"test/spec/utils.test.ts#utils formatSummaryTests should format tests with different statuses","name":"should format tests with different statuses","status":"passed","testResultsByEnv":{"default":"dbcc5e59cbced7f8a306d76bdc372a16"}}
