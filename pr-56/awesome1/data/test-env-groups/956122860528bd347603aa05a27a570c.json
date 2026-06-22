@@ -1,0 +1,1 @@
+{"id":"956122860528bd347603aa05a27a570c","fullName":"test/spec/utils.test.ts#utils generateSummarySectionComments should omit comments for sections without matching tests","name":"should omit comments for sections without matching tests","status":"passed","testResultsByEnv":{"default":"c63541596fc878c573a1a7e0ab262519"}}
