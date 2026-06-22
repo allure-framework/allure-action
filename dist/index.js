@@ -25408,7 +25408,7 @@ const resolveSummaryRemoteHref = (params) => {
 	const { reportDir, summaryFile, inputRemoteHref, summaryRemoteHref } = params;
 	if (!inputRemoteHref) return summaryRemoteHref;
 	const summaryDir = node_path.dirname(summaryFile);
-	if (!(0, node_fs.existsSync)(node_path.join(summaryDir, "index.html"))) return inputRemoteHref;
+	if (!(0, node_fs.existsSync)(node_path.posix.join(summaryDir, "index.html"))) return inputRemoteHref;
 	const suffix = getSummaryDirSuffix(reportDir, summaryFile);
 	if (!suffix) return inputRemoteHref;
 	return `${inputRemoteHref.replace(/\/$/, "")}/${suffix}`;
@@ -25424,11 +25424,11 @@ const run = async () => {
 		info("Not a pull request event, skipping");
 		return;
 	}
-	const reportDir = getGithubInput("report-directory") || node_path.join(process.cwd(), "allure-report");
+	const reportDir = getGithubInput("report-directory") || node_path.posix.join(process.cwd(), "allure-report");
 	const remoteHref = getGithubInput("remote-href") || void 0;
 	const enabledSections = parseSummarySections(getGithubInput("sections"));
-	const qualityGateFile = node_path.join(reportDir, "quality-gate.json");
-	const summaryFiles = await (0, import_out.default)([node_path.join(reportDir, "**", "summary.json")], { onlyFiles: true });
+	const qualityGateFile = node_path.posix.join(reportDir, "quality-gate.json");
+	const summaryFiles = await (0, import_out.default)([node_path.posix.join(reportDir, "**", "summary.json")], { onlyFiles: true });
 	const summaryFilesContent = await Promise.all(summaryFiles.map(async (file) => {
 		const content = await node_fs_promises.readFile(file, "utf-8");
 		const summary = JSON.parse(content);
