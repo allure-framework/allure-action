@@ -1,1 +1,1 @@
-{"id":"2fc610e7b27c9fdeeb853394bb124e48","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero skipped stats","name":"should handle zero skipped stats","status":"passed","testResultsByEnv":{"default":"4d173eece63c51c8c503e573540d4389"}}
+{"id":"2fc610e7b27c9fdeeb853394bb124e48","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero skipped stats","name":"should handle zero skipped stats","status":"passed","testResultsByEnv":{"default":"cfdf1239c8304da8b4b6adb068be1fac"}}
