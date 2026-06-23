@@ -1,1 +1,1 @@
-{"id":"3d462b457246d75730d3363f5a8a250d","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero passed stats","name":"should handle zero passed stats","status":"passed","testResultsByEnv":{"default":"421c88adee7e91d3d39e97ac419865a1"}}
+{"id":"3d462b457246d75730d3363f5a8a250d","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero passed stats","name":"should handle zero passed stats","status":"passed","testResultsByEnv":{"default":"78bcd9a94da34ab9916944a19b915d0a"}}
