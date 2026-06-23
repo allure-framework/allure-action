@@ -97,6 +97,9 @@ describe("action", () => {
         payload: {
           pull_request: {
             number: 1,
+            head: {
+              sha: "abc123",
+            },
           },
         },
       });
@@ -1360,6 +1363,69 @@ describe("action", () => {
         conclusion: "success",
         output: undefined,
       });
+    });
+
+    it("should create checks for every summary check", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  name: "Lint",
+                  status: "passed",
+                },
+                {
+                  name: "Security",
+                  status: "failed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateFile: "test/fixtures/quality-gate/quality-gate.json",
+        qualityGateContent: JSON.stringify([]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Lint",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Security",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "failure",
+      });
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(3);
     });
 
     it("should create a failed check when quality gate fails", async () => {

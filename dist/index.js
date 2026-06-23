@@ -25144,6 +25144,15 @@ var CiType;
 	CiType["Local"] = "local";
 })(CiType || (CiType = {}));
 //#endregion
+//#region node_modules/@allurereport/core-api/dist/gitFlow.js
+var GitProvider;
+(function(GitProvider) {
+	GitProvider["Github"] = "github";
+	GitProvider["Gitlab"] = "gitlab";
+	GitProvider["Bitbucket"] = "bitbucket";
+	GitProvider["Other"] = "other";
+})(GitProvider || (GitProvider = {}));
+//#endregion
 //#region node_modules/@allurereport/core-api/dist/categories.js
 const DEFAULT_ERROR_CATEGORY_IDS = {
 	productErrors: "_product_errors_default_category",
@@ -25413,6 +25422,7 @@ const resolveSummaryRemoteHref = (params) => {
 	if (!suffix) return inputRemoteHref;
 	return `${inputRemoteHref.replace(/\/$/, "")}/${suffix}`;
 };
+const getGithubCheckConclusion = (status) => status === "passed" ? "success" : "failure";
 const run = async () => {
 	const token = getGithubInput("github-token");
 	const { eventName, repo, payload } = getGithubContext();
@@ -25424,6 +25434,7 @@ const run = async () => {
 		info("Not a pull request event, skipping");
 		return;
 	}
+	const headSha = payload.pull_request.head.sha;
 	const reportDir = getGithubInput("report-directory") || node_path.posix.join(process.cwd(), "allure-report");
 	const remoteHref = getGithubInput("remote-href") || void 0;
 	const enabledSections = parseSummarySections(getGithubInput("sections"));
@@ -25454,11 +25465,11 @@ const run = async () => {
 	if (qualityGateResults) {
 		info("Quality gate results found, checking status");
 		const qualityGateFailed = isQualityGateFailed(qualityGateResults);
-		octokit.rest.checks.create({
+		await octokit.rest.checks.create({
 			owner: repo.owner,
 			repo: repo.repo,
 			name: "Allure Quality Gate",
-			head_sha: payload.pull_request.head.sha,
+			head_sha: headSha,
 			status: "completed",
 			conclusion: !qualityGateFailed ? "success" : "failure",
 			output: !qualityGateFailed ? void 0 : {
@@ -25467,6 +25478,14 @@ const run = async () => {
 			}
 		});
 	}
+	await Promise.all(summaryFilesContent.flatMap((summary) => (summary.checks ?? []).map((check) => octokit.rest.checks.create({
+		owner: repo.owner,
+		repo: repo.repo,
+		name: check.name,
+		head_sha: headSha,
+		status: "completed",
+		conclusion: getGithubCheckConclusion(check.status)
+	}))));
 	if (!summaryFilesContent?.length) {
 		info("No published reports found");
 		return;

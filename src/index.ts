@@ -87,6 +87,9 @@ const resolveSummaryRemoteHref = (params: {
   return `${inputRemoteHref.replace(/\/$/, "")}/${suffix}`;
 };
 
+const getGithubCheckConclusion = (status: NonNullable<PluginSummary["checks"]>[number]["status"]): "success" | "failure" =>
+  status === "passed" ? "success" : "failure";
+
 const run = async (): Promise<void> => {
   const token = getGithubInput("github-token");
   const { eventName, repo, payload } = getGithubContext();
@@ -100,6 +103,8 @@ const run = async (): Promise<void> => {
     core.info("Not a pull request event, skipping");
     return;
   }
+
+  const headSha = payload.pull_request.head.sha;
 
   const reportDir = getGithubInput("report-directory") || path.posix.join(process.cwd(), "allure-report");
   const remoteHref = getGithubInput("remote-href") || undefined;
@@ -142,11 +147,11 @@ const run = async (): Promise<void> => {
 
     const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 
-    octokit.rest.checks.create({
+    await octokit.rest.checks.create({
       owner: repo.owner,
       repo: repo.repo,
       name: "Allure Quality Gate",
-      head_sha: payload.pull_request.head.sha,
+      head_sha: headSha,
       status: "completed",
       conclusion: !qualityGateFailed ? "success" : "failure",
       output: !qualityGateFailed
@@ -154,9 +159,24 @@ const run = async (): Promise<void> => {
         : {
             title: "Quality Gate",
             summary: formatQualityGateResults(qualityGateResults),
-          },
+        },
     });
   }
+
+  await Promise.all(
+    summaryFilesContent.flatMap((summary) =>
+      (summary.checks ?? []).map((check) =>
+        octokit.rest.checks.create({
+          owner: repo.owner,
+          repo: repo.repo,
+          name: check.name,
+          head_sha: headSha,
+          status: "completed",
+          conclusion: getGithubCheckConclusion(check.status),
+        }),
+      ),
+    ),
+  );
 
   if (!summaryFilesContent?.length) {
     core.info("No published reports found");
