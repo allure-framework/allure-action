@@ -56,10 +56,11 @@ describe("action", () => {
       (getGithubContext as unknown as Mock).mockReturnValue({
         eventName: "",
       });
+      (fg as unknown as Mock).mockResolvedValue([]);
 
       await run();
 
-      expect(fg).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
 
     it("should not run action when there's no pull request", async () => {
@@ -68,10 +69,11 @@ describe("action", () => {
         eventName: "pull_request",
         payload: {},
       });
+      (fg as unknown as Mock).mockResolvedValue([]);
 
       await run();
 
-      expect(fg).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
   });
 
@@ -1426,6 +1428,69 @@ describe("action", () => {
         conclusion: "failure",
       });
       expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(3);
+    });
+
+    it("should create checks on push events without PR comments", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        return "";
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "push",
+        sha: "abc123",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Lint",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
 
     it("should create a failed check when quality gate fails", async () => {

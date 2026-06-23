@@ -173,8 +173,8 @@ export const generateSummarySectionComments = (
   summaries: ActionSummary[],
   sections: SummarySection[],
   options: { maxCommentBodyLength?: number } = {},
-): Array<{ body: string; marker: string }> => {
-  const comments: Array<{ body: string; marker: string }> = [];
+): { body: string; marker: string }[] => {
+  const comments: { body: string; marker: string }[] = [];
 
   sections.forEach((section) => {
     summaries.forEach((summary) => {

@@ -9,6 +9,7 @@ on:
 
 permissions:
   pull-requests: write
+  issues: write
   checks: write
   contents: write
 
@@ -55,20 +56,24 @@ jobs:
         run: yarn test
         continue-on-error: true
 
+      - name: Build report
+        if: always()
+        run: yarn report
+        continue-on-error: true
+
       - name: Run Allure Action
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./
         with:
           report-directory: "./out/allure-report"
           remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           sections: "all"
 
       - name: Deploy to GitHub Pages
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           publish_dir: ./out/allure-report
           publish_branch: gh-pages
           destination_dir: ${{ steps.path.outputs.subdir }}

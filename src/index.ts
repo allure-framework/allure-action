@@ -87,25 +87,22 @@ const resolveSummaryRemoteHref = (params: {
   return `${inputRemoteHref.replace(/\/$/, "")}/${suffix}`;
 };
 
-const getGithubCheckConclusion = (status: NonNullable<PluginSummary["checks"]>[number]["status"]): "success" | "failure" =>
-  status === "passed" ? "success" : "failure";
+const getGithubCheckConclusion = (
+  status: NonNullable<PluginSummary["checks"]>[number]["status"],
+): "success" | "failure" => (status === "passed" ? "success" : "failure");
 
 const run = async (): Promise<void> => {
   const token = getGithubInput("github-token");
-  const { eventName, repo, payload } = getGithubContext();
+  const { eventName, repo, payload, sha } = getGithubContext();
 
   if (!token) {
     core.error("No GitHub token provided");
     return;
   }
 
-  if (eventName !== "pull_request" || !payload.pull_request) {
-    core.info("Not a pull request event, skipping");
-    return;
-  }
-
-  const headSha = payload.pull_request.head.sha;
-
+  const pullRequest = payload?.pull_request;
+  const isPullRequest = eventName === "pull_request" && Boolean(pullRequest);
+  const headSha = pullRequest?.head.sha ?? sha;
   const reportDir = getGithubInput("report-directory") || path.posix.join(process.cwd(), "allure-report");
   const remoteHref = getGithubInput("remote-href") || undefined;
   const enabledSections = parseSummarySections(getGithubInput("sections"));
@@ -159,7 +156,7 @@ const run = async (): Promise<void> => {
         : {
             title: "Quality Gate",
             summary: formatQualityGateResults(qualityGateResults),
-        },
+          },
     });
   }
 
@@ -183,7 +180,12 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const issue_number = payload.pull_request.number;
+  if (!isPullRequest || !pullRequest) {
+    core.info("Not a pull request event, skipping comments");
+    return;
+  }
+
+  const issue_number = pullRequest.number;
   const { data: existingComments } = await octokit.rest.issues.listComments({
     owner: repo.owner,
     repo: repo.repo,

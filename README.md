@@ -48,8 +48,9 @@ Then, add the action to your workflow right after your tests, which produce Allu
     # Useful when you publish your report to GitHub pages or any other hosting for static web-sites
     # Default: ""
     remote-href: "https://allure-framework.github.io/allure-action/"
-    # Github Token that uses for posting the comments in Pull Requests
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+    # GitHub token used to create checks and post comments in pull requests
+    # Defaults to ${{ github.token }}
+    github-token: ${{ github.token }}
     # Optional extra section comments to publish alongside the summary table
     # Supported values: new, flaky, retry, all
     # Default: hidden

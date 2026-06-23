@@ -6,7 +6,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJSMin = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 var __copyProps = (to, from, except, desc) => {
 	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
 		key = keys[i];
@@ -23,15 +23,15 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 }) : target, mod));
 //#endregion
 let os = require("os");
-os = __toESM(os);
+os = __toESM(os, 1);
 let fs = require("fs");
-fs = __toESM(fs);
+fs = __toESM(fs, 1);
 let path = require("path");
-path = __toESM(path);
+path = __toESM(path, 1);
 let events = require("events");
-events = __toESM(events);
+events = __toESM(events, 1);
 let child_process = require("child_process");
-child_process = __toESM(child_process);
+child_process = __toESM(child_process, 1);
 require("timers");
 let node_fs = require("node:fs");
 let node_fs_promises = require("node:fs/promises");
@@ -1961,7 +1961,7 @@ var require_timers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	* @type {number}
 	* @default 499
 	*/
-	const TICK_MS = (RESOLUTION_MS >> 1) - 1;
+	const TICK_MS = 499;
 	/**
 	* fastNowTimeout is a Node.js timer used to manage and process
 	* the FastTimers stored in the `fastTimers` array.
@@ -2171,9 +2171,26 @@ var require_timers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	* used as a drop-in replacement for the native functions.
 	*/
 	module.exports = {
+		/**
+		* The setTimeout() method sets a timer which executes a function once the
+		* timer expires.
+		* @param {Function} callback A function to be executed after the timer
+		* expires.
+		* @param {number} delay The time, in milliseconds that the timer should
+		* wait before the specified function or code is executed.
+		* @param {*} [arg] An optional argument to be passed to the callback function
+		* when the timer expires.
+		* @returns {NodeJS.Timeout|FastTimer}
+		*/
 		setTimeout(callback, delay, arg) {
 			return delay <= RESOLUTION_MS ? setTimeout(callback, delay, arg) : new FastTimer(callback, delay, arg);
 		},
+		/**
+		* The clearTimeout method cancels an instantiated Timer previously created
+		* by calling setTimeout.
+		*
+		* @param {NodeJS.Timeout|FastTimer} timeout
+		*/
 		clearTimeout(timeout) {
 			if (timeout[kFastTimer])
  /**
@@ -2182,26 +2199,66 @@ var require_timers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			timeout.clear();
 			else clearTimeout(timeout);
 		},
+		/**
+		* The setFastTimeout() method sets a fastTimer which executes a function once
+		* the timer expires.
+		* @param {Function} callback A function to be executed after the timer
+		* expires.
+		* @param {number} delay The time, in milliseconds that the timer should
+		* wait before the specified function or code is executed.
+		* @param {*} [arg] An optional argument to be passed to the callback function
+		* when the timer expires.
+		* @returns {FastTimer}
+		*/
 		setFastTimeout(callback, delay, arg) {
 			return new FastTimer(callback, delay, arg);
 		},
+		/**
+		* The clearTimeout method cancels an instantiated FastTimer previously
+		* created by calling setFastTimeout.
+		*
+		* @param {FastTimer} timeout
+		*/
 		clearFastTimeout(timeout) {
 			timeout.clear();
 		},
+		/**
+		* The now method returns the value of the internal fast timer clock.
+		*
+		* @returns {number}
+		*/
 		now() {
 			return fastNow;
 		},
+		/**
+		* Trigger the onTick function to process the fastTimers array.
+		* Exported for testing purposes only.
+		* Marking as deprecated to discourage any use outside of testing.
+		* @deprecated
+		* @param {number} [delay=0] The delay in milliseconds to add to the now value.
+		*/
 		tick(delay = 0) {
 			fastNow += delay - RESOLUTION_MS + 1;
 			onTick();
 			onTick();
 		},
+		/**
+		* Reset FastTimers.
+		* Exported for testing purposes only.
+		* Marking as deprecated to discourage any use outside of testing.
+		* @deprecated
+		*/
 		reset() {
 			fastNow = 0;
 			fastTimers.length = 0;
 			clearTimeout(fastNowTimeout);
 			fastNowTimeout = null;
 		},
+		/**
+		* Exporting for testing purposes only.
+		* Marking as deprecated to discourage any use outside of testing.
+		* @deprecated
+		*/
 		kFastTimer
 	};
 }));
@@ -3116,6 +3173,7 @@ var require_data_url = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		const mimeType = {
 			type: typeLowercase,
 			subtype: subtypeLowercase,
+			/** @type {Map<string, string>} */
 			parameters: /* @__PURE__ */ new Map(),
 			essence: `${typeLowercase}/${subtypeLowercase}`
 		};
@@ -3845,6 +3903,12 @@ var require_util$6 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				if (isURLPotentiallyTrustworthy(referrerURL) && !isURLPotentiallyTrustworthy(currentURL)) return "no-referrer";
 				return referrerOrigin;
 			}
+			/**
+			* 1. If referrerURL is a potentially trustworthy URL and
+			* request’s current URL is not a potentially trustworthy URL,
+			* then return no referrer.
+			* 2. Return referrerOrigin
+			*/
 			default: return isNonPotentiallyTrustWorthy ? "no-referrer" : referrerOrigin;
 		}
 	}
@@ -4460,11 +4524,14 @@ var require_file = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const { webidl } = require_webidl();
 	var FileLike = class FileLike {
 		constructor(blobLike, fileName, options = {}) {
+			const n = fileName;
+			const t = options.type;
+			const d = options.lastModified ?? Date.now();
 			this[kState] = {
 				blobLike,
-				name: fileName,
-				type: options.type,
-				lastModified: options.lastModified ?? Date.now()
+				name: n,
+				type: t,
+				lastModified: d
 			};
 		}
 		stream(...args) {
@@ -5173,11 +5240,10 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	let currentBufferRef = null;
 	let currentBufferSize = 0;
 	let currentBufferPtr = null;
-	const USE_NATIVE_TIMER = 0;
 	const USE_FAST_TIMER = 1;
-	const TIMEOUT_HEADERS = 2 | USE_FAST_TIMER;
-	const TIMEOUT_BODY = 4 | USE_FAST_TIMER;
-	const TIMEOUT_KEEP_ALIVE = 8 | USE_NATIVE_TIMER;
+	const TIMEOUT_HEADERS = 3;
+	const TIMEOUT_BODY = 5;
+	const TIMEOUT_KEEP_ALIVE = 8;
 	var Parser = class {
 		constructor(client, socket, { exports: exports$1 }) {
 			assert$20(Number.isFinite(client[kMaxHeadersSize]) && client[kMaxHeadersSize] > 0);
@@ -7946,7 +8012,7 @@ var require_readable = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	* @returns {Uint8Array}
 	*/
 	function chunksConcat(chunks, length) {
-		if (chunks.length === 0 || length === 0) return new Uint8Array(0);
+		if (chunks.length === 0 || length === 0) return /* @__PURE__ */ new Uint8Array(0);
 		if (chunks.length === 1) return new Uint8Array(chunks[0]);
 		const buffer = new Uint8Array(Buffer.allocUnsafeSlow(length).buffer);
 		let offset = 0;
@@ -11382,7 +11448,6 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		let httpFetchParams = null;
 		let httpRequest = null;
 		let response = null;
-		const httpCache = null;
 		if (request.window === "no-window" && request.redirect === "error") {
 			httpFetchParams = fetchParams;
 			httpRequest = request;
@@ -11413,7 +11478,7 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		else httpRequest.headersList.append("accept-encoding", "gzip, deflate", true);
 		httpRequest.headersList.delete("host", true);
 		if (includeCredentials) {}
-		if (httpCache == null) httpRequest.cache = "no-store";
+		httpRequest.cache = "no-store";
 		if (httpRequest.cache !== "no-store" && httpRequest.cache !== "reload") {}
 		if (response == null) {
 			if (httpRequest.cache === "only-if-cached") return makeNetworkError("only if cached");
@@ -16615,7 +16680,7 @@ var require_to_regex_range = /* @__PURE__ */ __commonJSMin(((exports, module) =>
 		let nines = 1;
 		let zeros = 1;
 		let stop = countNines(min, nines);
-		let stops = new Set([max]);
+		let stops = /* @__PURE__ */ new Set([max]);
 		while (min <= stop && stop <= max) {
 			stops.add(stop);
 			nines += 1;
@@ -17621,6 +17686,9 @@ var require_constants$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		CHAR_VERTICAL_LINE: 124,
 		CHAR_ZERO_WIDTH_NOBREAK_SPACE: 65279,
 		SEP: path$8.sep,
+		/**
+		* Create EXTGLOB_CHARS
+		*/
 		extglobChars(chars) {
 			return {
 				"!": {
@@ -17650,6 +17718,9 @@ var require_constants$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				}
 			};
 		},
+		/**
+		* Create GLOB_CHARS
+		*/
 		globChars(win32) {
 			return win32 === true ? WINDOWS_CHARS : POSIX_CHARS;
 		}
@@ -19846,7 +19917,7 @@ var require_pattern = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	exports.hasGlobStar = hasGlobStar;
 	function endsWithSlashGlobStar(pattern) {
-		return pattern.endsWith("/" + GLOBSTAR);
+		return pattern.endsWith("/**");
 	}
 	exports.endsWithSlashGlobStar = endsWithSlashGlobStar;
 	function isAffectDepthOfReadingPattern(pattern) {
@@ -22617,6 +22688,16 @@ function getProxyFetch(destinationUrl) {
 function getApiBaseUrl() {
 	return process.env["GITHUB_API_URL"] || "https://api.github.com";
 }
+function getUserAgentWithOrchestrationId(baseUserAgent) {
+	var _a;
+	const orchId = (_a = process.env["ACTIONS_ORCHESTRATION_ID"]) === null || _a === void 0 ? void 0 : _a.trim();
+	if (orchId) {
+		const tag = `actions_orchestration_id/${orchId.replace(/[^a-z0-9_.-]/gi, "_")}`;
+		if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag)) return baseUserAgent;
+		return `${baseUserAgent ? `${baseUserAgent} ` : ""}${tag}`;
+	}
+	return baseUserAgent;
+}
 //#endregion
 //#region node_modules/universal-user-agent/index.js
 function getUserAgent() {
@@ -22717,13 +22798,12 @@ var before_after_hook_default = {
 };
 //#endregion
 //#region node_modules/@octokit/endpoint/dist-bundle/index.js
-var userAgent = `octokit-endpoint.js/0.0.0-development ${getUserAgent()}`;
 var DEFAULTS = {
 	method: "GET",
 	baseUrl: "https://api.github.com",
 	headers: {
 		accept: "application/vnd.github.v3+json",
-		"user-agent": userAgent
+		"user-agent": `octokit-endpoint.js/0.0.0-development ${getUserAgent()}`
 	},
 	mediaType: { format: "" }
 };
@@ -23161,8 +23241,7 @@ var RequestError = class extends Error {
 };
 //#endregion
 //#region node_modules/@octokit/request/dist-bundle/index.js
-var VERSION$4 = "10.0.8";
-var defaults_default = { headers: { "user-agent": `octokit-request.js/${VERSION$4} ${getUserAgent()}` } };
+var defaults_default = { headers: { "user-agent": `octokit-request.js/10.0.8 ${getUserAgent()}` } };
 function isPlainObject(value) {
 	if (typeof value !== "object" || value === null) return false;
 	if (Object.prototype.toString.call(value) !== "[object Object]") return false;
@@ -25014,6 +25093,8 @@ function getOctokitOptions(token, options) {
 	const opts = Object.assign({}, options || {});
 	const auth = getAuthString(token, opts);
 	if (auth) opts.auth = auth;
+	const userAgent = getUserAgentWithOrchestrationId(opts.userAgent);
+	if (userAgent) opts.userAgent = userAgent;
 	return opts;
 }
 //#endregion
@@ -25119,9 +25200,9 @@ const SUMMARY_SECTIONS = [
 ];
 //#endregion
 //#region node_modules/@allurereport/core-api/dist/constants.js
-const unsuccessfulStatuses = new Set(["failed", "broken"]);
-const successfulStatuses = new Set(["passed"]);
-const includedInSuccessRate = new Set([...unsuccessfulStatuses, ...successfulStatuses]);
+const unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
+const successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
+const includedInSuccessRate = /* @__PURE__ */ new Set([...unsuccessfulStatuses, ...successfulStatuses]);
 const filterByStatus = (statuses) => {
 	const set = new Set(statuses);
 	return (t) => set.has(t.status);
@@ -25425,16 +25506,14 @@ const resolveSummaryRemoteHref = (params) => {
 const getGithubCheckConclusion = (status) => status === "passed" ? "success" : "failure";
 const run = async () => {
 	const token = getGithubInput("github-token");
-	const { eventName, repo, payload } = getGithubContext();
+	const { eventName, repo, payload, sha } = getGithubContext();
 	if (!token) {
 		error("No GitHub token provided");
 		return;
 	}
-	if (eventName !== "pull_request" || !payload.pull_request) {
-		info("Not a pull request event, skipping");
-		return;
-	}
-	const headSha = payload.pull_request.head.sha;
+	const pullRequest = payload?.pull_request;
+	const isPullRequest = eventName === "pull_request" && Boolean(pullRequest);
+	const headSha = pullRequest?.head.sha ?? sha;
 	const reportDir = getGithubInput("report-directory") || node_path.posix.join(process.cwd(), "allure-report");
 	const remoteHref = getGithubInput("remote-href") || void 0;
 	const enabledSections = parseSummarySections(getGithubInput("sections"));
@@ -25490,7 +25569,11 @@ const run = async () => {
 		info("No published reports found");
 		return;
 	}
-	const issue_number = payload.pull_request.number;
+	if (!isPullRequest || !pullRequest) {
+		info("Not a pull request event, skipping comments");
+		return;
+	}
+	const issue_number = pullRequest.number;
 	const { data: existingComments } = await octokit.rest.issues.listComments({
 		owner: repo.owner,
 		repo: repo.repo,

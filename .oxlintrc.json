@@ -11,7 +11,9 @@
     "builtin": true
   },
   "ignorePatterns": [
-    "**/dist/**/*"
+    "**/dist/**/*",
+    "**/.yarn/**/*",
+    "**/.pnp.*"
   ],
   "rules": {
     "constructor-super": "error",
