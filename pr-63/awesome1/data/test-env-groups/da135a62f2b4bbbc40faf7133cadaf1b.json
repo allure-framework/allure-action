@@ -1,0 +1,1 @@
+{"id":"da135a62f2b4bbbc40faf7133cadaf1b","fullName":"allure-action:test/spec/action.test.ts#action quality gate should create a single check for every unique summary check name","name":"should create a single check for every unique summary check name","status":"passed","testResultsByEnv":{"default":"522a710f051e82ce49a4a76797445f63"}}
