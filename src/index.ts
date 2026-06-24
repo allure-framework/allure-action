@@ -91,6 +91,117 @@ const getGithubCheckConclusion = (
   status: NonNullable<PluginSummary["checks"]>[number]["status"],
 ): "success" | "failure" => (status === "passed" ? "success" : "failure");
 
+const getSummaryCheckKey = (check: SummaryCheck): string => check.id?.trim() ?? "";
+
+type GithubCheckConclusion = ReturnType<typeof getGithubCheckConclusion>;
+type SummaryCheck = NonNullable<PluginSummary["checks"]>[number];
+
+type SummaryCheckRun = {
+  conclusion: GithubCheckConclusion;
+  name: string;
+  sources: {
+    remoteHref?: string;
+    status: SummaryCheck["status"];
+    summaryId: string;
+    summaryName?: string;
+  }[];
+};
+
+const getSummaryCheckRuns = (summaries: ActionSummary[]): SummaryCheckRun[] => {
+  const checkRuns = new Map<string, SummaryCheckRun>();
+
+  summaries.forEach((summary) => {
+    (summary.checks ?? []).forEach((check) => {
+      const conclusion = getGithubCheckConclusion(check.status);
+      const key = getSummaryCheckKey(check);
+      const checkRun = checkRuns.get(key) ?? {
+        name: check.name,
+        conclusion,
+        sources: [],
+      };
+
+      if (checkRun.conclusion !== "failure" && conclusion === "failure") {
+        checkRun.conclusion = "failure";
+      }
+
+      checkRun.sources.push({
+        remoteHref: summary.remoteHref,
+        status: check.status,
+        summaryId: summary.summaryId,
+        summaryName: summary.name,
+      });
+
+      checkRuns.set(key, checkRun);
+    });
+  });
+
+  return [...checkRuns.values()];
+};
+
+const isDebugEnabled = (debugInput: string): boolean =>
+  ["1", "true", "yes", "on"].includes(debugInput.trim().toLowerCase());
+
+const printDebugInfo = (params: {
+  eventName: string;
+  headSha?: string;
+  isPullRequest: boolean;
+  qualityGateFile: string;
+  qualityGateFileExists: boolean;
+  qualityGateParseError?: unknown;
+  remoteHref?: string;
+  reportDir: string;
+  summaryCheckRuns: SummaryCheckRun[];
+  summaryFiles: string[];
+  summaryFilesContent: ActionSummary[];
+}): void => {
+  const {
+    eventName,
+    headSha,
+    isPullRequest,
+    qualityGateFile,
+    qualityGateFileExists,
+    qualityGateParseError,
+    remoteHref,
+    reportDir,
+    summaryCheckRuns,
+    summaryFiles,
+    summaryFilesContent,
+  } = params;
+  const checksCount = summaryFilesContent.reduce((acc, summary) => acc + (summary.checks?.length ?? 0), 0);
+  const summariesWithChecks = summaryFilesContent.filter((summary) => (summary.checks?.length ?? 0) > 0).length;
+
+  core.info("[debug] Allure Action diagnostics");
+  core.info(`[debug] Event: ${eventName || "unknown"}`);
+  core.info(`[debug] Pull request event: ${isPullRequest}`);
+  core.info(`[debug] Head SHA: ${headSha ?? "unknown"}`);
+  core.info(`[debug] Report directory: ${reportDir}`);
+  core.info(`[debug] Remote href: ${remoteHref ?? "not provided"}`);
+  core.info(`[debug] Summary files found: ${summaryFiles.length}`);
+  core.info(`[debug] Parsed summaries: ${summaryFilesContent.length}`);
+  core.info(`[debug] Summaries with checks: ${summariesWithChecks}`);
+  core.info(`[debug] Checks in summaries: ${checksCount}`);
+  core.info(`[debug] Unique checks to create: ${summaryCheckRuns.length}`);
+  core.info(`[debug] Unique check names: ${summaryCheckRuns.map((checkRun) => checkRun.name).join(", ") || "none"}`);
+  core.info(`[debug] Quality gate file: ${qualityGateFile}`);
+  core.info(`[debug] Quality gate file exists: ${qualityGateFileExists}`);
+
+  if (qualityGateParseError) {
+    core.info(`[debug] Quality gate parse error: ${String(qualityGateParseError)}`);
+  }
+
+  if (!summaryFilesContent.length) {
+    return;
+  }
+
+  summaryFilesContent.forEach((summary) => {
+    const checkNames = (summary.checks ?? []).map((check) => check.name).join(", ") || "none";
+
+    core.info(
+      `[debug] Summary "${summary.summaryId}": name="${summary.name ?? "unknown"}", checks=${summary.checks?.length ?? 0}, checkNames=${checkNames}, remoteHref=${summary.remoteHref ?? "not provided"}`,
+    );
+  });
+};
+
 const run = async (): Promise<void> => {
   const token = getGithubInput("github-token");
   const { eventName, repo, payload, sha } = getGithubContext();
@@ -106,6 +217,7 @@ const run = async (): Promise<void> => {
   const reportDir = getGithubInput("report-directory") || path.posix.join(process.cwd(), "allure-report");
   const remoteHref = getGithubInput("remote-href") || undefined;
   const enabledSections = parseSummarySections(getGithubInput("sections"));
+  const debug = isDebugEnabled(getGithubInput("debug"));
   const qualityGateFile = path.posix.join(reportDir, "quality-gate.json");
   const summaryFiles = await fg([path.posix.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
@@ -127,14 +239,35 @@ const run = async (): Promise<void> => {
       } as ActionSummary;
     }),
   )) as ActionSummary[];
+  const summaryCheckRuns = getSummaryCheckRuns(summaryFilesContent);
   let qualityGateResults: QualityGateResultsContent | undefined;
+  let qualityGateParseError: unknown;
+  const qualityGateFileExists = existsSync(qualityGateFile);
 
-  if (existsSync(qualityGateFile)) {
+  if (qualityGateFileExists) {
     const qualityGateContentRaw = await fs.readFile(qualityGateFile, "utf-8");
 
     try {
       qualityGateResults = JSON.parse(qualityGateContentRaw) as QualityGateResultsContent;
-    } catch {}
+    } catch (error) {
+      qualityGateParseError = error;
+    }
+  }
+
+  if (debug) {
+    printDebugInfo({
+      eventName,
+      headSha,
+      isPullRequest,
+      qualityGateFile,
+      qualityGateFileExists,
+      qualityGateParseError,
+      remoteHref,
+      reportDir,
+      summaryCheckRuns,
+      summaryFiles,
+      summaryFilesContent,
+    });
   }
 
   const octokit = getOctokit(token);
@@ -161,18 +294,28 @@ const run = async (): Promise<void> => {
   }
 
   await Promise.all(
-    summaryFilesContent.flatMap((summary) =>
-      (summary.checks ?? []).map((check) =>
-        octokit.rest.checks.create({
-          owner: repo.owner,
-          repo: repo.repo,
-          name: check.name,
-          head_sha: headSha,
-          status: "completed",
-          conclusion: getGithubCheckConclusion(check.status),
-        }),
-      ),
-    ),
+    summaryCheckRuns.map(async (checkRun) => {
+      if (debug) {
+        core.info(
+          `[debug] Creating check "${checkRun.name}" with conclusion "${checkRun.conclusion}" from ${checkRun.sources.length} source(s)`,
+        );
+      }
+
+      const response = await octokit.rest.checks.create({
+        owner: repo.owner,
+        repo: repo.repo,
+        name: `Allure external check: ${checkRun.name}`,
+        head_sha: headSha,
+        status: "completed",
+        conclusion: checkRun.conclusion,
+      });
+
+      if (debug) {
+        core.info(
+          `[debug] Created check "${checkRun.name}": id=${response?.data?.id ?? "unknown"}, htmlUrl=${response?.data?.html_url ?? "not provided"}`,
+        );
+      }
+    }),
   );
 
   if (!summaryFilesContent?.length) {

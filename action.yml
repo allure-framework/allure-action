@@ -22,6 +22,10 @@ inputs:
     description: "Optional collapsible section comments to publish alongside the summary table. Supported values: `new`, `flaky`, `retry`, or `all`. Accepts comma- or newline-separated values."
     required: false
     default: ""
+  debug:
+    description: "Print additional diagnostic information"
+    required: false
+    default: "false"
 
 runs:
   using: "node24"
