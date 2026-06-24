@@ -1,0 +1,1 @@
+{"id":"6f819aab7d93fa459d67600a397acef9","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should handle mixed summaries with and without withTestResultsLinks flag","name":"should handle mixed summaries with and without withTestResultsLinks flag","status":"passed","testResultsByEnv":{"default":"3767be8ef462c6a6c6f9659999964025"}}

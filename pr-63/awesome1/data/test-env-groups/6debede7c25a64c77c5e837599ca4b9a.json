@@ -1,0 +1,1 @@
+{"id":"6debede7c25a64c77c5e837599ca4b9a","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should publish enabled sections as separate collapsible comments","name":"should publish enabled sections as separate collapsible comments","status":"passed","testResultsByEnv":{"default":"581f9b566d04a601ad458a1a1f539e26"}}
