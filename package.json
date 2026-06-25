@@ -35,7 +35,7 @@
   "devDependencies": {
     "@allurereport/core-api": "^3.12.0",
     "@allurereport/plugin-api": "^3.8.2",
-    "@allurereport/plugin-awesome": "^3.8.2",
+    "@allurereport/plugin-awesome": "^3.13.1",
     "@types/d3-shape": "^3",
     "@types/lodash.chunk": "^4",
     "@types/node": "^26.0.0",
