@@ -1,0 +1,1 @@
+{"id":"b10cc952f76929d71bce66b89b4ec91d","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should escape pipe characters in report name cell","name":"should escape pipe characters in report name cell","status":"passed","testResultsByEnv":{"default":"e3040de5bd6b10ad61dafc7f247791c5"}}

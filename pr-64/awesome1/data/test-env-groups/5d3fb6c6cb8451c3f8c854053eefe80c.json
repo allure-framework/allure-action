@@ -1,0 +1,1 @@
+{"id":"5d3fb6c6cb8451c3f8c854053eefe80c","fullName":"test/spec/utils.test.ts#utils generateSummaryMarkdownTable should prefer remote-href option over summary.remoteHref","name":"should prefer remote-href option over summary.remoteHref","status":"passed","testResultsByEnv":{"default":"dc9c8b1e98d83e1b0325e033f05b0230"}}
