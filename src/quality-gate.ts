@@ -1,8 +1,10 @@
 import type { QualityGateValidationResult } from "@allurereport/plugin-api";
 import type { QualityGateResultsContent } from "./model.js";
 
+const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`, "g");
+
 export const stripAnsiCodes = (str: string, replacement?: string): string => {
-  return str.replace(/\u001b\[\d+m/g, replacement ?? "");
+  return str.replace(ansiCodePattern, replacement ?? "");
 };
 
 export const isQualityGateFailed = (qualityGateResultsContent?: QualityGateResultsContent): boolean => {

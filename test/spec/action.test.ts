@@ -56,10 +56,11 @@ describe("action", () => {
       (getGithubContext as unknown as Mock).mockReturnValue({
         eventName: "",
       });
+      (fg as unknown as Mock).mockResolvedValue([]);
 
       await run();
 
-      expect(fg).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
 
     it("should not run action when there's no pull request", async () => {
@@ -68,10 +69,11 @@ describe("action", () => {
         eventName: "pull_request",
         payload: {},
       });
+      (fg as unknown as Mock).mockResolvedValue([]);
 
       await run();
 
-      expect(fg).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
   });
 
@@ -97,6 +99,9 @@ describe("action", () => {
         payload: {
           pull_request: {
             number: 1,
+            head: {
+              sha: "abc123",
+            },
           },
         },
       });
@@ -154,6 +159,78 @@ describe("action", () => {
       });
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("<!-- allure-report-summary -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
+    });
+
+    it("should print debug information when debug is enabled", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/report/",
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+                {
+                  id: "security",
+                  name: "Security",
+                  status: "failed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "debug":
+            return "true";
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          default:
+            return "";
+        }
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(core.info).toHaveBeenCalledWith("[debug] Allure Action diagnostics");
+      expect(core.info).toHaveBeenCalledWith("[debug] Summary files found: 1");
+      expect(core.info).toHaveBeenCalledWith("[debug] Parsed summaries: 1");
+      expect(core.info).toHaveBeenCalledWith("[debug] Summaries with checks: 1");
+      expect(core.info).toHaveBeenCalledWith("[debug] Checks in summaries: 2");
+      expect(core.info).toHaveBeenCalledWith("[debug] Unique checks to create: 2");
+      expect(core.info).toHaveBeenCalledWith("[debug] Unique check names: Lint, Security");
+      expect(core.info).toHaveBeenCalledWith("[debug] Quality gate file exists: false");
+      expect(core.info).toHaveBeenCalledWith(
+        '[debug] Summary "report1/summary.json": name="Test Suite 1", checks=2, checkNames=Lint, Security, remoteHref=https://example.com/report/',
+      );
+      expect(core.info).toHaveBeenCalledWith(
+        '[debug] Creating check "Lint" with conclusion "success" from 1 source(s)',
+      );
+      expect(core.info).toHaveBeenCalledWith(
+        '[debug] Creating check "Security" with conclusion "failure" from 1 source(s)',
+      );
     });
 
     it("should create comments for new tests", async () => {
@@ -1360,6 +1437,227 @@ describe("action", () => {
         conclusion: "success",
         output: undefined,
       });
+    });
+
+    it("should create checks for every summary check", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+                {
+                  id: "security",
+                  name: "Security",
+                  status: "failed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateFile: "test/fixtures/quality-gate/quality-gate.json",
+        qualityGateContent: JSON.stringify([]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockReturnValue(true);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Security",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "failure",
+      });
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(3);
+    });
+
+    it("should create a single check for every unique summary check id", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/awesome1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint-1",
+                  name: "Lint",
+                  status: "passed",
+                },
+                {
+                  id: "security-1",
+                  name: "Security",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+          {
+            path: "test/fixtures/quality-gate/awesome2/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 2",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint-1",
+                  name: "Lint",
+                  status: "failed",
+                },
+                {
+                  id: "security-2",
+                  name: "Security",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.summaryFiles[1].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "failure",
+      });
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Security",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+      });
+    });
+
+    it("should create checks on push events without PR comments", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        return "";
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "push",
+        sha: "abc123",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "abc123",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
     });
 
     it("should create a failed check when quality gate fails", async () => {

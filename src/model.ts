@@ -1,5 +1,4 @@
-import type { QualityGateValidationResult, SummaryTestResult } from "@allurereport/plugin-api";
-import type { PluginSummary } from "@allurereport/plugin-api";
+import type { PluginSummary, QualityGateValidationResult, SummaryTestResult } from "@allurereport/plugin-api";
 
 export type RemoteSummaryTestResult = SummaryTestResult & {
   remoteHref?: string;
