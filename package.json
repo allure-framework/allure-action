@@ -44,7 +44,7 @@
     "allure": "^3.8.2",
     "allure-vitest": "^3.8.0",
     "lefthook": "^2.1.4",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.2",
     "oxfmt": "^0.56.0",
     "oxlint": "^1.56.0",
     "rollup-plugin-license": "^3.7.0",
