@@ -1,0 +1,1 @@
+{"id":"73dd678d1ce6041a8bba342dceee001e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummarySectionComments should render a truncation note when remote report link is unavailable","name":"should render a truncation note when remote report link is unavailable","status":"passed","testResultsByEnv":{"default":"d140f83134238c78e5b8bd5d22b5c36f"}}
