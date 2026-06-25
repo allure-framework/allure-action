@@ -2201,7 +2201,7 @@ __metadata:
     npm-run-all2: "npm:^8.0.4"
     oxfmt: "npm:^0.56.0"
     oxlint: "npm:^1.56.0"
-    rollup-plugin-license: "npm:^3.7.0"
+    rollup-plugin-license: "npm:^3.7.1"
     tsdown: "npm:^0.21.7"
     typescript: "npm:^6.0.2"
     vitest: "npm:^4.1.2"
@@ -4749,9 +4749,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup-plugin-license@npm:^3.7.0":
-  version: 3.7.0
-  resolution: "rollup-plugin-license@npm:3.7.0"
+"rollup-plugin-license@npm:^3.7.1":
+  version: 3.7.1
+  resolution: "rollup-plugin-license@npm:3.7.1"
   dependencies:
     commenting: "npm:^1.1.0"
     fdir: "npm:^6.4.3"
@@ -4763,7 +4763,7 @@ __metadata:
     spdx-satisfies: "npm:^5.0.1"
   peerDependencies:
     rollup: ^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0
-  checksum: 10/87ed02fc88c6da8fd5b221393a9628c3359dc0ecad9670dbbc8272dc4dda8fe1367375a2571930ff24bb2f7b3abf175858709fb30fea501001bebae40a4d19e5
+  checksum: 10/9996aeeffd62bf850e3a49c619f1852e8f3a53141762c4cb91d5b829216ea9a4e147d6217e22e36ce87659a975e3f5c54cd3da1b64ccc99a3326985087471759
   languageName: node
   linkType: hard
 
