@@ -1,0 +1,1 @@
+{"id":"b444f5f569f224f7ece2162977496b24","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero broken stats","name":"should handle zero broken stats","status":"passed","testResultsByEnv":{"default":"19ec84672081a491e7bf39a1098663f7"}}

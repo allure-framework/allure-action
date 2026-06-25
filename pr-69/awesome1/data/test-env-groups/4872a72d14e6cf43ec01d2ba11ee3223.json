@@ -1,0 +1,1 @@
+{"id":"4872a72d14e6cf43ec01d2ba11ee3223","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should handle summary files without remoteHref","name":"should handle summary files without remoteHref","status":"passed","testResultsByEnv":{"default":"6eb0d2385c6152849d6416b953f82bfb"}}

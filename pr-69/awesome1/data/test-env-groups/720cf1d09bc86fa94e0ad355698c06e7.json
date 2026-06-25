@@ -1,0 +1,1 @@
+{"id":"720cf1d09bc86fa94e0ad355698c06e7","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should create comments for retry tests","name":"should create comments for retry tests","status":"passed","testResultsByEnv":{"default":"f42eff8078d56a8e9ea7c84e22e07b1c"}}

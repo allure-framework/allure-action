@@ -1,0 +1,1 @@
+{"id":"21d4f26939e12501093d904ff6cf27a6","fullName":"allure-action:test/spec/action.test.ts#action quality gate should create a failed check when quality gate fails","name":"should create a failed check when quality gate fails","status":"passed","testResultsByEnv":{"default":"fac3baa906cfea004585e5d319806576"}}

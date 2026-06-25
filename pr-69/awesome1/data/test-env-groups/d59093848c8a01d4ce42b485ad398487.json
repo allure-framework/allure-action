@@ -1,0 +1,1 @@
+{"id":"d59093848c8a01d4ce42b485ad398487","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should generate a table for a single summary without remoteHref","name":"should generate a table for a single summary without remoteHref","status":"passed","testResultsByEnv":{"default":"b8959ac7cc9985d73e11bd39dcb97b89"}}

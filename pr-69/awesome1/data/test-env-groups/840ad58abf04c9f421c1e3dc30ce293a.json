@@ -1,0 +1,1 @@
+{"id":"840ad58abf04c9f421c1e3dc30ce293a","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip various ANSI codes (bold, underline, etc.)","name":"should strip various ANSI codes (bold, underline, etc.)","status":"passed","testResultsByEnv":{"default":"2de43b9de2257ea5850929dfd66f45cb"}}

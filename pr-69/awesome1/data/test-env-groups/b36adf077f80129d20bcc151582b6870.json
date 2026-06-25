@@ -1,0 +1,1 @@
+{"id":"b36adf077f80129d20bcc151582b6870","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResults should format record content with multiple violations per environment","name":"should format record content with multiple violations per environment","status":"passed","testResultsByEnv":{"default":"481453216b27094d5af969f50fdb52ac"}}
