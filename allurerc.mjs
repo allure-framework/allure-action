@@ -34,6 +34,11 @@ const config = {
         groupBy: "none",
       },
     },
+    testops: {
+      options: {
+        launchName: `Allure Action GitHub actions run (${new Date().toISOString()})`,
+      },
+    },
   },
 };
 

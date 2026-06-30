@@ -18,7 +18,8 @@
     "format:oxlint": "allure check --name='oxlint' --output='./out/allure-results' -- oxlint --fix src test",
     "format:oxfmt": "allure check --name='oxfmt' --output='./out/allure-results' -- oxfmt src test package.json",
     "package": "yarn clean && yarn build",
-    "test": "vitest run",
+    "test": "allure run -- yarn run test:unit",
+    "test:unit": "vitest run --config vitest.config.ts",
     "report": "allure generate ./out/allure-results",
     "report:open": "allure open ./out/allure-report"
   },
@@ -45,6 +46,7 @@
     "@allurereport/core-api": "^3.13.1",
     "@allurereport/plugin-api": "^3.13.1",
     "@allurereport/plugin-awesome": "^3.13.1",
+    "@allurereport/plugin-testops": "^3.13.1",
     "@types/d3-shape": "^3",
     "@types/lodash.chunk": "^4",
     "@types/node": "^26.0.0",
