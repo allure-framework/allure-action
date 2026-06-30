@@ -1,1 +1,1 @@
-{"id":"4a84bffe44936fe39c1ca1489076e0f3","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should handle empty string","name":"should handle empty string","status":"passed","testResultsByEnv":{"default":"ebf6f19afe83bb147a56da85649e962f"}}
+{"id":"4a84bffe44936fe39c1ca1489076e0f3","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should handle empty string","name":"should handle empty string","status":"passed","testResultsByEnv":{"default":"0366ec4b3afd459cd2584ca64710ba79"}}

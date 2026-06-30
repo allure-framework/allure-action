@@ -1,1 +1,1 @@
-{"id":"09b665860964badd5dd47298c2dd8ab9","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should format tests without remoteHref","name":"should format tests without remoteHref","status":"passed","testResultsByEnv":{"default":"11e4cfe6caf4607c1924f7278c02cb01"}}
+{"id":"09b665860964badd5dd47298c2dd8ab9","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should format tests without remoteHref","name":"should format tests without remoteHref","status":"passed","testResultsByEnv":{"default":"4152e9160f528cf17bdf609833c83115"}}
