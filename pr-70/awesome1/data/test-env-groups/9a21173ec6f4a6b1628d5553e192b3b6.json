@@ -1,0 +1,1 @@
+{"id":"9a21173ec6f4a6b1628d5553e192b3b6","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero skipped stats","name":"should handle zero skipped stats","status":"passed","testResultsByEnv":{"default":"0bacffbfaea9566252566e017f16a00d"}}

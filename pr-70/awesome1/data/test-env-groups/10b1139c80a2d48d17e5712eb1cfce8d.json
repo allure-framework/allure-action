@@ -1,0 +1,1 @@
+{"id":"10b1139c80a2d48d17e5712eb1cfce8d","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should handle ANSI codes with different number sequences","name":"should handle ANSI codes with different number sequences","status":"passed","testResultsByEnv":{"default":"71d97e266d6ef14111b512d11a55f01e"}}

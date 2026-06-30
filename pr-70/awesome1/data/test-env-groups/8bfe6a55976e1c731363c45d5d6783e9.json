@@ -1,0 +1,1 @@
+{"id":"8bfe6a55976e1c731363c45d5d6783e9","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummarySectionComments should omit comments for sections without matching tests","name":"should omit comments for sections without matching tests","status":"passed","testResultsByEnv":{"default":"ae07b7f93676f6fc7b1ea35643640a07"}}

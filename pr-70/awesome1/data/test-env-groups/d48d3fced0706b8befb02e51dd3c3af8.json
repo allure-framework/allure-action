@@ -1,0 +1,1 @@
+{"id":"d48d3fced0706b8befb02e51dd3c3af8","fullName":"allure-action:test/spec/action.test.ts#action quality gate should handle quality gate in per-environment record format with multiple environments","name":"should handle quality gate in per-environment record format with multiple environments","status":"passed","testResultsByEnv":{"default":"3e3bde2a9b667bf6f0bb52186f595343"}}
