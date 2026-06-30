@@ -6,6 +6,7 @@ const req = createRequire(import.meta.url);
 
 export default defineConfig({
   test: {
+    include: ["test/spec/**/*.{test,spec}.{ts,tsx,js,mjs,mts}"],
     setupFiles: [req.resolve("allure-vitest/setup")],
     reporters: [
       "default",
