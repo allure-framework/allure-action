@@ -1,0 +1,1 @@
+{"id":"70a496330b92843adaed031ffc25e682","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should display tests without remoteHref in table format","name":"should display tests without remoteHref in table format","status":"passed","testResultsByEnv":{"default":"ca7c84a0c571caf93cec2148084c2a5a"}}

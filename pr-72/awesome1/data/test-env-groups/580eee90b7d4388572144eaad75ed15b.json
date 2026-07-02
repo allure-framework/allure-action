@@ -1,0 +1,1 @@
+{"id":"580eee90b7d4388572144eaad75ed15b","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should not create additional comments when there are no new/flaky/retry tests","name":"should not create additional comments when there are no new/flaky/retry tests","status":"passed","testResultsByEnv":{"default":"ee61a21ad2c88913f104521b7abd9b67"}}

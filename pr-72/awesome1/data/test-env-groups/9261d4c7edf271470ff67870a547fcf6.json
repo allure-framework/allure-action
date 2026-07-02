@@ -1,0 +1,1 @@
+{"id":"9261d4c7edf271470ff67870a547fcf6","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should preserve trailing slash in remote-href option when pluginId is ignored","name":"should preserve trailing slash in remote-href option when pluginId is ignored","status":"passed","testResultsByEnv":{"default":"0cfe2af24c1f77b32ebe055ff3304b55"}}

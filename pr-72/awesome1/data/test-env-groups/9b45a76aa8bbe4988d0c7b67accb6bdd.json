@@ -1,0 +1,1 @@
+{"id":"9b45a76aa8bbe4988d0c7b67accb6bdd","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGareResultsList should strip ANSI codes from messages","name":"should strip ANSI codes from messages","status":"passed","testResultsByEnv":{"default":"7ed9d7c0ab1152f9f04314147d35c1b4"}}

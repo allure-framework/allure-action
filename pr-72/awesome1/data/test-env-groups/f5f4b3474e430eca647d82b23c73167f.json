@@ -1,0 +1,1 @@
+{"id":"f5f4b3474e430eca647d82b23c73167f","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should prefer remote-href option over summary.remoteHref","name":"should prefer remote-href option over summary.remoteHref","status":"passed","testResultsByEnv":{"default":"e8b761997f4d7fdcec7ddf1b1f7aae6f"}}

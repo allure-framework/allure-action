@@ -1,0 +1,1 @@
+{"id":"1f07290f65f08b26e21a547104352bbd","fullName":"allure-action:test/spec/action.test.ts#action when actions should be skipped should not run action when there's no pull request","name":"should not run action when there's no pull request","status":"passed","testResultsByEnv":{"default":"ad3ba2a526a9cfce474f6ed2150792ca"}}

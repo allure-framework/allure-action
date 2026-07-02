@@ -1,0 +1,1 @@
+{"id":"3aba82d73700264969e2a93c7b591df8","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should fall back to summary.remoteHref when remote-href option is missing","name":"should fall back to summary.remoteHref when remote-href option is missing","status":"passed","testResultsByEnv":{"default":"c8984ce9cf0b601c179f6c5df0cd4b53"}}

@@ -1,0 +1,1 @@
+{"id":"81dcefd5a470314c4eadce28c0249710","fullName":"allure-action:test/spec/utils.test.ts#utils isQualityGateFailed should return false for undefined input","name":"should return false for undefined input","status":"passed","testResultsByEnv":{"default":"c08facd54e3388e26ab378120e9c7c50"}}

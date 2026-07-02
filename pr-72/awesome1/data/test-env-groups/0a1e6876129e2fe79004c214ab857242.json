@@ -1,0 +1,1 @@
+{"id":"0a1e6876129e2fe79004c214ab857242","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummarySectionComments should create separate collapsible comments for enabled sections","name":"should create separate collapsible comments for enabled sections","status":"passed","testResultsByEnv":{"default":"88ec4db5e29ccf4e8f2491c78ee78a41"}}
