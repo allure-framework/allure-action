@@ -122,7 +122,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/core-api@npm:3.13.1, @allurereport/core-api@npm:^3.13.1":
+"@allurereport/core-api@npm:3.13.1":
   version: 3.13.1
   resolution: "@allurereport/core-api@npm:3.13.1"
   dependencies:
@@ -137,6 +137,15 @@ __metadata:
   dependencies:
     d3-shape: "npm:^3.2.0"
   checksum: 10/5fa3ea242b8f1c3d92c9deee99e3e0f2b8aad8232577b35880f48b1129b492b0f96a2a54f2f818f1d7a29e97824725b92c5b8a3366839983c21c2057d642533d
+  languageName: node
+  linkType: hard
+
+"@allurereport/core-api@npm:^3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/core-api@npm:3.14.0"
+  dependencies:
+    d3-shape: "npm:^3.2.0"
+  checksum: 10/a78c490110fcfa72ff512469f17939374d38310a467bd394513d6fda209717b1b5d20519f1af84a743777206e684472e631cf054a1333455c77d9b0fdfb7f68a
   languageName: node
   linkType: hard
 
@@ -2226,7 +2235,7 @@ __metadata:
     "@actions/github": "npm:^9.1.1"
     "@actions/glob": "npm:^0.7.0"
     "@actions/io": "npm:^3.0.2"
-    "@allurereport/core-api": "npm:^3.13.1"
+    "@allurereport/core-api": "npm:^3.14.0"
     "@allurereport/plugin-api": "npm:^3.13.1"
     "@allurereport/plugin-awesome": "npm:^3.13.1"
     "@allurereport/plugin-testops": "npm:^3.13.1"
