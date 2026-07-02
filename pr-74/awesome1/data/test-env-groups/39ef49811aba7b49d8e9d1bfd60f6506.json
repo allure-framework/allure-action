@@ -1,0 +1,1 @@
+{"id":"39ef49811aba7b49d8e9d1bfd60f6506","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should return a table with header only for empty array","name":"should return a table with header only for empty array","status":"passed","testResultsByEnv":{"default":"32740041530a83661030ffbb329938c2"}}

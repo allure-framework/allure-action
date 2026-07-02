@@ -1,0 +1,1 @@
+{"id":"36a66a210179aad0c619d82aab9e4c5f","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero passed stats","name":"should handle zero passed stats","status":"passed","testResultsByEnv":{"default":"1b50544dd2504e4488c6dd7d55b2d2f4"}}

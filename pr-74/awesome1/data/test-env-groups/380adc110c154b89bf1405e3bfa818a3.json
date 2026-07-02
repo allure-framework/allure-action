@@ -1,0 +1,1 @@
+{"id":"380adc110c154b89bf1405e3bfa818a3","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResults should format record content with multiple environments","name":"should format record content with multiple environments","status":"passed","testResultsByEnv":{"default":"a3125d331c7c4799dc2a43608ad4c06d"}}

@@ -1,0 +1,1 @@
+{"id":"a291be9464d6494ea14bb9d40471c79a","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should render View link from remote-href option for every row","name":"should render View link from remote-href option for every row","status":"passed","testResultsByEnv":{"default":"3dadb085903671b3a6b89cefa4f3e85c"}}
