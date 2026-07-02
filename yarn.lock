@@ -113,12 +113,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/ci@npm:3.13.2":
-  version: 3.13.2
-  resolution: "@allurereport/ci@npm:3.13.2"
+"@allurereport/ci@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/ci@npm:3.14.0"
   dependencies:
-    "@allurereport/core-api": "npm:3.13.2"
-  checksum: 10/678489f3dc809690f57dfbf28e13e6c2cb9445de434bdd1caf37249d665282258e7766e9e779864b173642d3fcaeba9b8d34943c22731c4d7a64388045a8acbd
+    "@allurereport/core-api": "npm:3.14.0"
+  checksum: 10/3fc472e48a986afb8d5a1835c91bc362bf0d3845ad57c1328d3016d96c5fb32363b0539854f8d2e08de973196479051a7d773192e2cb7b3eccbd1c642c614853
   languageName: node
   linkType: hard
 
@@ -131,12 +131,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/core-api@npm:3.13.2":
-  version: 3.13.2
-  resolution: "@allurereport/core-api@npm:3.13.2"
+"@allurereport/core-api@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/core-api@npm:3.14.0"
   dependencies:
     d3-shape: "npm:^3.2.0"
-  checksum: 10/5fa3ea242b8f1c3d92c9deee99e3e0f2b8aad8232577b35880f48b1129b492b0f96a2a54f2f818f1d7a29e97824725b92c5b8a3366839983c21c2057d642533d
+  checksum: 10/a78c490110fcfa72ff512469f17939374d38310a467bd394513d6fda209717b1b5d20519f1af84a743777206e684472e631cf054a1333455c77d9b0fdfb7f68a
   languageName: node
   linkType: hard
 
@@ -192,12 +192,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/git@npm:3.13.2":
-  version: 3.13.2
-  resolution: "@allurereport/git@npm:3.13.2"
+"@allurereport/git@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/git@npm:3.14.0"
   dependencies:
-    "@allurereport/core-api": "npm:3.13.2"
-  checksum: 10/705e08e86fd2ed81c9e008176cc57e4e6f45cbc5b59926fb6909cc3431eb99564636383769c50756f3bdeeb1c0228b39e4ddccbdd0834973d5af744b3bccab61
+    "@allurereport/core-api": "npm:3.14.0"
+  checksum: 10/80d1c28d052cfcb1e7ba4ec0febcb2a47bb0a3542d964acf7c7216dc54494113f1aa69469c55040e87df8679777fd62fd52629e8840b248765afa1cc6f1844fe
   languageName: node
   linkType: hard
 
@@ -233,12 +233,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/plugin-api@npm:3.13.2":
-  version: 3.13.2
-  resolution: "@allurereport/plugin-api@npm:3.13.2"
+"@allurereport/plugin-api@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/plugin-api@npm:3.14.0"
   dependencies:
-    "@allurereport/core-api": "npm:3.13.2"
-  checksum: 10/705856fe73adcf98f0f355d6ca799d0449f46006cd1d0544014929296ed28f4222b52d17c3e3694e892d9ae6b42084d7052725d031fbf87d1f294d50d4e3b72b
+    "@allurereport/core-api": "npm:3.14.0"
+  checksum: 10/3be4655c919e8dd5780d10d22baa7fe2099724b4e4b6f0a7f5728b0b5664c69251d31e90929c23e08cf7f40f94ebdf669b4cb562ec9d1ecae8e41bfa0dd1ca1b
   languageName: node
   linkType: hard
 
@@ -372,23 +372,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/plugin-testops@npm:^3.13.1":
-  version: 3.13.2
-  resolution: "@allurereport/plugin-testops@npm:3.13.2"
+"@allurereport/plugin-testops@npm:^3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/plugin-testops@npm:3.14.0"
   dependencies:
-    "@allurereport/ci": "npm:3.13.2"
-    "@allurereport/core-api": "npm:3.13.2"
-    "@allurereport/git": "npm:3.13.2"
-    "@allurereport/plugin-api": "npm:3.13.2"
-    "@allurereport/reader-api": "npm:3.13.2"
-    "@allurereport/service": "npm:3.13.2"
+    "@allurereport/ci": "npm:3.14.0"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/git": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
+    "@allurereport/reader-api": "npm:3.14.0"
+    "@allurereport/service": "npm:3.14.0"
     axios: "npm:^1.18.1"
     form-data: "npm:^4.0.6"
     lodash-es: "npm:^4.18.1"
     p-limit: "npm:^7.3.0"
     progress: "npm:^2.0.3"
     yoctocolors: "npm:^2"
-  checksum: 10/4dd069c39ae2e90e5b6d712edc6a1e43a5105cfe29bdcf65622099ee09bb9ffc1221e834d501a8a00e6ba307941c12d0237e0a58db59ba4d1c8b767d5c9d5136
+  checksum: 10/5cbe657ac94f6f72c81db84b4c2de13eedff29004984d46592adc76e8f0d92abc8bea0e2264f54ad953305a7f7fcd4d27901690e572fe7eabb81701cb4db29a9
   languageName: node
   linkType: hard
 
@@ -413,14 +413,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/reader-api@npm:3.13.2":
-  version: 3.13.2
-  resolution: "@allurereport/reader-api@npm:3.13.2"
+"@allurereport/reader-api@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/reader-api@npm:3.14.0"
   dependencies:
-    "@allurereport/core-api": "npm:3.13.2"
-    "@allurereport/plugin-api": "npm:3.13.2"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
     mime-types: "npm:^2.1.35"
-  checksum: 10/3abccd91b29ec2de92e3ceda6c260a65cbf87950ae9abf7365fb05f270a83ff14c77c138a258235e8b6000842ea0cb0f0246740e7dad7d52e25c381663f75aad
+  checksum: 10/8be4b9a768648a3e4a03ddde7a258d79242585b0fad065e01d5ee3dbed4c9e8c899f145de6d796b9449149efd8093d2951edcda8a40c5004f4c639d829de3e61
   languageName: node
   linkType: hard
 
@@ -448,15 +448,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/service@npm:3.13.2":
-  version: 3.13.2
-  resolution: "@allurereport/service@npm:3.13.2"
+"@allurereport/service@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/service@npm:3.14.0"
   dependencies:
-    "@allurereport/core-api": "npm:3.13.2"
-    "@allurereport/plugin-api": "npm:3.13.2"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
     axios: "npm:^1.18.1"
     open: "npm:^11.0.0"
-  checksum: 10/3dc849dd5fb0646e9f556b631fa932bcffdceea100c7b1a17d1ca6cc9f067d8c01b464f6fe39d36ee2fda7c51670d066613280346e3e30f28462189748e184c1
+  checksum: 10/b64cd0f224d654ea597555fae7f39351b071cb14a898ad5e68b4c7449349e60159542722e2d0e48d70098b7cc5b18b8f310583699cd8d91a710282523f6eee92
   languageName: node
   linkType: hard
 
@@ -2229,7 +2229,7 @@ __metadata:
     "@allurereport/core-api": "npm:^3.13.1"
     "@allurereport/plugin-api": "npm:^3.13.1"
     "@allurereport/plugin-awesome": "npm:^3.13.1"
-    "@allurereport/plugin-testops": "npm:^3.13.1"
+    "@allurereport/plugin-testops": "npm:^3.14.0"
     "@types/d3-shape": "npm:^3"
     "@types/lodash.chunk": "npm:^4"
     "@types/node": "npm:^26.0.0"
