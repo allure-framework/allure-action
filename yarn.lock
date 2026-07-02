@@ -93,6 +93,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@allurereport/aql@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/aql@npm:3.14.0"
+  checksum: 10/33683519ca6d1fc86c35f76e5db5c05c58ff8a37228ae7fbd27fde1f2e8ab9738ff03e25751ed20db0ef886f859721fce5ba904b0a972c6cac689e19e94fc3b3
+  languageName: node
+  linkType: hard
+
 "@allurereport/charts-api@npm:3.13.1":
   version: 3.13.1
   resolution: "@allurereport/charts-api@npm:3.13.1"
@@ -101,6 +108,17 @@ __metadata:
     "@allurereport/plugin-api": "npm:3.13.1"
     d3-shape: "npm:^3.2.0"
   checksum: 10/94c8e83144f52b29ec46215706de119b73f911b358f17a896f91eae2ef396dd0d0be5bb7015ae46dc9c5a1b44bc7b98d65f9a8781abeb1c881c1077bd11ce273
+  languageName: node
+  linkType: hard
+
+"@allurereport/charts-api@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/charts-api@npm:3.14.0"
+  dependencies:
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
+    d3-shape: "npm:^3.2.0"
+  checksum: 10/63d66fe697e4d09298bbb3866ab8fdbb4ce35d465ddf01d58b94955f56a18edd976312037f00c18bdf0dab1c50350abcaff0d54d09c54e0ee49efe167b4178c7
   languageName: node
   linkType: hard
 
@@ -137,6 +155,15 @@ __metadata:
   dependencies:
     d3-shape: "npm:^3.2.0"
   checksum: 10/5fa3ea242b8f1c3d92c9deee99e3e0f2b8aad8232577b35880f48b1129b492b0f96a2a54f2f818f1d7a29e97824725b92c5b8a3366839983c21c2057d642533d
+  languageName: node
+  linkType: hard
+
+"@allurereport/core-api@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/core-api@npm:3.14.0"
+  dependencies:
+    d3-shape: "npm:^3.2.0"
+  checksum: 10/a78c490110fcfa72ff512469f17939374d38310a467bd394513d6fda209717b1b5d20519f1af84a743777206e684472e631cf054a1333455c77d9b0fdfb7f68a
   languageName: node
   linkType: hard
 
@@ -242,7 +269,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/plugin-awesome@npm:3.13.1, @allurereport/plugin-awesome@npm:^3.13.1":
+"@allurereport/plugin-api@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/plugin-api@npm:3.14.0"
+  dependencies:
+    "@allurereport/core-api": "npm:3.14.0"
+  checksum: 10/3be4655c919e8dd5780d10d22baa7fe2099724b4e4b6f0a7f5728b0b5664c69251d31e90929c23e08cf7f40f94ebdf669b4cb562ec9d1ecae8e41bfa0dd1ca1b
+  languageName: node
+  linkType: hard
+
+"@allurereport/plugin-awesome@npm:3.13.1":
   version: 3.13.1
   resolution: "@allurereport/plugin-awesome@npm:3.13.1"
   dependencies:
@@ -255,6 +291,22 @@ __metadata:
     handlebars: "npm:^4.7.9"
     markdown-it: "npm:^14.2.0"
   checksum: 10/06f1a199103df14466fc7db5273ad4d0ca9e4f4e5e3b6c43c7e53cb2afc3c4b8e8ff28624783bf648ee8b15b7604a7d9f8e243b5859c57b30793a6f691f7a3b5
+  languageName: node
+  linkType: hard
+
+"@allurereport/plugin-awesome@npm:^3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/plugin-awesome@npm:3.14.0"
+  dependencies:
+    "@allurereport/charts-api": "npm:3.14.0"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
+    "@allurereport/web-awesome": "npm:3.14.0"
+    "@allurereport/web-commons": "npm:3.14.0"
+    d3-shape: "npm:^3.2.0"
+    handlebars: "npm:^4.7.9"
+    markdown-it: "npm:^14.2.0"
+  checksum: 10/e17b6c0f619f71b07c7c41bd014310446c625a6329c3d33b6591eeaf4677b19a693b9dbe704d98bcd0e67d826583e812fa8cb4bfd87ede301465cad5d9457718
   languageName: node
   linkType: hard
 
@@ -503,6 +555,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@allurereport/web-awesome@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/web-awesome@npm:3.14.0"
+  dependencies:
+    "@allurereport/charts-api": "npm:3.14.0"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
+    "@allurereport/web-commons": "npm:3.14.0"
+    "@allurereport/web-components": "npm:3.14.0"
+    "@preact/signals": "npm:^2.6.1"
+    clsx: "npm:^2.1.1"
+    d3-shape: "npm:^3.2.0"
+    i18next: "npm:^24.0.2"
+    md5: "npm:^2.3.0"
+    minisearch: "npm:^7.2.0"
+    preact: "npm:^10.28.2"
+    prismjs: "npm:^1.30.0"
+  checksum: 10/d60fed03e0c5c6fd617451231286a40914df42ea80af41fd9665371f33442f9ea0e0cba857375d27accae62fdc652d21f6760a032cbad535589af25898c30af9
+  languageName: node
+  linkType: hard
+
 "@allurereport/web-classic@npm:3.13.1":
   version: 3.13.1
   resolution: "@allurereport/web-classic@npm:3.13.1"
@@ -540,6 +613,26 @@ __metadata:
     dompurify: "npm:^3.4.0"
     nanoid: "npm:^5.1.6"
   checksum: 10/ca9ffbf05f41bfd71f991e9ffbedae5391bcf2cd05d0365193327903492cb2bd856a8019527d5fa08c7ce40bd6f040b19f96f1029061f298cd3fadab1728a60c
+  languageName: node
+  linkType: hard
+
+"@allurereport/web-commons@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/web-commons@npm:3.14.0"
+  dependencies:
+    "@allurereport/aql": "npm:3.14.0"
+    "@allurereport/charts-api": "npm:3.14.0"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/plugin-api": "npm:3.14.0"
+    "@preact/signals": "npm:^2.6.1"
+    "@preact/signals-core": "npm:^1.12.2"
+    ansi-to-html: "npm:^0.7.2"
+    d3-interpolate: "npm:^3.0.1"
+    d3-scale: "npm:^4.0.2"
+    d3-shape: "npm:^3.2.0"
+    dompurify: "npm:^3.4.0"
+    nanoid: "npm:^5.1.6"
+  checksum: 10/1e23ffd4331a45018ffb539f0be006d7d3748416a6fdb74948dd12a7cd5dcfcd33db561ef2c5b0c8a1f914314268c5e1c9477786a05f138b73c2d2ccc833cd9b
   languageName: node
   linkType: hard
 
@@ -585,6 +678,51 @@ __metadata:
     sortablejs: "npm:^1.15.7"
     use-debounce: "npm:^10.0.6"
   checksum: 10/0ea47ebcc2182747e8f8678c1d0a638375b55b3fe4cf62fddca771dc2220aba648425cc1858c8a97a795d85f411eabfa507351b0226c4eda2632f42c762237f0
+  languageName: node
+  linkType: hard
+
+"@allurereport/web-components@npm:3.14.0":
+  version: 3.14.0
+  resolution: "@allurereport/web-components@npm:3.14.0"
+  dependencies:
+    "@allurereport/charts-api": "npm:3.14.0"
+    "@allurereport/core-api": "npm:3.14.0"
+    "@allurereport/web-commons": "npm:3.14.0"
+    "@floating-ui/dom": "npm:^1.7.4"
+    "@nivo/bar": "npm:^0.99.0"
+    "@nivo/core": "npm:^0.99.0"
+    "@nivo/funnel": "npm:^0.99.0"
+    "@nivo/heatmap": "npm:^0.99.0"
+    "@nivo/line": "npm:^0.99.0"
+    "@nivo/pie": "npm:^0.99.0"
+    "@nivo/text": "npm:^0.99.0"
+    "@nivo/theming": "npm:^0.99.0"
+    "@nivo/tooltip": "npm:^0.99.0"
+    "@nivo/treemap": "npm:^0.99.0"
+    "@preact/compat": "npm:^18.3.1"
+    "@preact/signals": "npm:^2.6.1"
+    "@react-spring/web": "npm:^10.0.3"
+    clsx: "npm:^2.1.1"
+    d3-array: "npm:^3.2.4"
+    d3-axis: "npm:^3.0.0"
+    d3-brush: "npm:^3.0.0"
+    d3-format: "npm:^3.1.0"
+    d3-interpolate: "npm:^3.0.1"
+    d3-regression: "npm:^1.3.10"
+    d3-scale: "npm:^4.0.2"
+    d3-selection: "npm:^3.0.0"
+    d3-shape: "npm:^3.2.0"
+    d3-tip: "npm:^0.9.1"
+    d3-transition: "npm:^3.0.1"
+    lodash: "npm:^4.18.1"
+    markdown-it: "npm:^14.2.0"
+    preact: "npm:^10.28.2"
+    prismjs: "npm:^1.30.0"
+    react: "npm:@preact/compat@*"
+    react-dom: "npm:@preact/compat@*"
+    sortablejs: "npm:^1.15.7"
+    use-debounce: "npm:^10.0.6"
+  checksum: 10/2eaf4d4ecaecc1340855bef806c2b93ad97eb32f9701421d37d9d1a4cada481a35e351f5527b602dcd7849aa5bf6e8250c1b42b49aada4addd097017a4dd8aa5
   languageName: node
   linkType: hard
 
@@ -2228,7 +2366,7 @@ __metadata:
     "@actions/io": "npm:^3.0.2"
     "@allurereport/core-api": "npm:^3.13.1"
     "@allurereport/plugin-api": "npm:^3.13.1"
-    "@allurereport/plugin-awesome": "npm:^3.13.1"
+    "@allurereport/plugin-awesome": "npm:^3.14.0"
     "@allurereport/plugin-testops": "npm:^3.13.1"
     "@types/d3-shape": "npm:^3"
     "@types/lodash.chunk": "npm:^4"
