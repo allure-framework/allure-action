@@ -1,0 +1,1 @@
+{"id":"cb1613077318786d343bd58c6a6aac3d","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should escape special characters in report links","name":"should escape special characters in report links","status":"passed","testResultsByEnv":{"default":"172c1a7a97bdcb42b08a7a2f9d0104df"}}

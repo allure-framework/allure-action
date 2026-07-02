@@ -1,0 +1,1 @@
+{"id":"b039b9d14fa262ea2715f7fddbc6f9e6","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should post separate comments for each summary with withTestResultsLinks flag","name":"should post separate comments for each summary with withTestResultsLinks flag","status":"passed","testResultsByEnv":{"default":"f46eb54a9132aae9260cf6282ade2da8"}}

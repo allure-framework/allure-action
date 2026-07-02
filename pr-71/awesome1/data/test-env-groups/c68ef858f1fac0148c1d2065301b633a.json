@@ -1,0 +1,1 @@
+{"id":"c68ef858f1fac0148c1d2065301b633a","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should handle string with only ANSI codes","name":"should handle string with only ANSI codes","status":"passed","testResultsByEnv":{"default":"91423a7096cc807a12b5515e1ece913f"}}

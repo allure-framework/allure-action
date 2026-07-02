@@ -1,0 +1,1 @@
+{"id":"a65ad37f51ca7e706d517d6e3e4ce689","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should print debug information when debug is enabled","name":"should print debug information when debug is enabled","status":"passed","testResultsByEnv":{"default":"3140d0833b02f76f0de3785a39c19797"}}
