@@ -1,1 +1,1 @@
-{"id":"3207ca7c6e0a96f0a574c282835cba00","fullName":"allure-action:test/spec/utils.test.ts#utils parseSummarySections should support the all shortcut","name":"should support the all shortcut","status":"passed","testResultsByEnv":{"default":"8306e9efef479798c60da5dbe66cb9fb"}}
+{"id":"3207ca7c6e0a96f0a574c282835cba00","fullName":"allure-action:test/spec/utils.test.ts#utils parseSummarySections should support the all shortcut","name":"should support the all shortcut","status":"passed","testResultsByEnv":{"default":"be2fd6086d380d0461ea7ad304993ac6"}}
