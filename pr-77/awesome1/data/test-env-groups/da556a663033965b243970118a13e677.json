@@ -1,0 +1,1 @@
+{"id":"da556a663033965b243970118a13e677","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should display retry tests in table format","name":"should display retry tests in table format","status":"passed","testResultsByEnv":{"default":"8cd9d139a4c69eaf32134f001c758ad9"}}

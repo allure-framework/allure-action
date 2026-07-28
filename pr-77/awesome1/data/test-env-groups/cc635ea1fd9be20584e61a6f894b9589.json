@@ -1,0 +1,1 @@
+{"id":"cc635ea1fd9be20584e61a6f894b9589","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should escape special characters in test names and remoteHref","name":"should escape special characters in test names and remoteHref","status":"passed","testResultsByEnv":{"default":"65b14e07b817c3a96ad08616acde1bd5"}}
