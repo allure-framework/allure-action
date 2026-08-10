@@ -4,7 +4,7 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { ActionSummary, QualityGateResultsContent } from "./model.js";
+import type { ActionSummary, CompatiblePluginSummary, QualityGateResultsContent } from "./model.js";
 import {
   SUMMARY_SECTION_MARKER_PREFIX,
   deleteCommentsByMarkerPrefix,
@@ -18,6 +18,7 @@ import {
   isQualityGateFailed,
   normalizePathForUrl,
   parseSummarySections,
+  readTestResultRegistry,
 } from "./utils.js";
 
 const getSummaryDirSuffix = (reportDir: string, summaryFile: string): string => {
@@ -219,13 +220,14 @@ const run = async (): Promise<void> => {
   const enabledSections = parseSummarySections(getGithubInput("sections"));
   const debug = isDebugEnabled(getGithubInput("debug"));
   const qualityGateFile = path.posix.join(reportDir, "quality-gate.json");
+  const testResultsFile = path.posix.join(reportDir, "test-results.json");
   const summaryFiles = await fg([path.posix.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
   });
   const summaryFilesContent = (await Promise.all(
     summaryFiles.map(async (file) => {
       const content = await fs.readFile(file, "utf-8");
-      const summary = JSON.parse(content) as PluginSummary;
+      const summary = JSON.parse(content) as CompatiblePluginSummary;
 
       return {
         ...summary,
@@ -253,6 +255,8 @@ const run = async (): Promise<void> => {
       qualityGateParseError = error;
     }
   }
+
+  const testResultRegistry = enabledSections.length ? await readTestResultRegistry(testResultsFile) : undefined;
 
   if (debug) {
     printDebugInfo({
@@ -335,7 +339,9 @@ const run = async (): Promise<void> => {
     issue_number,
   });
   const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
-  const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections);
+  const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, {
+    testResultRegistry,
+  });
 
   await findOrCreateComment({
     octokit,

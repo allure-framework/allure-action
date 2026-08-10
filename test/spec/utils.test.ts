@@ -1,6 +1,11 @@
 import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
 import { describe, expect, it } from "vitest";
-import type { ActionSummary, QualityGateResultsContent, RemoteSummaryTestResult } from "../../src/model.js";
+import type {
+  ActionSummary,
+  CompatiblePluginSummary,
+  QualityGateResultsContent,
+  RemoteSummaryTestResult,
+} from "../../src/model.js";
 import {
   formatQualityGareResultsList,
   formatQualityGateResults,
@@ -10,6 +15,7 @@ import {
   getSummarySectionMarker,
   isQualityGateFailed,
   parseSummarySections,
+  resolveSummaryTests,
   stripAnsiCodes,
 } from "../../src/utils.js";
 
@@ -37,7 +43,94 @@ describe("utils", () => {
     });
   });
 
+  describe("resolveSummaryTests", () => {
+    it("should resolve IDs while preserving embedded legacy results in mixed arrays", () => {
+      const legacyResult = {
+        id: "legacy-test",
+        name: "Legacy test",
+        status: "passed" as const,
+        duration: 100,
+      };
+      const registryResult = {
+        id: "registry-test",
+        name: "Registry test",
+        status: "failed" as const,
+        duration: 200,
+      };
+
+      const result = resolveSummaryTests([legacyResult, "registry-test", "missing-test"], {
+        byId: {
+          "registry-test": registryResult,
+        },
+      });
+
+      expect(result).toEqual([legacyResult, registryResult]);
+    });
+
+    it("should tolerate missing registry and unresolved IDs", () => {
+      expect(resolveSummaryTests(["missing-test"])).toEqual([]);
+      expect(resolveSummaryTests(undefined)).toEqual([]);
+    });
+  });
+
   describe("generateSummarySectionComments", () => {
+    it("should render ID-based sections using the shared registry", () => {
+      const summaries = [
+        {
+          summaryId: "suite-a/summary.json",
+          name: "Suite A",
+          stats: {
+            passed: 2,
+            failed: 1,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          remoteHref: "https://example.com/suite-a/",
+          meta: {
+            withTestResultsLinks: true,
+          },
+          newTests: ["test-1"],
+          flakyTests: ["test-2"],
+          retryTests: ["test-3"],
+        },
+      ] as ActionSummary[];
+
+      const results = generateSummarySectionComments(summaries, ["new", "flaky", "retry"], {
+        testResultRegistry: {
+          byId: {
+            "test-1": {
+              id: "test-1",
+              name: "Registry-backed test",
+              status: "passed",
+              duration: 100,
+            },
+            "test-2": {
+              id: "test-2",
+              name: "Registry-backed flaky test",
+              status: "failed",
+              duration: 200,
+            },
+            "test-3": {
+              id: "test-3",
+              name: "Registry-backed retry test",
+              status: "passed",
+              duration: 300,
+            },
+          },
+        },
+      });
+
+      expect(results).toHaveLength(3);
+      expect(results[0].body).toContain("Registry-backed test");
+      expect(results[0].body).toContain("https://example.com/suite-a/#test-1");
+      expect(results[1].body).toContain("Registry-backed flaky test");
+      expect(results[1].body).toContain("https://example.com/suite-a/#test-2");
+      expect(results[2].body).toContain("Registry-backed retry test");
+      expect(results[2].body).toContain("https://example.com/suite-a/#test-3");
+    });
+
     it("should create separate collapsible comments for enabled sections", () => {
       const summaries = [
         {
@@ -356,6 +449,23 @@ describe("utils", () => {
       const result = generateSummaryMarkdownTable([]);
 
       expect(result).toMatchSnapshot();
+    });
+
+    it("should count ID-based summary collections without registry resolution", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: { passed: 1, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+          duration: 1000,
+          newTests: ["new-1", "new-2"],
+          flakyTests: ["flaky-1"],
+          retryTests: ["retry-1", "retry-2", "retry-3"],
+        },
+      ] as unknown as CompatiblePluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toContain("| 2 | 1 | 3 |  |");
     });
 
     it("should generate a table for a single summary without remoteHref", () => {

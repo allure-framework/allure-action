@@ -38,6 +38,9 @@ vi.mock("../../src/utils.js", async (importOriginal) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  (fg as unknown as Mock).mockReset();
+  (existsSync as unknown as Mock).mockReset();
+  (fs.readFile as unknown as Mock).mockReset();
 });
 
 describe("action", () => {
@@ -525,6 +528,80 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain(
         '<a href="https://example.com/report/#test-3" target="_blank" rel="noopener noreferrer">should be a retry test</a>',
       );
+    });
+
+    it("should resolve ID-based sections from one root registry for multiple plugin summaries", async () => {
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        if (input === "report-directory") {
+          return "test/fixtures/action";
+        }
+
+        if (input === "github-token") {
+          return "token";
+        }
+
+        if (input === "sections") {
+          return "new";
+        }
+
+        return "";
+      });
+
+      const registryFile = "test/fixtures/action/test-results.json";
+      const summaryFiles = ["test/fixtures/action/awesome/summary.json", "test/fixtures/action/classic/summary.json"];
+      const summaries = {
+        [summaryFiles[0]]: JSON.stringify({
+          name: "Awesome",
+          stats: { passed: 1, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+          duration: 100,
+          newTests: ["awesome-test"],
+          flakyTests: [],
+          retryTests: [],
+        }),
+        [summaryFiles[1]]: JSON.stringify({
+          name: "Classic",
+          stats: { passed: 1, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+          duration: 200,
+          newTests: ["classic-test"],
+          flakyTests: [],
+          retryTests: [],
+        }),
+      };
+      const registry = JSON.stringify({
+        byId: {
+          "awesome-test": {
+            id: "awesome-test",
+            name: "Awesome registry test",
+            status: "passed",
+            duration: 100,
+          },
+          "classic-test": {
+            id: "classic-test",
+            name: "Classic registry test",
+            status: "passed",
+            duration: 200,
+          },
+        },
+      });
+
+      (fg as unknown as Mock).mockResolvedValue(summaryFiles);
+      (existsSync as unknown as Mock).mockImplementation((file: string) => file === registryFile);
+      (fs.readFile as unknown as Mock).mockImplementation(async (file: string) => {
+        if (file === registryFile) {
+          return registry;
+        }
+
+        return summaries[file as keyof typeof summaries];
+      });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(fs.readFile).toHaveBeenCalledWith(registryFile, "utf-8");
+      expect(fs.readFile).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(3);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("Awesome registry test");
+      expect(octokitMock.rest.issues.createComment.mock.calls[2][0].body).toContain("Classic registry test");
     });
 
     it("should handle multiple summary files", async () => {

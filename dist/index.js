@@ -25331,6 +25331,26 @@ const SUMMARY_SECTIONS = [
 	"retry"
 ];
 //#endregion
+//#region src/utils/testResults.ts
+const readTestResultRegistry = async (registryFile) => {
+	if (!(0, node_fs.existsSync)(registryFile)) return;
+	try {
+		const content = await (0, node_fs_promises.readFile)(registryFile, "utf-8");
+		const registry = JSON.parse(content);
+		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) return;
+		return registry;
+	} catch {
+		return;
+	}
+};
+const resolveSummaryTests = (values, registry) => {
+	return (values ?? []).flatMap((value) => {
+		if (typeof value === "object" && value !== null) return [value];
+		const resolved = registry?.byId?.[value];
+		return resolved ? [resolved] : [];
+	});
+};
+//#endregion
 //#region node_modules/@allurereport/core-api/dist/constants.js
 const unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
 const successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
@@ -25409,7 +25429,7 @@ const formatDuration = (duration) => {
 	return res.join(" ");
 };
 //#endregion
-//#region src/table.ts
+//#region src/utils/markdown/table.ts
 const escapeHtml = (value) => {
 	return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
 };
@@ -25476,7 +25496,7 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 	].join("\n");
 };
 //#endregion
-//#region src/sections.ts
+//#region src/utils/markdown/sections.ts
 const SUMMARY_SECTION_DEFINITIONS = {
 	new: {
 		filter: "new",
@@ -25518,8 +25538,9 @@ const createSummaryTestRemoteHref = (summary, testId) => {
 	if (!summary.remoteHref || !getSummaryTestResultsLinksFlag(summary)) return;
 	return `${summary.remoteHref}#${testId}`;
 };
-const getSummarySectionTests = (summary, section) => {
-	return (summary[SUMMARY_SECTION_DEFINITIONS[section].testsKey] ?? []).map((test) => ({
+const getSummarySectionTests = (summary, section, registry) => {
+	const definition = SUMMARY_SECTION_DEFINITIONS[section];
+	return resolveSummaryTests(summary[definition.testsKey], registry).map((test) => ({
 		...test,
 		remoteHref: createSummaryTestRemoteHref(summary, test.id)
 	}));
@@ -25565,8 +25586,8 @@ const getTruncatedSummarySectionLines = (summary, section) => {
 	];
 };
 const generateSummarySectionCommentBody = (summary, section, options = {}) => {
-	const { maxCommentBodyLength = MAX_SECTION_COMMENT_BODY_LENGTH } = options;
-	const tests = getSummarySectionTests(summary, section);
+	const { maxCommentBodyLength = MAX_SECTION_COMMENT_BODY_LENGTH, testResultRegistry } = options;
+	const tests = getSummarySectionTests(summary, section, testResultRegistry);
 	if (!tests.length) return;
 	const titleLine = `### ${SUMMARY_SECTION_DEFINITIONS[section].title} in ${getSummaryDisplayName(summary)}`;
 	const summaryLine = formatSummarySectionToggleLabel(section, tests.length);
@@ -25706,6 +25727,7 @@ const run = async () => {
 	const enabledSections = parseSummarySections(getGithubInput("sections"));
 	const debug = isDebugEnabled(getGithubInput("debug"));
 	const qualityGateFile = node_path.posix.join(reportDir, "quality-gate.json");
+	const testResultsFile = node_path.posix.join(reportDir, "test-results.json");
 	const summaryFiles = await (0, import_out.default)([node_path.posix.join(reportDir, "**", "summary.json")], { onlyFiles: true });
 	const summaryFilesContent = await Promise.all(summaryFiles.map(async (file) => {
 		const content = await node_fs_promises.readFile(file, "utf-8");
@@ -25733,6 +25755,7 @@ const run = async () => {
 			qualityGateParseError = error;
 		}
 	}
+	const testResultRegistry = enabledSections.length ? await readTestResultRegistry(testResultsFile) : void 0;
 	if (debug) printDebugInfo({
 		eventName,
 		headSha,
@@ -25790,7 +25813,7 @@ const run = async () => {
 		issue_number
 	});
 	const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
-	const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections);
+	const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, { testResultRegistry });
 	await findOrCreateComment({
 		octokit,
 		owner: repo.owner,
