@@ -1,0 +1,1 @@
+{"id":"75e6a2655a9c992ac6220cd47c7c2641","fullName":"allure-action:test/spec/action.test.ts#action quality gate should create a successful check when per-environment record has empty arrays","name":"should create a successful check when per-environment record has empty arrays","status":"passed","testResultsByEnv":{"default":"ea26a19df7da7e9fcb42c850d98e64dc"}}
