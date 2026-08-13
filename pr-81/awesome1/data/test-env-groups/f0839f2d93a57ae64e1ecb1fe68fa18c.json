@@ -1,1 +1,1 @@
-{"id":"f0839f2d93a57ae64e1ecb1fe68fa18c","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero failed stats","name":"should handle zero failed stats","status":"passed","testResultsByEnv":{"default":"f88fbe56cb937c88aaedcfe5d0bf0651"}}
+{"id":"f0839f2d93a57ae64e1ecb1fe68fa18c","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero failed stats","name":"should handle zero failed stats","status":"passed","testResultsByEnv":{"default":"c4a63fb5b17a787a3cfa508ce21f6a24"}}

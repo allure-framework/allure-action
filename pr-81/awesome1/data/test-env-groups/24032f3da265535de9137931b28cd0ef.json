@@ -1,1 +1,1 @@
-{"id":"24032f3da265535de9137931b28cd0ef","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle complex durations","name":"should handle complex durations","status":"passed","testResultsByEnv":{"default":"d16409fdf4e1630f100cc248a2eea2e3"}}
+{"id":"24032f3da265535de9137931b28cd0ef","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle complex durations","name":"should handle complex durations","status":"passed","testResultsByEnv":{"default":"86ec61e65aa43c70def9941de82138b7"}}

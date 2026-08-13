@@ -1,1 +1,1 @@
-{"id":"295a904691e98b880a10479fdaf0f2e0","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero unknown stats","name":"should handle zero unknown stats","status":"passed","testResultsByEnv":{"default":"7e38b9bd85d6f53b37aecfda14d05484"}}
+{"id":"295a904691e98b880a10479fdaf0f2e0","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero unknown stats","name":"should handle zero unknown stats","status":"passed","testResultsByEnv":{"default":"a31daba31e3a38cee75119d61af27cad"}}
