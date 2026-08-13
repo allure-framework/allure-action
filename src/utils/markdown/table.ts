@@ -1,6 +1,5 @@
 import { formatDuration } from "@allurereport/core-api";
-import type { PluginSummary } from "@allurereport/plugin-api";
-import type { RemoteSummaryTestResult } from "./model.js";
+import type { CompatiblePluginSummary, RemoteSummaryTestResult } from "../../model.js";
 
 const escapeHtml = (value: string): string => {
   return value
@@ -37,7 +36,7 @@ export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => 
  * Doesn't include certain information about every test to keep the table compact
  */
 export const generateSummaryMarkdownTable = (
-  summaries: PluginSummary[],
+  summaries: CompatiblePluginSummary[],
   options: { remoteHref?: string } = {},
 ): string => {
   const { remoteHref: inputRemoteHref } = options;

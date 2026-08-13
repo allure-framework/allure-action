@@ -1,5 +1,12 @@
-import type { PluginSummary } from "@allurereport/plugin-api";
-import { type ActionSummary, SUMMARY_SECTIONS, type RemoteSummaryTestResult, type SummarySection } from "./model.js";
+import {
+  type ActionSummary,
+  type CompatiblePluginSummary,
+  SUMMARY_SECTIONS,
+  type RemoteSummaryTestResult,
+  type SummarySection,
+  type TestResultRegistry,
+} from "../../model.js";
+import { resolveSummaryTests } from "../testResults.js";
 import { createExternalLink, formatSummaryTest } from "./table.js";
 
 const SUMMARY_SECTION_DEFINITIONS: Record<
@@ -47,12 +54,12 @@ const normalizeSummarySection = (value: string): string => {
     .replace(/^[\s[\]"']+|[\s\]"']+$/g, "");
 };
 
-const getSummaryDisplayName = (summary: PluginSummary): string => {
+const getSummaryDisplayName = (summary: CompatiblePluginSummary): string => {
   return summary?.name ?? "Allure Report";
 };
 
-const getSummaryTestResultsLinksFlag = (summary: PluginSummary): boolean => {
-  const { meta } = summary as PluginSummary & {
+const getSummaryTestResultsLinksFlag = (summary: CompatiblePluginSummary): boolean => {
+  const { meta } = summary as CompatiblePluginSummary & {
     meta?: {
       withTestResultsLinks?: boolean;
     };
@@ -61,7 +68,7 @@ const getSummaryTestResultsLinksFlag = (summary: PluginSummary): boolean => {
   return Boolean(meta?.withTestResultsLinks);
 };
 
-const createSummaryTestRemoteHref = (summary: PluginSummary, testId: string): string | undefined => {
+const createSummaryTestRemoteHref = (summary: CompatiblePluginSummary, testId: string): string | undefined => {
   if (!summary.remoteHref || !getSummaryTestResultsLinksFlag(summary)) {
     return undefined;
   }
@@ -69,9 +76,13 @@ const createSummaryTestRemoteHref = (summary: PluginSummary, testId: string): st
   return `${summary.remoteHref}#${testId}`;
 };
 
-const getSummarySectionTests = (summary: PluginSummary, section: SummarySection): RemoteSummaryTestResult[] => {
+const getSummarySectionTests = (
+  summary: CompatiblePluginSummary,
+  section: SummarySection,
+  registry?: TestResultRegistry,
+): RemoteSummaryTestResult[] => {
   const definition = SUMMARY_SECTION_DEFINITIONS[section];
-  const tests = summary[definition.testsKey] ?? [];
+  const tests = resolveSummaryTests(summary[definition.testsKey], registry);
 
   return tests.map((test) => ({
     ...test,
@@ -99,7 +110,7 @@ export const getSummarySectionMarker = (summaryId: string, section: SummarySecti
   return `${SUMMARY_SECTION_MARKER_PREFIX}${section}:${summaryId} -->`;
 };
 
-const getSummarySectionFilterHref = (summary: PluginSummary, section: SummarySection): string | undefined => {
+const getSummarySectionFilterHref = (summary: CompatiblePluginSummary, section: SummarySection): string | undefined => {
   if (!summary.remoteHref) {
     return undefined;
   }
@@ -119,7 +130,7 @@ const renderSummarySectionCommentBody = (titleLine: string, summaryLine: string,
   );
 };
 
-const getTruncatedSummarySectionLines = (summary: PluginSummary, section: SummarySection): string[] => {
+const getTruncatedSummarySectionLines = (summary: CompatiblePluginSummary, section: SummarySection): string[] => {
   const moreHref = getSummarySectionFilterHref(summary, section);
 
   if (!moreHref) {
@@ -130,12 +141,12 @@ const getTruncatedSummarySectionLines = (summary: PluginSummary, section: Summar
 };
 
 const generateSummarySectionCommentBody = (
-  summary: PluginSummary,
+  summary: CompatiblePluginSummary,
   section: SummarySection,
-  options: { maxCommentBodyLength?: number } = {},
+  options: { maxCommentBodyLength?: number; testResultRegistry?: TestResultRegistry } = {},
 ): string | undefined => {
-  const { maxCommentBodyLength = MAX_SECTION_COMMENT_BODY_LENGTH } = options;
-  const tests = getSummarySectionTests(summary, section);
+  const { maxCommentBodyLength = MAX_SECTION_COMMENT_BODY_LENGTH, testResultRegistry } = options;
+  const tests = getSummarySectionTests(summary, section, testResultRegistry);
 
   if (!tests.length) {
     return undefined;
@@ -172,7 +183,7 @@ const generateSummarySectionCommentBody = (
 export const generateSummarySectionComments = (
   summaries: ActionSummary[],
   sections: SummarySection[],
-  options: { maxCommentBodyLength?: number } = {},
+  options: { maxCommentBodyLength?: number; testResultRegistry?: TestResultRegistry } = {},
 ): { body: string; marker: string }[] => {
   const comments: { body: string; marker: string }[] = [];
 
