@@ -1,0 +1,1 @@
+{"id":"74dea562de66540687c4abc908fd45d2","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should generate a table for multiple summaries","name":"should generate a table for multiple summaries","status":"passed","testResultsByEnv":{"default":"bd906d2e9652e6ab1496e1914aee9dc2"}}

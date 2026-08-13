@@ -1,0 +1,1 @@
+{"id":"455394f78dc7fd512c60f1fe97737c93","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummarySectionComments should render ID-based sections using the shared registry","name":"should render ID-based sections using the shared registry","status":"passed","testResultsByEnv":{"default":"7be6532c6e9ef7bd95316b2b1c2881c9"}}

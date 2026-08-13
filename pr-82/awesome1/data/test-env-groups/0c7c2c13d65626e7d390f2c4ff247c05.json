@@ -1,0 +1,1 @@
+{"id":"0c7c2c13d65626e7d390f2c4ff247c05","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should replace ANSI codes with custom replacement","name":"should replace ANSI codes with custom replacement","status":"passed","testResultsByEnv":{"default":"ab4fa7de3f0b3e54d08a540f12457915"}}
