@@ -1,0 +1,1 @@
+{"id":"d9839f14b5188172804cf90f9e9d56df","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should escape pipe characters in report name cell","name":"should escape pipe characters in report name cell","status":"passed","testResultsByEnv":{"default":"383ed527e6f058a2e86e21c36493f07e"}}
