@@ -1,0 +1,1 @@
+{"id":"f5fc3da061c020d2022f37a495fe4326","fullName":"allure-action:test/spec/utils.test.ts#utils isQualityGateFailed should return false for an empty object","name":"should return false for an empty object","status":"passed","testResultsByEnv":{"default":"64706c77e5a80b56c35d303705a39425"}}

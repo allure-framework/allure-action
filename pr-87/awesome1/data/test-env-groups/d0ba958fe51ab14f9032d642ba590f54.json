@@ -1,0 +1,1 @@
+{"id":"d0ba958fe51ab14f9032d642ba590f54","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should count ID-based summary collections without registry resolution","name":"should count ID-based summary collections without registry resolution","status":"passed","testResultsByEnv":{"default":"fa80f91a5854cf611a1204ff2bdcec5e"}}

@@ -1,0 +1,1 @@
+{"id":"14f47a79bc6e397f6198b78cc02ef486","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should return the same string when there are no ANSI codes","name":"should return the same string when there are no ANSI codes","status":"passed","testResultsByEnv":{"default":"79f4ae690f2a43811719c6cda4f83828"}}
