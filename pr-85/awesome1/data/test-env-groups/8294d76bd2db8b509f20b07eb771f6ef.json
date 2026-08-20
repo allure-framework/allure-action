@@ -1,0 +1,1 @@
+{"id":"8294d76bd2db8b509f20b07eb771f6ef","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummarySectionComments should truncate oversized section comments and append More link","name":"should truncate oversized section comments and append More link","status":"passed","testResultsByEnv":{"default":"604b4bf0e19873ac42036b6e9f1899c4"}}

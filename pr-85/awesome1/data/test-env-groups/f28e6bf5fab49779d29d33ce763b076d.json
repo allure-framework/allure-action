@@ -1,0 +1,1 @@
+{"id":"f28e6bf5fab49779d29d33ce763b076d","fullName":"allure-action:test/spec/utils.test.ts#utils isQualityGateFailed should return true for a record with multiple non-empty environments","name":"should return true for a record with multiple non-empty environments","status":"passed","testResultsByEnv":{"default":"945ad19cc26a844e6ca6c1b2c7391dc8"}}
