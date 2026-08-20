@@ -1,0 +1,1 @@
+{"id":"6cf0bc37d9c228f78740882d9279caa5","fullName":"allure-action:test/spec/utils.test.ts#utils resolveSummaryTests should resolve IDs while preserving embedded legacy results in mixed arrays","name":"should resolve IDs while preserving embedded legacy results in mixed arrays","status":"passed","testResultsByEnv":{"default":"d99254147bbeeb16fd1b7cd0be288dc5"}}
