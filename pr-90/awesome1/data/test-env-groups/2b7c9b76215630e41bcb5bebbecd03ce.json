@@ -1,0 +1,1 @@
+{"id":"2b7c9b76215630e41bcb5bebbecd03ce","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should create a quality gate check but skip comments outside pull requests","name":"should create a quality gate check but skip comments outside pull requests","status":"passed","testResultsByEnv":{"default":"43dbdb9eb5aaf936c2e39de495693d59"}}

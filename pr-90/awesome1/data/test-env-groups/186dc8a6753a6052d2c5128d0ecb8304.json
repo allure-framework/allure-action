@@ -1,0 +1,1 @@
+{"id":"186dc8a6753a6052d2c5128d0ecb8304","fullName":"allure-action:test/spec/utils.test.ts#utils generateQualityGateComment should render related tests resolved through the shared registry","name":"should render related tests resolved through the shared registry","status":"passed","testResultsByEnv":{"default":"0fd75010e57771b4795abab26b0af87c"}}

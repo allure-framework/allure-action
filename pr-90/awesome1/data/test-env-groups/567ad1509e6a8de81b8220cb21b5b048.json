@@ -1,0 +1,1 @@
+{"id":"567ad1509e6a8de81b8220cb21b5b048","fullName":"allure-action:test/spec/utils.test.ts#utils isQualityGateFailed should return true when at least one rule failed","name":"should return true when at least one rule failed","status":"passed","testResultsByEnv":{"default":"124c42faf0d8bec53dd9bc28a1313dee"}}

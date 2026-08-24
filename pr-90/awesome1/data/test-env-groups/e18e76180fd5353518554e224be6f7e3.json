@@ -1,0 +1,1 @@
+{"id":"e18e76180fd5353518554e224be6f7e3","fullName":"allure-action:test/spec/utils.test.ts#utils generateQualityGateComment should keep abstract rules readable when no test IDs are available","name":"should keep abstract rules readable when no test IDs are available","status":"passed","testResultsByEnv":{"default":"bd92f9932d47c2409ca36c5ee8fc546c"}}

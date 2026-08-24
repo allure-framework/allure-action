@@ -1,0 +1,1 @@
+{"id":"9e9689b5a51708e5853e8da0539b19a7","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should delete stale quality gate comments when gate results are missing","name":"should delete stale quality gate comments when gate results are missing","status":"passed","testResultsByEnv":{"default":"8cc59ecdff68a78f10b30b2e9329ef95"}}

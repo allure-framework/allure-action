@@ -1,0 +1,1 @@
+{"id":"fb08ef28c463266271866ce68c61a44a","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI codes from multi-line string","name":"should strip ANSI codes from multi-line string","status":"passed","testResultsByEnv":{"default":"c71967240dc8b79ef7b2f8da733f9f55"}}
