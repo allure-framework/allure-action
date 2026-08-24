@@ -1737,19 +1737,12 @@ var require_request$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				arr.push(val[i]);
 			} else if (val[i] === null) arr.push("");
 			else if (typeof val[i] === "object") throw new InvalidArgumentError(`invalid ${key} header`);
-			else {
-				const str = `${val[i]}`;
-				if (!isValidHeaderValue(str)) throw new InvalidArgumentError(`invalid ${key} header`);
-				arr.push(str);
-			}
+			else arr.push(`${val[i]}`);
 			val = arr;
 		} else if (typeof val === "string") {
 			if (!isValidHeaderValue(val)) throw new InvalidArgumentError(`invalid ${key} header`);
 		} else if (val === null) val = "";
-		else {
-			val = `${val}`;
-			if (!isValidHeaderValue(val)) throw new InvalidArgumentError(`invalid ${key} header`);
-		}
+		else val = `${val}`;
 		if (headerName === "host") {
 			if (request.host !== null) throw new InvalidArgumentError("duplicate host header");
 			if (typeof val !== "string") throw new InvalidArgumentError("invalid host header");
@@ -5192,7 +5185,7 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const util = require_util$7();
 	const { channels } = require_diagnostics();
 	const timers = require_timers();
-	const { RequestContentLengthMismatchError, ResponseContentLengthMismatchError, RequestAbortedError, InvalidArgumentError, HeadersTimeoutError, HeadersOverflowError, SocketError, InformationalError, BodyTimeoutError, HTTPParserError, ResponseExceededMaxSizeError } = require_errors();
+	const { RequestContentLengthMismatchError, ResponseContentLengthMismatchError, RequestAbortedError, HeadersTimeoutError, HeadersOverflowError, SocketError, InformationalError, BodyTimeoutError, HTTPParserError, ResponseExceededMaxSizeError } = require_errors();
 	const { kUrl, kReset, kClient, kParser, kBlocking, kRunning, kPending, kSize, kWriting, kQueue, kNoRef, kKeepAliveDefaultTimeout, kHostHeader, kPendingIdx, kRunningIdx, kError, kPipelining, kSocket, kKeepAliveTimeoutValue, kMaxHeadersSize, kKeepAliveMaxTimeout, kKeepAliveTimeoutThreshold, kHeadersTimeout, kBodyTimeout, kStrictContentLength, kMaxRequests, kCounter, kMaxResponseSize, kOnError, kResume, kHTTPContext } = require_symbols$4();
 	const constants = require_constants$6();
 	const EMPTY_BUF = Buffer.alloc(0);
@@ -5782,17 +5775,7 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			if (request.contentType == null) headers.push("content-type", contentType);
 			body = bodyStream.stream;
 			contentLength = bodyStream.length;
-		} else if (util.isBlobLike(body) && request.contentType == null) {
-			const contentType = body.type;
-			if (contentType) {
-				const contentTypeValue = `${contentType}`;
-				if (!util.isValidHeaderValue(contentTypeValue)) {
-					util.errorRequest(client, request, new InvalidArgumentError("invalid content-type header"));
-					return false;
-				}
-				headers.push("content-type", contentTypeValue);
-			}
-		}
+		} else if (util.isBlobLike(body) && request.contentType == null && body.type) headers.push("content-type", body.type);
 		if (body && typeof body.read === "function") body.read(0);
 		const bodyLength = util.bodyLength(body);
 		contentLength = bodyLength ?? contentLength;
@@ -7692,18 +7675,6 @@ var require_retry_handler = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 		const current = Date.now();
 		return new Date(retryAfter).getTime() - current;
 	}
-	function validatePartialResponseContentLength(headers, range, statusCode, retryCount) {
-		const contentLength = headers["content-length"];
-		if (contentLength == null) return null;
-		if (!Number.isFinite(range.start) || !Number.isFinite(range.end)) return null;
-		const length = Number(contentLength);
-		const expectedLength = range.end - range.start + 1;
-		if (!Number.isFinite(length) || length !== expectedLength) return new RequestRetryError("Content-Length mismatch", statusCode, {
-			headers,
-			data: { count: retryCount }
-		});
-		return null;
-	}
 	module.exports = class RetryHandler {
 		constructor(opts, handlers) {
 			const { retryOptions, ...dispatchOpts } = opts;
@@ -7839,11 +7810,6 @@ var require_retry_handler = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 					}));
 					return false;
 				}
-				const contentLengthError = validatePartialResponseContentLength(headers, contentRange, statusCode, this.retryCount);
-				if (contentLengthError != null) {
-					this.abort(contentLengthError);
-					return false;
-				}
 				const { start, size, end = size - 1 } = contentRange;
 				assert$16(this.start === start, "content-range mismatch");
 				assert$16(this.end == null || this.end === end, "content-range mismatch");
@@ -7854,11 +7820,6 @@ var require_retry_handler = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 				if (statusCode === 206) {
 					const range = parseRangeHeader(headers["content-range"]);
 					if (range == null) return this.handler.onHeaders(statusCode, rawHeaders, resume, statusMessage);
-					const contentLengthError = validatePartialResponseContentLength(headers, range, statusCode, this.retryCount);
-					if (contentLengthError != null) {
-						this.abort(contentLengthError);
-						return false;
-					}
 					const { start, size, end = size - 1 } = range;
 					assert$16(start != null && Number.isFinite(start), "content-range mismatch");
 					assert$16(end != null && Number.isFinite(end), "invalid content-length");
@@ -13234,54 +13195,16 @@ var require_util$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	function validateCookiePath(path) {
 		for (let i = 0; i < path.length; ++i) {
 			const code = path.charCodeAt(i);
-			if (code < 32 || code > 126 || code === 59) throw new Error("Invalid cookie path");
+			if (code < 32 || code === 127 || code === 59) throw new Error("Invalid cookie path");
 		}
 	}
 	/**
-	* <let-dig> ::= <letter> | <digit>
-	*
-	* <letter> ::= any one of the 52 alphabetic characters A through Z in
-	* upper case and a through z in lower case
-	*
-	* <digit> ::= any one of the ten digits 0 through 9r
-	*
-	* @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
-	* @param {number} code
-	*/
-	function isLetterOrDigit(code) {
-		return code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122;
-	}
-	/**
-	* Validates a cookie domain against the "preferred name syntax".
-	*
-	* <domain>      ::= <subdomain> | " "
-	* <subdomain>   ::= <label> | <subdomain> "." <label>
-	* <label>       ::= <let-dig> [ [ <ldh-str> ] <let-dig> ]
-	* <ldh-str>     ::= <let-dig-hyp> | <let-dig-hyp> <ldh-str>
-	* <let-dig-hyp> ::= <let-dig> | "-"
-	*
-	* @see https://www.rfc-editor.org/rfc/rfc1034#section-3.5
-	* @see https://www.rfc-editor.org/rfc/rfc1123#section-2.1
-	* @see https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4
+	* I have no idea why these values aren't allowed to be honest,
+	* but Deno tests these. - Khafra
 	* @param {string} domain
 	*/
 	function validateCookieDomain(domain) {
-		if (domain === " ") return;
-		if (domain.length > 255) throw new Error("Invalid cookie domain");
-		let labelLength = 0;
-		for (let i = 0; i < domain.length; ++i) {
-			const code = domain.charCodeAt(i);
-			if (code === 46) {
-				if (labelLength === 0) throw new Error("Invalid cookie domain");
-				if (domain.charCodeAt(i - 1) === 45) throw new Error("Invalid cookie domain");
-				labelLength = 0;
-				continue;
-			}
-			if (labelLength === 0 && !isLetterOrDigit(code)) throw new Error("Invalid cookie domain");
-			if (!isLetterOrDigit(code) && code !== 45) throw new Error("Invalid cookie domain");
-			if (++labelLength > 63) throw new Error("Invalid cookie domain");
-		}
-		if (labelLength === 0 || domain.charCodeAt(domain.length - 1) === 45) throw new Error("Invalid cookie domain");
+		if (domain.startsWith("-") || domain.endsWith(".") || domain.endsWith("-")) throw new Error("Invalid cookie domain");
 	}
 	const IMFDays = [
 		"Sun",
@@ -13396,11 +13319,7 @@ var require_util$2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		for (const part of cookie.unparsed) {
 			if (!part.includes("=")) throw new Error("Invalid unparsed");
 			const [key, ...value] = part.split("=");
-			const trimmedKey = key.trim();
-			const joinedValue = value.join("=");
-			validateCookieName(trimmedKey);
-			validateCookieValue(joinedValue);
-			out.push(`${trimmedKey}=${joinedValue}`);
+			out.push(`${key.trim()}=${value.join("=")}`);
 		}
 		return out.join("; ");
 	}
@@ -25375,63 +25294,6 @@ const deleteCommentsByMarkerPrefix = async (params) => {
 //#region src/path.ts
 const normalizePathForUrl = (value) => value.split(node_path.sep).join("/");
 //#endregion
-//#region src/quality-gate.ts
-const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`, "g");
-const stripAnsiCodes = (str, replacement) => {
-	return str.replace(ansiCodePattern, replacement ?? "");
-};
-const isQualityGateFailed = (qualityGateResultsContent) => {
-	if (!qualityGateResultsContent) return false;
-	if (Array.isArray(qualityGateResultsContent)) return qualityGateResultsContent.length > 0;
-	return Object.values(qualityGateResultsContent).flat().length > 0;
-};
-const formatQualityGareResultsList = (qualityGateResults) => {
-	const commentLines = [];
-	qualityGateResults.forEach((result) => {
-		commentLines.push(`**${result.rule}** has failed:`);
-		commentLines.push("```shell");
-		commentLines.push(stripAnsiCodes(result.message));
-		commentLines.push("```");
-		commentLines.push("");
-	});
-	return commentLines.join("\n");
-};
-const formatQualityGateResults = (qualityGateResultsContent) => {
-	if (Array.isArray(qualityGateResultsContent)) return formatQualityGareResultsList(qualityGateResultsContent);
-	const comments = [];
-	Object.entries(qualityGateResultsContent).forEach(([env, results]) => {
-		comments.push([`**Environment**: "${env}"`, formatQualityGareResultsList(results)].join("\n"));
-	});
-	return comments.join("\n\n---\n\n");
-};
-//#endregion
-//#region src/model.ts
-const SUMMARY_SECTIONS = [
-	"new",
-	"flaky",
-	"retry"
-];
-//#endregion
-//#region src/utils/testResults.ts
-const readTestResultRegistry = async (registryFile) => {
-	if (!(0, node_fs.existsSync)(registryFile)) return;
-	try {
-		const content = await (0, node_fs_promises.readFile)(registryFile, "utf-8");
-		const registry = JSON.parse(content);
-		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) return;
-		return registry;
-	} catch {
-		return;
-	}
-};
-const resolveSummaryTests = (values, registry) => {
-	return (values ?? []).flatMap((value) => {
-		if (typeof value === "object" && value !== null) return [value];
-		const resolved = registry?.byId?.[value];
-		return resolved ? [resolved] : [];
-	});
-};
-//#endregion
 //#region node_modules/@allurereport/core-api/dist/constants.js
 const unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
 const successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
@@ -25575,6 +25437,226 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 			return `| ${cells.join(" | ")} |`;
 		})
 	].join("\n");
+};
+//#endregion
+//#region src/quality-gate.ts
+const QUALITY_GATE_COMMENT_MARKER = "<!-- allure-quality-gate -->";
+const MAX_QUALITY_GATE_COMMENT_BODY_LENGTH = 6e4;
+const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`, "g");
+const stripAnsiCodes = (str, replacement) => {
+	return str.replace(ansiCodePattern, replacement ?? "");
+};
+const isRecord = (value) => {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+const stringifyValue = (value) => {
+	if (typeof value === "string") return value;
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return String(value);
+	}
+};
+const previewText = (value) => {
+	if (typeof value !== "string") return;
+	const normalized = stripAnsiCodes(value).replace(/\s+/g, " ").trim();
+	if (!normalized) return;
+	return normalized.length > 180 ? `${normalized.slice(0, 177)}...` : normalized;
+};
+const getTestResultMessage = (testResult) => {
+	const error = testResult.error;
+	return previewText(isRecord(error) ? error.message : void 0) ?? previewText(testResult.message) ?? previewText(testResult.statusMessage);
+};
+const getTestResultDuration = (testResult) => {
+	if (typeof testResult.duration === "number") return testResult.duration;
+	if (typeof testResult.start === "number" && typeof testResult.stop === "number") return Math.max(testResult.stop - testResult.start, 0);
+	return 0;
+};
+const getSummaryTestResultsLinksFlag$1 = (summary) => {
+	const { meta } = summary;
+	return Boolean(meta?.withTestResultsLinks);
+};
+const getReportRemoteHref = (options) => {
+	const { remoteHref, summaries = [] } = options;
+	return summaries.find((summary) => summary.remoteHref && getSummaryTestResultsLinksFlag$1(summary))?.remoteHref ?? summaries.find((summary) => summary.remoteHref)?.remoteHref ?? remoteHref;
+};
+const createTestRemoteHref = (testId, options) => {
+	const reportRemoteHref = getReportRemoteHref(options);
+	return reportRemoteHref ? `${reportRemoteHref}#${testId}` : void 0;
+};
+const qualityGateEntries = (qualityGateResultsContent) => {
+	if (Array.isArray(qualityGateResultsContent)) return qualityGateResultsContent.map((result) => ({
+		environment: result.environment,
+		result
+	}));
+	return Object.entries(qualityGateResultsContent).flatMap(([environment, results]) => results.map((result) => ({
+		environment: result.environment ?? environment,
+		result
+	})));
+};
+const failedQualityGateEntries = (qualityGateResultsContent) => {
+	return qualityGateEntries(qualityGateResultsContent).filter(({ result }) => !result.success);
+};
+const relatedTestsLabel = (count) => {
+	if (count === 0) return "no related tests";
+	return `${count} related ${count === 1 ? "test" : "tests"}`;
+};
+const formatRuleSummaryLine = ({ environment, result }) => {
+	const relatedCount = result.testResults?.length ?? 0;
+	const env = environment ? `, environment: ${environment}` : "";
+	const actual = result.actual === void 0 ? "" : `, actual: ${stringifyValue(result.actual)}`;
+	const expected = result.expected === void 0 ? "" : `, expected: ${stringifyValue(result.expected)}`;
+	return `- **${result.rule}**${env}: ${stripAnsiCodes(result.message)} (${relatedTestsLabel(relatedCount)}${actual}${expected})`;
+};
+const isQualityGateFailed = (qualityGateResultsContent) => {
+	if (!qualityGateResultsContent) return false;
+	return failedQualityGateEntries(qualityGateResultsContent).length > 0;
+};
+const formatQualityGateResults = (qualityGateResultsContent) => {
+	const entries = failedQualityGateEntries(qualityGateResultsContent);
+	if (!entries.length) return "Quality gate passed.";
+	return [`Quality gate failed with ${entries.length} ${entries.length === 1 ? "rule" : "rules"}.`, ""].concat(entries.map(formatRuleSummaryLine)).join("\n");
+};
+const readTestResultFile = async (testResultId, reportDir) => {
+	const file = node_path.posix.join(reportDir, "data", "test-results", `${testResultId}.json`);
+	if (!(0, node_fs.existsSync)(file)) return;
+	try {
+		const content = await (0, node_fs_promises.readFile)(file, "utf-8");
+		const testResult = JSON.parse(content);
+		if (!isRecord(testResult)) return;
+		return {
+			duration: getTestResultDuration(testResult),
+			environment: typeof testResult.environment === "string" ? testResult.environment : void 0,
+			id: typeof testResult.id === "string" ? testResult.id : testResultId,
+			message: getTestResultMessage(testResult),
+			name: typeof testResult.name === "string" ? testResult.name : testResultId,
+			status: typeof testResult.status === "string" ? testResult.status : "unknown"
+		};
+	} catch {
+		return;
+	}
+};
+const resolveQualityGateTestResults = async (testResultIds, options) => {
+	const uniqueTestResultIds = [...new Set(testResultIds)];
+	return (await Promise.all(uniqueTestResultIds.map(async (testResultId) => {
+		const registryTest = options.testResultRegistry?.byId?.[testResultId];
+		const fileTest = await readTestResultFile(testResultId, options.reportDir);
+		const merged = {
+			id: testResultId,
+			name: testResultId,
+			status: "unknown",
+			duration: 0,
+			...registryTest,
+			...fileTest
+		};
+		if (!registryTest && !fileTest) return;
+		return {
+			...merged,
+			remoteHref: createTestRemoteHref(merged.id, options)
+		};
+	}))).filter((testResult) => Boolean(testResult));
+};
+const formatQualityGateTestResult = (test) => {
+	const statusText = `${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`;
+	const testName = test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name;
+	const details = [`(${formatDuration(test.duration)})`];
+	if (test.environment) details.push(`environment: ${test.environment}`);
+	if (test.message) details.push(test.message);
+	return `- ${statusText} ${testName} ${details.join(" - ")}`;
+};
+const renderQualityGateEntry = ({ environment, result, tests }) => {
+	const relatedCount = result.testResults?.length ?? 0;
+	const lines = [
+		"<details>",
+		`<summary><strong>${result.rule}</strong> failed, ${relatedTestsLabel(relatedCount)}</summary>`,
+		""
+	];
+	if (environment) lines.push(`**Environment**: ${environment}`);
+	lines.push(`**Expected**: ${stringifyValue(result.expected)}`);
+	lines.push(`**Actual**: ${stringifyValue(result.actual)}`);
+	lines.push("");
+	lines.push("```text");
+	lines.push(stripAnsiCodes(result.message));
+	lines.push("```");
+	lines.push("");
+	if (!relatedCount) lines.push("_No related test results were reported for this rule._");
+	else if (!tests.length) lines.push("_Related test result details were not found in the report artifacts._");
+	else {
+		lines.push("Related test results:");
+		lines.push(...tests.map(formatQualityGateTestResult));
+	}
+	lines.push("</details>");
+	lines.push("");
+	return lines;
+};
+const renderQualityGateComment = (entries, options = {}) => {
+	const lines = [
+		"# Allure Quality Gate",
+		"",
+		`Quality gate failed with ${entries.length} ${entries.length === 1 ? "rule" : "rules"}.`,
+		"",
+		...entries.flatMap(renderQualityGateEntry)
+	];
+	const moreHref = getReportRemoteHref(options);
+	if (options.truncated) lines.push(moreHref ? createExternalLink(moreHref, "More") : "_List truncated due to comment size limit._");
+	return lines.join("\n");
+};
+const generateQualityGateComment = async (qualityGateResultsContent, options) => {
+	if (!qualityGateResultsContent || !isQualityGateFailed(qualityGateResultsContent)) return;
+	const maxCommentBodyLength = options.maxCommentBodyLength ?? MAX_QUALITY_GATE_COMMENT_BODY_LENGTH;
+	const entries = await Promise.all(failedQualityGateEntries(qualityGateResultsContent).map(async (entry) => ({
+		...entry,
+		tests: await resolveQualityGateTestResults(entry.result.testResults ?? [], options)
+	})));
+	const fullBody = renderQualityGateComment(entries, options);
+	if (fullBody.length <= maxCommentBodyLength) return fullBody;
+	const truncatedEntries = entries.map((entry) => ({
+		...entry,
+		tests: []
+	}));
+	entries.forEach((entry, entryIndex) => {
+		entry.tests.forEach((test) => {
+			if (renderQualityGateComment(truncatedEntries.map((currentEntry, index) => index === entryIndex ? {
+				...currentEntry,
+				tests: [...currentEntry.tests, test]
+			} : currentEntry), {
+				...options,
+				truncated: true
+			}).length <= maxCommentBodyLength) truncatedEntries[entryIndex].tests.push(test);
+		});
+	});
+	const truncatedBody = renderQualityGateComment(truncatedEntries, {
+		...options,
+		truncated: true
+	});
+	return truncatedBody.length <= maxCommentBodyLength ? truncatedBody : truncatedBody.slice(0, Math.max(maxCommentBodyLength - 1, 0));
+};
+//#endregion
+//#region src/model.ts
+const SUMMARY_SECTIONS = [
+	"new",
+	"flaky",
+	"retry"
+];
+//#endregion
+//#region src/utils/testResults.ts
+const readTestResultRegistry = async (registryFile) => {
+	if (!(0, node_fs.existsSync)(registryFile)) return;
+	try {
+		const content = await (0, node_fs_promises.readFile)(registryFile, "utf-8");
+		const registry = JSON.parse(content);
+		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) return;
+		return registry;
+	} catch {
+		return;
+	}
+};
+const resolveSummaryTests = (values, registry) => {
+	return (values ?? []).flatMap((value) => {
+		if (typeof value === "object" && value !== null) return [value];
+		const resolved = registry?.byId?.[value];
+		return resolved ? [resolved] : [];
+	});
 };
 //#endregion
 //#region src/utils/markdown/sections.ts
@@ -25836,7 +25918,8 @@ const run = async () => {
 			qualityGateParseError = error;
 		}
 	}
-	const testResultRegistry = enabledSections.length ? await readTestResultRegistry(testResultsFile) : void 0;
+	const qualityGateFailed = isQualityGateFailed(qualityGateResults);
+	const testResultRegistry = enabledSections.length || qualityGateFailed ? await readTestResultRegistry(testResultsFile) : void 0;
 	if (debug) printDebugInfo({
 		eventName,
 		headSha,
@@ -25853,7 +25936,6 @@ const run = async () => {
 	const octokit = getOctokit(token);
 	if (qualityGateResults) {
 		info("Quality gate results found, checking status");
-		const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 		await octokit.rest.checks.create({
 			owner: repo.owner,
 			repo: repo.repo,
@@ -25879,10 +25961,6 @@ const run = async () => {
 		});
 		if (debug) info(`[debug] Created check "${checkRun.name}": id=${response?.data?.id ?? "unknown"}, htmlUrl=${response?.data?.html_url ?? "not provided"}`);
 	}));
-	if (!summaryFilesContent?.length) {
-		info("No published reports found");
-		return;
-	}
 	if (!isPullRequest || !pullRequest) {
 		info("Not a pull request event, skipping comments");
 		return;
@@ -25893,9 +25971,16 @@ const run = async () => {
 		repo: repo.repo,
 		issue_number
 	});
-	const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+	const summaryCommentMarkdown = summaryFilesContent.length ? generateSummaryMarkdownTable(summaryFilesContent) : "";
 	const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, { testResultRegistry });
-	await findOrCreateComment({
+	const qualityGateComment = !qualityGateParseError && qualityGateFailed ? await generateQualityGateComment(qualityGateResults, {
+		remoteHref,
+		reportDir,
+		summaries: summaryFilesContent,
+		testResultRegistry
+	}) : void 0;
+	if (!summaryFilesContent?.length) info("No published reports found");
+	else await findOrCreateComment({
 		octokit,
 		owner: repo.owner,
 		repo: repo.repo,
@@ -25903,6 +25988,22 @@ const run = async () => {
 		existingComments,
 		marker: "<!-- allure-report-summary -->",
 		body: summaryCommentMarkdown
+	});
+	if (qualityGateComment) await findOrCreateComment({
+		octokit,
+		owner: repo.owner,
+		repo: repo.repo,
+		issue_number,
+		existingComments,
+		marker: QUALITY_GATE_COMMENT_MARKER,
+		body: qualityGateComment
+	});
+	else if (!qualityGateParseError) await deleteCommentsByMarkerPrefix({
+		octokit,
+		owner: repo.owner,
+		repo: repo.repo,
+		existingComments,
+		prefix: QUALITY_GATE_COMMENT_MARKER
 	});
 	await Promise.all(sectionComments.map((comment) => findOrCreateComment({
 		octokit,

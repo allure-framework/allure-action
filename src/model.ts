@@ -24,6 +24,20 @@ export type CompatiblePluginSummary = Omit<PluginSummary, "newTests" | "flakyTes
 
 export type QualityGateResultsContent = QualityGateValidationResult[] | Record<string, QualityGateValidationResult[]>;
 
+export type ResolvedQualityGateTestResult = SummaryTestResult & {
+  environment?: string;
+  message?: string;
+  remoteHref?: string;
+};
+
+export type QualityGateCommentOptions = {
+  maxCommentBodyLength?: number;
+  remoteHref?: string;
+  reportDir: string;
+  summaries?: CompatiblePluginSummary[];
+  testResultRegistry?: TestResultRegistry;
+};
+
 export const SUMMARY_SECTIONS = ["new", "flaky", "retry"] as const;
 
 export type SummarySection = (typeof SUMMARY_SECTIONS)[number];

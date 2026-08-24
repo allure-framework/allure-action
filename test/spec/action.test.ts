@@ -236,6 +236,310 @@ describe("action", () => {
       );
     });
 
+    it("should create a quality gate check and rich pull request comment for failed gates", async () => {
+      const files = new Map([
+        [
+          "report1/summary.json",
+          JSON.stringify({
+            name: "Test Suite 1",
+            stats: {
+              passed: 10,
+              failed: 1,
+              broken: 0,
+              skipped: 0,
+              unknown: 0,
+            },
+            duration: 5000,
+            remoteHref: "https://example.com/report/",
+            meta: {
+              withTestResultsLinks: true,
+            },
+            newTests: [],
+            flakyTests: [],
+            retryTests: [],
+          }),
+        ],
+        [
+          "test/fixtures/action/quality-gate.json",
+          JSON.stringify({
+            chrome: [
+              {
+                rule: "maxFailures",
+                message: "Failed tests: 1 exceeds threshold of 0",
+                success: false,
+                actual: 1,
+                expected: 0,
+                testResults: ["test-1", "missing-test"],
+              },
+            ],
+          }),
+        ],
+        [
+          "test/fixtures/action/test-results.json",
+          JSON.stringify({
+            byId: {
+              "test-1": {
+                id: "test-1",
+                name: "Registry-backed failed test",
+                status: "failed",
+                duration: 250,
+              },
+            },
+          }),
+        ],
+      ]);
+
+      (fg as unknown as Mock).mockResolvedValue(["report1/summary.json"]);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return (
+          filePath === "test/fixtures/action/quality-gate.json" || filePath === "test/fixtures/action/test-results.json"
+        );
+      });
+      (fs.readFile as unknown as Mock).mockImplementation((filePath: string) => {
+        const content = files.get(filePath);
+
+        if (content === undefined) {
+          throw new Error(`Unexpected read: ${filePath}`);
+        }
+
+        return Promise.resolve(content);
+      });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          conclusion: "failure",
+          name: "Allure Quality Gate",
+          output: expect.objectContaining({
+            summary: expect.stringContaining("Quality gate failed with 1 rule."),
+          }),
+        }),
+      );
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<!-- allure-quality-gate -->");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("# Allure Quality Gate");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("maxFailures");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("**Environment**: chrome");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("**Expected**: 0");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("**Actual**: 1");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        '<a href="https://example.com/report/#test-1" target="_blank" rel="noopener noreferrer">Registry-backed failed test</a>',
+      );
+    });
+
+    it("should resolve quality gate tests from per-test result files when registry is unavailable", async () => {
+      const files = new Map([
+        [
+          "report1/summary.json",
+          JSON.stringify({
+            name: "Test Suite 1",
+            stats: {
+              passed: 0,
+              failed: 1,
+              broken: 0,
+              skipped: 0,
+              unknown: 0,
+            },
+            duration: 5000,
+            remoteHref: "https://example.com/report/",
+            newTests: [],
+            flakyTests: [],
+            retryTests: [],
+          }),
+        ],
+        [
+          "test/fixtures/action/quality-gate.json",
+          JSON.stringify([
+            {
+              rule: "maxDuration",
+              message: "\u001B[31mDuration exceeded\u001B[39m",
+              success: false,
+              actual: 2000,
+              expected: 1000,
+              testResults: ["test-2"],
+            },
+          ]),
+        ],
+        [
+          "test/fixtures/action/data/test-results/test-2.json",
+          JSON.stringify({
+            id: "test-2",
+            name: "slow test",
+            status: "failed",
+            start: 1000,
+            stop: 3000,
+            environment: "firefox",
+            error: {
+              message: "Expected request to finish faster",
+            },
+          }),
+        ],
+      ]);
+
+      (fg as unknown as Mock).mockResolvedValue(["report1/summary.json"]);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return (
+          filePath === "test/fixtures/action/quality-gate.json" ||
+          filePath === "test/fixtures/action/data/test-results/test-2.json"
+        );
+      });
+      (fs.readFile as unknown as Mock).mockImplementation((filePath: string) => {
+        const content = files.get(filePath);
+
+        if (content === undefined) {
+          throw new Error(`Unexpected read: ${filePath}`);
+        }
+
+        return Promise.resolve(content);
+      });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<!-- allure-quality-gate -->");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("slow test");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("environment: firefox");
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+        "Expected request to finish faster",
+      );
+      expect(octokitMock.rest.checks.create.mock.calls[0][0].output.summary).toContain("Duration exceeded");
+      expect(octokitMock.rest.checks.create.mock.calls[0][0].output.summary).not.toContain("\u001B");
+    });
+
+    it("should delete stale quality gate comments when gate results are missing", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 1,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 1000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+        data: [
+          {
+            id: 99,
+            body: "<!-- allure-quality-gate -->\n# Allure Quality Gate",
+          },
+        ],
+      });
+
+      await run();
+
+      expect(octokitMock.rest.issues.deleteComment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          comment_id: 99,
+        }),
+      );
+    });
+
+    it("should create a quality gate check but skip comments outside pull requests", async () => {
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "push",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+        sha: "abc123",
+        payload: {},
+      });
+      (fg as unknown as Mock).mockResolvedValue([]);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return filePath === "test/fixtures/action/quality-gate.json";
+      });
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(
+        JSON.stringify([
+          {
+            rule: "maxFailures",
+            message: "Failed tests: 1 exceeds threshold of 0",
+            success: false,
+            actual: 1,
+            expected: 0,
+            testResults: [],
+          },
+        ]),
+      );
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          conclusion: "failure",
+          name: "Allure Quality Gate",
+        }),
+      );
+      expect(octokitMock.rest.issues.listComments).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+    });
+
+    it("should keep stale quality gate comments untouched when gate payload is malformed", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 1,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 1000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return filePath === "test/fixtures/action/quality-gate.json";
+      });
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce("{not json");
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+        data: [
+          {
+            id: 99,
+            body: "<!-- allure-quality-gate -->\n# Allure Quality Gate",
+          },
+        ],
+      });
+
+      await run();
+
+      expect(octokitMock.rest.issues.deleteComment).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          comment_id: 99,
+        }),
+      );
+    });
+
     it("should create comments for new tests", async () => {
       const fixtures = {
         summaryFiles: [
@@ -1938,7 +2242,7 @@ describe("action", () => {
 
       const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
 
-      expect(summaryOutput).toContain('**Environment**: "chrome"');
+      expect(summaryOutput).toContain("environment: chrome");
       expect(summaryOutput).toContain("Failed tests: 2 exceeds threshold of 0");
     });
 
@@ -2004,11 +2308,10 @@ describe("action", () => {
 
       const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
 
-      expect(summaryOutput).toContain('**Environment**: "chrome"');
-      expect(summaryOutput).toContain('**Environment**: "firefox"');
+      expect(summaryOutput).toContain("environment: chrome");
+      expect(summaryOutput).toContain("environment: firefox");
       expect(summaryOutput).toContain("Failed tests threshold");
       expect(summaryOutput).toContain("Broken tests threshold");
-      expect(summaryOutput).toContain("---");
     });
 
     it("should create a successful check when per-environment record has empty arrays", async () => {
