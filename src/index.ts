@@ -7,9 +7,11 @@ import * as path from "node:path";
 import type { ActionSummary, CompatiblePluginSummary, QualityGateResultsContent } from "./model.js";
 import {
   SUMMARY_SECTION_MARKER_PREFIX,
+  QUALITY_GATE_COMMENT_MARKER,
   deleteCommentsByMarkerPrefix,
   findOrCreateComment,
   formatQualityGateResults,
+  generateQualityGateComment,
   generateSummaryMarkdownTable,
   generateSummarySectionComments,
   getGithubContext,
@@ -256,7 +258,9 @@ const run = async (): Promise<void> => {
     }
   }
 
-  const testResultRegistry = enabledSections.length ? await readTestResultRegistry(testResultsFile) : undefined;
+  const qualityGateFailed = isQualityGateFailed(qualityGateResults);
+  const testResultRegistry =
+    enabledSections.length || qualityGateFailed ? await readTestResultRegistry(testResultsFile) : undefined;
 
   if (debug) {
     printDebugInfo({
@@ -278,8 +282,6 @@ const run = async (): Promise<void> => {
 
   if (qualityGateResults) {
     core.info("Quality gate results found, checking status");
-
-    const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 
     await octokit.rest.checks.create({
       owner: repo.owner,
@@ -322,11 +324,6 @@ const run = async (): Promise<void> => {
     }),
   );
 
-  if (!summaryFilesContent?.length) {
-    core.info("No published reports found");
-    return;
-  }
-
   if (!isPullRequest || !pullRequest) {
     core.info("Not a pull request event, skipping comments");
     return;
@@ -338,6 +335,38 @@ const run = async (): Promise<void> => {
     repo: repo.repo,
     issue_number,
   });
+  const qualityGateComment = await generateQualityGateComment(qualityGateResults, {
+    remoteHref,
+    reportDir,
+    summaries: summaryFilesContent,
+    testResultRegistry,
+  });
+
+  if (qualityGateComment) {
+    await findOrCreateComment({
+      octokit,
+      owner: repo.owner,
+      repo: repo.repo,
+      issue_number,
+      existingComments,
+      marker: QUALITY_GATE_COMMENT_MARKER,
+      body: qualityGateComment,
+    });
+  } else if (!qualityGateParseError) {
+    await deleteCommentsByMarkerPrefix({
+      octokit,
+      owner: repo.owner,
+      repo: repo.repo,
+      existingComments,
+      prefix: QUALITY_GATE_COMMENT_MARKER,
+    });
+  }
+
+  if (!summaryFilesContent?.length) {
+    core.info("No published reports found");
+    return;
+  }
+
   const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
   const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, {
     testResultRegistry,

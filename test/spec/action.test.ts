@@ -18,6 +18,7 @@ vi.mock("node:fs", () => ({
 }));
 vi.mock("@actions/core", async (importOriginal) => ({
   ...(await importOriginal()),
+  error: vi.fn(),
   info: vi.fn(),
 }));
 vi.mock("../../src/utils.js", async (importOriginal) => {
@@ -51,6 +52,7 @@ describe("action", () => {
 
       await run();
 
+      expect(core.error).toHaveBeenCalledWith("No GitHub token provided");
       expect(fg).not.toHaveBeenCalled();
     });
 
@@ -1938,8 +1940,83 @@ describe("action", () => {
 
       const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
 
-      expect(summaryOutput).toContain('**Environment**: "chrome"');
+      expect(summaryOutput).toContain("environment: chrome");
       expect(summaryOutput).toContain("Failed tests: 2 exceeds threshold of 0");
+    });
+
+    it("should create a quality gate PR comment with resolved related tests", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 8,
+                failed: 2,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              remoteHref: "https://example.com/report",
+              meta: {
+                withTestResultsLinks: true,
+              },
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateFile: "test/fixtures/quality-gate/quality-gate.json",
+        testResultsFile: "test/fixtures/quality-gate/test-results.json",
+        qualityGateContent: JSON.stringify([
+          {
+            success: false,
+            expected: 0,
+            actual: 1,
+            rule: "maxFailures",
+            message: "The number of failed tests 1 exceeds the allowed threshold value 0",
+            environment: "Chrome",
+            testResults: ["test-1"],
+          },
+        ]),
+        testResultRegistryContent: JSON.stringify({
+          byId: {
+            "test-1": {
+              id: "test-1",
+              name: "confirms a card payment",
+              status: "failed",
+              duration: 1790,
+              environment: "Chrome",
+            },
+          },
+        }),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent)
+        .mockResolvedValueOnce(fixtures.testResultRegistryContent);
+      (existsSync as unknown as Mock).mockImplementation(
+        (filePath: string) => filePath === fixtures.qualityGateFile || filePath === fixtures.testResultsFile,
+      );
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(2);
+      const qualityGateComment = octokitMock.rest.issues.createComment.mock.calls[0][0].body;
+
+      expect(qualityGateComment).toContain("<!-- allure-quality-gate -->");
+      expect(qualityGateComment).toContain("# Allure Quality Gate");
+      expect(qualityGateComment).toContain("<summary><strong>maxFailures</strong> failed, 1 related test</summary>");
+      expect(qualityGateComment).toContain(
+        '<a href="https://example.com/report#test-1" target="_blank" rel="noopener noreferrer">confirms a card payment</a>',
+      );
+      expect(qualityGateComment).toContain("environment: Chrome");
     });
 
     it("should handle quality gate in per-environment record format with multiple environments", async () => {
@@ -2004,11 +2081,60 @@ describe("action", () => {
 
       const summaryOutput = octokitMock.rest.checks.create.mock.calls[0][0].output?.summary;
 
-      expect(summaryOutput).toContain('**Environment**: "chrome"');
-      expect(summaryOutput).toContain('**Environment**: "firefox"');
+      expect(summaryOutput).toContain("environment: chrome");
+      expect(summaryOutput).toContain("environment: firefox");
       expect(summaryOutput).toContain("Failed tests threshold");
       expect(summaryOutput).toContain("Broken tests threshold");
-      expect(summaryOutput).toContain("---");
+    });
+
+    it("should keep stale quality gate comments untouched when quality gate payload is malformed", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "test/fixtures/quality-gate/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+                skipped: 0,
+                unknown: 0,
+              },
+              duration: 5000,
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+        qualityGateFile: "test/fixtures/quality-gate/quality-gate.json",
+        qualityGateContent: "{not-valid-json",
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(fixtures.summaryFiles[0].content)
+        .mockResolvedValueOnce(fixtures.qualityGateContent);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => filePath === fixtures.qualityGateFile);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+        data: [
+          {
+            id: 10,
+            body: "<!-- allure-quality-gate -->\n# Old Allure Quality Gate",
+          },
+        ],
+      });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "Allure Quality Gate",
+        }),
+      );
+      expect(octokitMock.rest.issues.updateComment).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.deleteComment).not.toHaveBeenCalled();
     });
 
     it("should create a successful check when per-environment record has empty arrays", async () => {

@@ -64,6 +64,11 @@ jobs:
         run: yarn report
         continue-on-error: true
 
+      - name: Build quality gate notification preview
+        if: always()
+        run: yarn report:quality-gate-preview
+        continue-on-error: true
+
       - name: Run Allure Action
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./
@@ -72,6 +77,40 @@ jobs:
           remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
           sections: "all"
           debug: "true"
+
+      - name: Keep quality gate preview non-blocking
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const ref = context.payload.pull_request.head.sha;
+            const { data } = await github.rest.checks.listForRef({
+              owner,
+              repo,
+              ref,
+              check_name: "Allure Quality Gate",
+            });
+            const [checkRun] = data.check_runs
+              .filter(({ conclusion }) => conclusion === "failure")
+              .sort((left, right) => new Date(right.completed_at ?? 0) - new Date(left.completed_at ?? 0));
+
+            if (!checkRun) {
+              return;
+            }
+
+            await github.rest.checks.update({
+              owner,
+              repo,
+              check_run_id: checkRun.id,
+              status: "completed",
+              conclusion: "neutral",
+              output: {
+                title: "Quality Gate Preview",
+                summary:
+                  "The quality gate notification preview was rendered in the pull request comment. This demo check is neutral so the preview fixture does not fail the pull request.",
+              },
+            });
 
       - name: Deploy to GitHub Pages
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository

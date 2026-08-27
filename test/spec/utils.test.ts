@@ -7,9 +7,10 @@ import type {
   RemoteSummaryTestResult,
 } from "../../src/model.js";
 import {
-  formatQualityGareResultsList,
+  formatQualityGateResultsList,
   formatQualityGateResults,
   formatSummaryTests,
+  generateQualityGateComment,
   generateSummaryMarkdownTable,
   generateSummarySectionComments,
   getSummarySectionMarker,
@@ -1484,6 +1485,12 @@ describe("utils", () => {
 
       expect(stripAnsiCodes(input)).toBe("Custom Bright Red Background");
     });
+
+    it("should strip compound ANSI codes", () => {
+      const input = "\u001b[1;31mBold red\u001b[0m \u001b[38;5;196mPalette red\u001b[0m";
+
+      expect(stripAnsiCodes(input)).toBe("Bold red Palette red");
+    });
   });
 
   describe("isQualityGateFailed", () => {
@@ -1508,6 +1515,18 @@ describe("utils", () => {
       ];
 
       expect(isQualityGateFailed(results)).toBe(true);
+    });
+
+    it("should return false for successful quality gate results", () => {
+      const results: QualityGateResultsContent = [
+        {
+          success: true,
+          rule: "Failed tests threshold",
+          message: "Passed",
+        } as QualityGateValidationResult,
+      ];
+
+      expect(isQualityGateFailed(results)).toBe(false);
     });
 
     it("should return false for an empty record", () => {
@@ -1549,20 +1568,20 @@ describe("utils", () => {
     });
   });
 
-  describe("formatQualityGareResultsList", () => {
+  describe("formatQualityGateResultsList", () => {
     it("should format a single violation", () => {
-      const result = formatQualityGareResultsList([
+      const result = formatQualityGateResultsList([
         {
           rule: "Failed tests threshold",
           message: "Failed tests: 2 exceeds threshold of 0",
         } as QualityGateValidationResult,
       ]);
 
-      expect(result).toMatchSnapshot();
+      expect(result).toBe("- **Failed tests threshold**: Failed tests: 2 exceeds threshold of 0 (no related tests)");
     });
 
     it("should format multiple violations", () => {
-      const result = formatQualityGareResultsList([
+      const result = formatQualityGateResultsList([
         {
           rule: "Failed tests threshold",
           message: "Failed tests: 2 exceeds threshold of 0",
@@ -1573,11 +1592,16 @@ describe("utils", () => {
         } as QualityGateValidationResult,
       ]);
 
-      expect(result).toMatchSnapshot();
+      expect(result).toBe(
+        [
+          "- **Failed tests threshold**: Failed tests: 2 exceeds threshold of 0 (no related tests)",
+          "- **Broken tests threshold**: Broken tests: 1 exceeds threshold of 0 (no related tests)",
+        ].join("\n"),
+      );
     });
 
     it("should strip ANSI codes from messages", () => {
-      const result = formatQualityGareResultsList([
+      const result = formatQualityGateResultsList([
         {
           rule: "Failed tests threshold",
           message: "\u001b[31mFailed tests: 2 exceeds threshold of 0\u001b[0m",
@@ -1590,7 +1614,7 @@ describe("utils", () => {
     });
 
     it("should return empty string for empty array", () => {
-      expect(formatQualityGareResultsList([])).toBe("");
+      expect(formatQualityGateResultsList([])).toBe("");
     });
   });
 
@@ -1605,7 +1629,13 @@ describe("utils", () => {
 
       const result = formatQualityGateResults(content);
 
-      expect(result).toMatchSnapshot();
+      expect(result).toBe(
+        [
+          "Quality gate failed with 1 rule.",
+          "",
+          "- **Failed tests threshold**: Failed tests: 2 exceeds threshold of 0 (no related tests)",
+        ].join("\n"),
+      );
     });
 
     it("should format record content with single environment", () => {
@@ -1620,9 +1650,9 @@ describe("utils", () => {
 
       const result = formatQualityGateResults(content);
 
-      expect(result).toContain('**Environment**: "chrome"');
+      expect(result).toContain("environment: chrome");
       expect(result).toContain("Failed tests threshold");
-      expect(result).toMatchSnapshot();
+      expect(result).toContain("Quality gate failed with 1 rule.");
     });
 
     it("should format record content with multiple environments", () => {
@@ -1643,10 +1673,16 @@ describe("utils", () => {
 
       const result = formatQualityGateResults(content);
 
-      expect(result).toContain('**Environment**: "chrome"');
-      expect(result).toContain('**Environment**: "firefox"');
-      expect(result).toContain("---");
-      expect(result).toMatchSnapshot();
+      expect(result).toContain("environment: chrome");
+      expect(result).toContain("environment: firefox");
+      expect(result).toBe(
+        [
+          "Quality gate failed with 2 rules.",
+          "",
+          "- **Failed tests threshold**, environment: chrome: Failed tests: 2 exceeds threshold of 0 (no related tests)",
+          "- **Broken tests threshold**, environment: firefox: Broken tests: 1 exceeds threshold of 0 (no related tests)",
+        ].join("\n"),
+      );
     });
 
     it("should format record content with multiple violations per environment", () => {
@@ -1667,7 +1703,64 @@ describe("utils", () => {
 
       expect(result).toContain("Failed tests threshold");
       expect(result).toContain("Broken tests threshold");
-      expect(result).toMatchSnapshot();
+      expect(result).toBe(
+        [
+          "Quality gate failed with 2 rules.",
+          "",
+          "- **Failed tests threshold**, environment: chrome: Failed tests: 5 exceeds threshold of 0 (no related tests)",
+          "- **Broken tests threshold**, environment: chrome: Broken tests: 2 exceeds threshold of 0 (no related tests)",
+        ].join("\n"),
+      );
+    });
+  });
+
+  describe("generateQualityGateComment", () => {
+    it("should render failed rules with registry-resolved related tests", async () => {
+      const result = await generateQualityGateComment(
+        [
+          {
+            success: false,
+            expected: 0,
+            actual: 1,
+            rule: "maxFailures",
+            message: "The number of failed tests 1 exceeds the allowed threshold value 0",
+            environment: "Chrome",
+            testResults: ["test-1"],
+          } as QualityGateValidationResult,
+        ],
+        {
+          reportDir: "test/fixtures/quality-gate",
+          summaries: [
+            {
+              remoteHref: "https://example.com/report",
+              meta: {
+                withTestResultsLinks: true,
+              },
+            } as CompatiblePluginSummary,
+          ],
+          testResultRegistry: {
+            byId: {
+              "test-1": {
+                id: "test-1",
+                name: "confirms a card payment",
+                status: "failed",
+                duration: 1790,
+                environment: "Chrome",
+              },
+            },
+          },
+        },
+      );
+
+      expect(result).toContain("# Allure Quality Gate");
+      expect(result).toContain("<summary><strong>maxFailures</strong> failed, 1 related test</summary>");
+      expect(result).toContain("**Environment**: Chrome");
+      expect(result).toContain("**Expected**: 0");
+      expect(result).toContain("**Actual**: 1");
+      expect(result).toContain(
+        '<a href="https://example.com/report#test-1" target="_blank" rel="noopener noreferrer">confirms a card payment</a>',
+      );
+      expect(result).toContain("environment: Chrome");
     });
   });
 });
