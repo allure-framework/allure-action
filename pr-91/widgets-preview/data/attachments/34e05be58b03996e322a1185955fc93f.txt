@@ -1,0 +1,8 @@
+POST /api/invoices/export HTTP/1.1
+content-type: application/json
+
+{"accountId":"preview-account","format":"pdf"}
+
+HTTP/1.1 200 OK
+content-type: application/pdf
+x-request-id: widgets-preview-attachment

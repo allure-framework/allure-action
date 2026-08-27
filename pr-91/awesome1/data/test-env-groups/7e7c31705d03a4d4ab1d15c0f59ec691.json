@@ -1,0 +1,1 @@
+{"id":"7e7c31705d03a4d4ab1d15c0f59ec691","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should render a widgets preview row with the nested report link","name":"should render a widgets preview row with the nested report link","status":"passed","testResultsByEnv":{"default":"d89472bdaf71efc0ce16afb3a95a3a51"}}

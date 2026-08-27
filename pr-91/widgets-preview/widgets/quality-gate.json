@@ -1,0 +1,38 @@
+{
+  "chrome": [
+    {
+      "success": false,
+      "expected": 0,
+      "actual": 1,
+      "rule": "maxFailures",
+      "message": "The number of failed tests 1 exceeds the allowed threshold value 0",
+      "environment": "chrome"
+    },
+    {
+      "success": true,
+      "expected": 5,
+      "actual": 6,
+      "rule": "minTestsCount",
+      "message": "The total number of tests is within the expected threshold",
+      "environment": "chrome"
+    }
+  ],
+  "firefox": [
+    {
+      "success": false,
+      "expected": 0.9,
+      "actual": 0.75,
+      "rule": "successRate",
+      "message": "Success rate 0.75 is less than expected 0.9",
+      "environment": "firefox"
+    },
+    {
+      "success": true,
+      "expected": 3,
+      "actual": 4,
+      "rule": "minTestsCount",
+      "message": "The total number of tests is within the expected threshold",
+      "environment": "firefox"
+    }
+  ]
+}

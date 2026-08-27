@@ -1,0 +1,1 @@
+{"id":"e2feafc4c0572b0fccfe9cfda4e64888","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip compound ANSI codes","name":"should strip compound ANSI codes","status":"passed","testResultsByEnv":{"default":"4f543853e56bdb49bdfb0355513edb0a"}}
