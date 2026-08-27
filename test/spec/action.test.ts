@@ -371,9 +371,6 @@ describe("action", () => {
             start: 1000,
             stop: 3000,
             environment: "firefox",
-            error: {
-              message: "Expected request to finish faster",
-            },
           }),
         ],
       ]);
@@ -402,7 +399,7 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("<!-- allure-quality-gate -->");
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("slow test");
       expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain("environment: firefox");
-      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).toContain(
+      expect(octokitMock.rest.issues.createComment.mock.calls[1][0].body).not.toContain(
         "Expected request to finish faster",
       );
       expect(octokitMock.rest.checks.create.mock.calls[0][0].output.summary).toContain("Duration exceeded");

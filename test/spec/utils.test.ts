@@ -1698,7 +1698,7 @@ describe("utils", () => {
       );
 
       expect(result).toContain("# Allure Quality Gate");
-      expect(result).toContain("<strong>maxFailures</strong> failed, 2 related tests");
+      expect(result).toContain("<strong>maxFailures</strong> failed, 1 related test");
       expect(result).toContain("**Environment**: chrome");
       expect(result).toContain("**Expected**: 0");
       expect(result).toContain("**Actual**: 1");

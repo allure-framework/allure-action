@@ -25457,16 +25457,6 @@ const stringifyValue = (value) => {
 		return String(value);
 	}
 };
-const previewText = (value) => {
-	if (typeof value !== "string") return;
-	const normalized = stripAnsiCodes(value).replace(/\s+/g, " ").trim();
-	if (!normalized) return;
-	return normalized.length > 180 ? `${normalized.slice(0, 177)}...` : normalized;
-};
-const getTestResultMessage = (testResult) => {
-	const error = testResult.error;
-	return previewText(isRecord(error) ? error.message : void 0) ?? previewText(testResult.message) ?? previewText(testResult.statusMessage);
-};
 const getTestResultDuration = (testResult) => {
 	if (typeof testResult.duration === "number") return testResult.duration;
 	if (typeof testResult.start === "number" && typeof testResult.stop === "number") return Math.max(testResult.stop - testResult.start, 0);
@@ -25528,7 +25518,6 @@ const readTestResultFile = async (testResultId, reportDir) => {
 			duration: getTestResultDuration(testResult),
 			environment: typeof testResult.environment === "string" ? testResult.environment : void 0,
 			id: typeof testResult.id === "string" ? testResult.id : testResultId,
-			message: getTestResultMessage(testResult),
 			name: typeof testResult.name === "string" ? testResult.name : testResultId,
 			status: typeof testResult.status === "string" ? testResult.status : "unknown"
 		};
@@ -25561,14 +25550,12 @@ const formatQualityGateTestResult = (test) => {
 	const testName = test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name;
 	const details = [`(${formatDuration(test.duration)})`];
 	if (test.environment) details.push(`environment: ${test.environment}`);
-	if (test.message) details.push(test.message);
 	return `- ${statusText} ${testName} ${details.join(" - ")}`;
 };
-const renderQualityGateEntry = ({ environment, result, tests }) => {
-	const relatedCount = result.testResults?.length ?? 0;
+const renderQualityGateEntry = ({ environment, result, relatedTestCount, tests }) => {
 	const lines = [
 		"<details>",
-		`<summary><strong>${result.rule}</strong> failed, ${relatedTestsLabel(relatedCount)}</summary>`,
+		`<summary><strong>${result.rule}</strong> failed, ${relatedTestsLabel(relatedTestCount)}</summary>`,
 		""
 	];
 	if (environment) lines.push(`**Environment**: ${environment}`);
@@ -25579,8 +25566,7 @@ const renderQualityGateEntry = ({ environment, result, tests }) => {
 	lines.push(stripAnsiCodes(result.message));
 	lines.push("```");
 	lines.push("");
-	if (!relatedCount) lines.push("_No related test results were reported for this rule._");
-	else if (!tests.length) lines.push("_Related test result details were not found in the report artifacts._");
+	if (!relatedTestCount) lines.push("_No related test results were reported for this rule._");
 	else {
 		lines.push("Related test results:");
 		lines.push(...tests.map(formatQualityGateTestResult));
@@ -25604,10 +25590,14 @@ const renderQualityGateComment = (entries, options = {}) => {
 const generateQualityGateComment = async (qualityGateResultsContent, options) => {
 	if (!qualityGateResultsContent || !isQualityGateFailed(qualityGateResultsContent)) return;
 	const maxCommentBodyLength = options.maxCommentBodyLength ?? MAX_QUALITY_GATE_COMMENT_BODY_LENGTH;
-	const entries = await Promise.all(failedQualityGateEntries(qualityGateResultsContent).map(async (entry) => ({
-		...entry,
-		tests: await resolveQualityGateTestResults(entry.result.testResults ?? [], options)
-	})));
+	const entries = await Promise.all(failedQualityGateEntries(qualityGateResultsContent).map(async (entry) => {
+		const tests = await resolveQualityGateTestResults(entry.result.testResults ?? [], options);
+		return {
+			...entry,
+			relatedTestCount: tests.length,
+			tests
+		};
+	}));
 	const fullBody = renderQualityGateComment(entries, options);
 	if (fullBody.length <= maxCommentBodyLength) return fullBody;
 	const truncatedEntries = entries.map((entry) => ({

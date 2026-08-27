@@ -26,7 +26,6 @@ export type QualityGateResultsContent = QualityGateValidationResult[] | Record<s
 
 export type ResolvedQualityGateTestResult = SummaryTestResult & {
   environment?: string;
-  message?: string;
   remoteHref?: string;
 };
 
