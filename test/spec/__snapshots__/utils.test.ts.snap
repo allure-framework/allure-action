@@ -1,73 +1,36 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`utils > formatQualityGareResultsList > should format a single violation 1`] = `
-"**Failed tests threshold** has failed:
-\`\`\`shell
-Failed tests: 2 exceeds threshold of 0
-\`\`\`
-"
-`;
-
-exports[`utils > formatQualityGareResultsList > should format multiple violations 1`] = `
-"**Failed tests threshold** has failed:
-\`\`\`shell
-Failed tests: 2 exceeds threshold of 0
-\`\`\`
-
-**Broken tests threshold** has failed:
-\`\`\`shell
-Broken tests: 1 exceeds threshold of 0
-\`\`\`
-"
-`;
-
 exports[`utils > formatQualityGateResults > should format array content (legacy format) 1`] = `
-"**Failed tests threshold** has failed:
-\`\`\`shell
-Failed tests: 2 exceeds threshold of 0
-\`\`\`
-"
+"Quality gate failed with 1 rule.
+
+- **Failed tests threshold**: Failed tests: 2 exceeds threshold of 0 (no related tests)"
 `;
 
 exports[`utils > formatQualityGateResults > should format record content with multiple environments 1`] = `
-"**Environment**: "chrome"
-**Failed tests threshold** has failed:
-\`\`\`shell
-Failed tests: 2 exceeds threshold of 0
-\`\`\`
+"Quality gate failed with 2 rules.
 
-
----
-
-**Environment**: "firefox"
-**Broken tests threshold** has failed:
-\`\`\`shell
-Broken tests: 1 exceeds threshold of 0
-\`\`\`
-"
+- **Failed tests threshold**, environment: chrome: Failed tests: 2 exceeds threshold of 0 (no related tests)
+- **Broken tests threshold**, environment: firefox: Broken tests: 1 exceeds threshold of 0 (no related tests)"
 `;
 
 exports[`utils > formatQualityGateResults > should format record content with multiple violations per environment 1`] = `
-"**Environment**: "chrome"
-**Failed tests threshold** has failed:
-\`\`\`shell
-Failed tests: 5 exceeds threshold of 0
-\`\`\`
+"Quality gate failed with 2 rules.
 
-**Broken tests threshold** has failed:
-\`\`\`shell
-Broken tests: 2 exceeds threshold of 0
-\`\`\`
-"
+- **Failed tests threshold**, environment: chrome: Failed tests: 5 exceeds threshold of 0 (no related tests)
+- **Broken tests threshold**, environment: chrome: Broken tests: 2 exceeds threshold of 0 (no related tests)"
 `;
 
 exports[`utils > formatQualityGateResults > should format record content with single environment 1`] = `
-"**Environment**: "chrome"
-**Failed tests threshold** has failed:
-\`\`\`shell
-Failed tests: 2 exceeds threshold of 0
-\`\`\`
-"
+"Quality gate failed with 1 rule.
+
+- **Failed tests threshold**, environment: chrome: Failed tests: 2 exceeds threshold of 0 (no related tests)"
+`;
+
+exports[`utils > formatQualityGateResultsList > should format a single violation 1`] = `"- **Failed tests threshold**: Failed tests: 2 exceeds threshold of 0 (no related tests)"`;
+
+exports[`utils > formatQualityGateResultsList > should format multiple violations 1`] = `
+"- **Failed tests threshold**: Failed tests: 2 exceeds threshold of 0 (no related tests)
+- **Broken tests threshold**: Broken tests: 1 exceeds threshold of 0 (no related tests)"
 `;
 
 exports[`utils > formatSummaryTests > should format tests with different statuses 1`] = `
