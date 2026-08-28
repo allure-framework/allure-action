@@ -25375,63 +25375,6 @@ const deleteCommentsByMarkerPrefix = async (params) => {
 //#region src/path.ts
 const normalizePathForUrl = (value) => value.split(node_path.sep).join("/");
 //#endregion
-//#region src/quality-gate.ts
-const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`, "g");
-const stripAnsiCodes = (str, replacement) => {
-	return str.replace(ansiCodePattern, replacement ?? "");
-};
-const isQualityGateFailed = (qualityGateResultsContent) => {
-	if (!qualityGateResultsContent) return false;
-	if (Array.isArray(qualityGateResultsContent)) return qualityGateResultsContent.length > 0;
-	return Object.values(qualityGateResultsContent).flat().length > 0;
-};
-const formatQualityGareResultsList = (qualityGateResults) => {
-	const commentLines = [];
-	qualityGateResults.forEach((result) => {
-		commentLines.push(`**${result.rule}** has failed:`);
-		commentLines.push("```shell");
-		commentLines.push(stripAnsiCodes(result.message));
-		commentLines.push("```");
-		commentLines.push("");
-	});
-	return commentLines.join("\n");
-};
-const formatQualityGateResults = (qualityGateResultsContent) => {
-	if (Array.isArray(qualityGateResultsContent)) return formatQualityGareResultsList(qualityGateResultsContent);
-	const comments = [];
-	Object.entries(qualityGateResultsContent).forEach(([env, results]) => {
-		comments.push([`**Environment**: "${env}"`, formatQualityGareResultsList(results)].join("\n"));
-	});
-	return comments.join("\n\n---\n\n");
-};
-//#endregion
-//#region src/model.ts
-const SUMMARY_SECTIONS = [
-	"new",
-	"flaky",
-	"retry"
-];
-//#endregion
-//#region src/utils/testResults.ts
-const readTestResultRegistry = async (registryFile) => {
-	if (!(0, node_fs.existsSync)(registryFile)) return;
-	try {
-		const content = await (0, node_fs_promises.readFile)(registryFile, "utf-8");
-		const registry = JSON.parse(content);
-		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) return;
-		return registry;
-	} catch {
-		return;
-	}
-};
-const resolveSummaryTests = (values, registry) => {
-	return (values ?? []).flatMap((value) => {
-		if (typeof value === "object" && value !== null) return [value];
-		const resolved = registry?.byId?.[value];
-		return resolved ? [resolved] : [];
-	});
-};
-//#endregion
 //#region node_modules/@allurereport/core-api/dist/constants.js
 const unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
 const successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
@@ -25575,6 +25518,216 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 			return `| ${cells.join(" | ")} |`;
 		})
 	].join("\n");
+};
+//#endregion
+//#region src/quality-gate.ts
+const QUALITY_GATE_COMMENT_MARKER = "<!-- allure-quality-gate -->";
+const MAX_QUALITY_GATE_COMMENT_BODY_LENGTH = 6e4;
+const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-~]`, "g");
+const stripAnsiCodes = (str, replacement) => {
+	return str.replace(ansiCodePattern, replacement ?? "");
+};
+const isRecord = (value) => {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+const stringifyValue = (value) => {
+	if (typeof value === "string") return value;
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return String(value);
+	}
+};
+const getTestResultDuration = (testResult) => {
+	if (typeof testResult.duration === "number") return testResult.duration;
+	if (typeof testResult.start === "number" && typeof testResult.stop === "number") return Math.max(testResult.stop - testResult.start, 0);
+	return 0;
+};
+const getSummaryTestResultsLinksFlag$1 = (summary) => {
+	const { meta } = summary;
+	return Boolean(meta?.withTestResultsLinks);
+};
+const getReportRemoteHref = (options) => {
+	const { remoteHref, summaries = [] } = options;
+	return summaries.find((summary) => summary.remoteHref && getSummaryTestResultsLinksFlag$1(summary))?.remoteHref ?? summaries.find((summary) => summary.remoteHref)?.remoteHref ?? remoteHref;
+};
+const createTestRemoteHref = (testId, options) => {
+	const reportRemoteHref = getReportRemoteHref(options);
+	return reportRemoteHref ? `${reportRemoteHref}#${testId}` : void 0;
+};
+const qualityGateEntries = (qualityGateResultsContent) => {
+	if (Array.isArray(qualityGateResultsContent)) return qualityGateResultsContent.map((result) => ({
+		environment: result.environment,
+		result
+	}));
+	return Object.entries(qualityGateResultsContent).flatMap(([environment, results]) => results.map((result) => ({
+		environment: result.environment ?? environment,
+		result
+	})));
+};
+const failedQualityGateEntries = (qualityGateResultsContent) => {
+	return qualityGateEntries(qualityGateResultsContent).filter(({ result }) => !result.success);
+};
+const relatedTestsLabel = (count) => {
+	if (count === 0) return "no related tests";
+	return `${count} related ${count === 1 ? "test" : "tests"}`;
+};
+const formatRuleSummaryLine = ({ environment, result }) => {
+	const relatedCount = result.testResults?.length ?? 0;
+	const env = environment ? `, environment: ${environment}` : "";
+	const actual = result.actual === void 0 ? "" : `, actual: ${stringifyValue(result.actual)}`;
+	const expected = result.expected === void 0 ? "" : `, expected: ${stringifyValue(result.expected)}`;
+	return `- **${result.rule}**${env}: ${stripAnsiCodes(result.message)} (${relatedTestsLabel(relatedCount)}${actual}${expected})`;
+};
+const isQualityGateFailed = (qualityGateResultsContent) => {
+	if (!qualityGateResultsContent) return false;
+	return failedQualityGateEntries(qualityGateResultsContent).length > 0;
+};
+const formatQualityGateResults = (qualityGateResultsContent) => {
+	const entries = failedQualityGateEntries(qualityGateResultsContent);
+	if (!entries.length) return "Quality gate passed.";
+	return [`Quality gate failed with ${entries.length} ${entries.length === 1 ? "rule" : "rules"}.`, ""].concat(entries.map(formatRuleSummaryLine)).join("\n");
+};
+const readTestResultFile = async (testResultId, reportDir) => {
+	const file = node_path.posix.join(reportDir, "data", "test-results", `${testResultId}.json`);
+	if (!(0, node_fs.existsSync)(file)) return;
+	try {
+		const content = await (0, node_fs_promises.readFile)(file, "utf-8");
+		const testResult = JSON.parse(content);
+		if (!isRecord(testResult)) return;
+		return {
+			duration: getTestResultDuration(testResult),
+			environment: typeof testResult.environment === "string" ? testResult.environment : void 0,
+			id: typeof testResult.id === "string" ? testResult.id : testResultId,
+			name: typeof testResult.name === "string" ? testResult.name : testResultId,
+			status: typeof testResult.status === "string" ? testResult.status : "unknown"
+		};
+	} catch {
+		return;
+	}
+};
+const resolveQualityGateTestResults = async (testResultIds, options) => {
+	const uniqueTestResultIds = [...new Set(testResultIds)];
+	return (await Promise.all(uniqueTestResultIds.map(async (testResultId) => {
+		const registryTest = options.testResultRegistry?.byId?.[testResultId];
+		const fileTest = registryTest ? void 0 : await readTestResultFile(testResultId, options.reportDir);
+		const merged = {
+			id: testResultId,
+			name: testResultId,
+			status: "unknown",
+			duration: 0,
+			...registryTest,
+			...fileTest
+		};
+		if (!registryTest && !fileTest) return;
+		return {
+			...merged,
+			remoteHref: createTestRemoteHref(merged.id, options)
+		};
+	}))).filter((testResult) => Boolean(testResult));
+};
+const formatQualityGateTestResult = (test) => {
+	const statusText = `${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`;
+	const testName = test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name;
+	const details = [`(${formatDuration(test.duration)})`];
+	if (test.environment) details.push(`environment: ${test.environment}`);
+	return `- ${statusText} ${testName} ${details.join(" - ")}`;
+};
+const renderQualityGateEntry = ({ environment, result, relatedTestCount, tests }) => {
+	const lines = [
+		"<details>",
+		`<summary><strong>${result.rule}</strong> failed, ${relatedTestsLabel(relatedTestCount)}</summary>`,
+		""
+	];
+	if (environment) lines.push(`**Environment**: ${environment}`);
+	lines.push(`**Expected**: ${stringifyValue(result.expected)}`);
+	lines.push(`**Actual**: ${stringifyValue(result.actual)}`);
+	lines.push("");
+	lines.push("```text");
+	lines.push(stripAnsiCodes(result.message));
+	lines.push("```");
+	lines.push("");
+	if (!relatedTestCount) lines.push("_No related test results were reported for this rule._");
+	else {
+		lines.push("Related test results:");
+		lines.push(...tests.map(formatQualityGateTestResult));
+	}
+	lines.push("</details>");
+	lines.push("");
+	return lines;
+};
+const renderQualityGateComment = (entries, options = {}) => {
+	const lines = [
+		"# Allure Quality Gate",
+		"",
+		`Quality gate failed with ${entries.length} ${entries.length === 1 ? "rule" : "rules"}.`,
+		"",
+		...entries.flatMap(renderQualityGateEntry)
+	];
+	const moreHref = getReportRemoteHref(options);
+	if (options.truncated) lines.push(moreHref ? createExternalLink(moreHref, "More") : "_List truncated due to comment size limit._");
+	return lines.join("\n");
+};
+const generateQualityGateComment = async (qualityGateResultsContent, options) => {
+	if (!qualityGateResultsContent || !isQualityGateFailed(qualityGateResultsContent)) return;
+	const maxCommentBodyLength = options.maxCommentBodyLength ?? MAX_QUALITY_GATE_COMMENT_BODY_LENGTH;
+	const entries = await Promise.all(failedQualityGateEntries(qualityGateResultsContent).map(async (entry) => {
+		const tests = await resolveQualityGateTestResults(entry.result.testResults ?? [], options);
+		return {
+			...entry,
+			relatedTestCount: tests.length,
+			tests
+		};
+	}));
+	const fullBody = renderQualityGateComment(entries, options);
+	if (fullBody.length <= maxCommentBodyLength) return fullBody;
+	const truncatedEntries = entries.map((entry) => ({
+		...entry,
+		tests: []
+	}));
+	entries.forEach((entry, entryIndex) => {
+		entry.tests.forEach((test) => {
+			if (renderQualityGateComment(truncatedEntries.map((currentEntry, index) => index === entryIndex ? {
+				...currentEntry,
+				tests: [...currentEntry.tests, test]
+			} : currentEntry), {
+				...options,
+				truncated: true
+			}).length <= maxCommentBodyLength) truncatedEntries[entryIndex].tests.push(test);
+		});
+	});
+	const truncatedBody = renderQualityGateComment(truncatedEntries, {
+		...options,
+		truncated: true
+	});
+	return truncatedBody.length <= maxCommentBodyLength ? truncatedBody : truncatedBody.slice(0, Math.max(maxCommentBodyLength - 1, 0));
+};
+//#endregion
+//#region src/model.ts
+const SUMMARY_SECTIONS = [
+	"new",
+	"flaky",
+	"retry"
+];
+//#endregion
+//#region src/utils/testResults.ts
+const readTestResultRegistry = async (registryFile) => {
+	if (!(0, node_fs.existsSync)(registryFile)) return;
+	try {
+		const content = await (0, node_fs_promises.readFile)(registryFile, "utf-8");
+		const registry = JSON.parse(content);
+		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) return;
+		return registry;
+	} catch {
+		return;
+	}
+};
+const resolveSummaryTests = (values, registry) => {
+	return (values ?? []).flatMap((value) => {
+		if (typeof value === "object" && value !== null) return [value];
+		const resolved = registry?.byId?.[value];
+		return resolved ? [resolved] : [];
+	});
 };
 //#endregion
 //#region src/utils/markdown/sections.ts
@@ -25836,7 +25989,8 @@ const run = async () => {
 			qualityGateParseError = error;
 		}
 	}
-	const testResultRegistry = enabledSections.length ? await readTestResultRegistry(testResultsFile) : void 0;
+	const qualityGateFailed = isQualityGateFailed(qualityGateResults);
+	const testResultRegistry = enabledSections.length || qualityGateFailed ? await readTestResultRegistry(testResultsFile) : void 0;
 	if (debug) printDebugInfo({
 		eventName,
 		headSha,
@@ -25853,7 +26007,6 @@ const run = async () => {
 	const octokit = getOctokit(token);
 	if (qualityGateResults) {
 		info("Quality gate results found, checking status");
-		const qualityGateFailed = isQualityGateFailed(qualityGateResults);
 		await octokit.rest.checks.create({
 			owner: repo.owner,
 			repo: repo.repo,
@@ -25879,10 +26032,6 @@ const run = async () => {
 		});
 		if (debug) info(`[debug] Created check "${checkRun.name}": id=${response?.data?.id ?? "unknown"}, htmlUrl=${response?.data?.html_url ?? "not provided"}`);
 	}));
-	if (!summaryFilesContent?.length) {
-		info("No published reports found");
-		return;
-	}
 	if (!isPullRequest || !pullRequest) {
 		info("Not a pull request event, skipping comments");
 		return;
@@ -25893,6 +26042,32 @@ const run = async () => {
 		repo: repo.repo,
 		issue_number
 	});
+	const qualityGateComment = await generateQualityGateComment(qualityGateResults, {
+		remoteHref,
+		reportDir,
+		summaries: summaryFilesContent,
+		testResultRegistry
+	});
+	if (qualityGateComment) await findOrCreateComment({
+		octokit,
+		owner: repo.owner,
+		repo: repo.repo,
+		issue_number,
+		existingComments,
+		marker: QUALITY_GATE_COMMENT_MARKER,
+		body: qualityGateComment
+	});
+	else if (!qualityGateParseError) await deleteCommentsByMarkerPrefix({
+		octokit,
+		owner: repo.owner,
+		repo: repo.repo,
+		existingComments,
+		prefix: QUALITY_GATE_COMMENT_MARKER
+	});
+	if (!summaryFilesContent?.length) {
+		info("No published reports found");
+		return;
+	}
 	const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
 	const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, { testResultRegistry });
 	await findOrCreateComment({
