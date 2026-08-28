@@ -2130,6 +2130,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/pretty-format@npm:4.1.10":
+  version: 4.1.10
+  resolution: "@vitest/pretty-format@npm:4.1.10"
+  dependencies:
+    tinyrainbow: "npm:^3.1.0"
+  checksum: 10/e4f6907143ab0e40dda29d70b17027586c92921d622091321f10512e660b3995dcee7aa56e17b750b72560f295e25f96035372348415f18ebfd39b66a55b4704
+  languageName: node
+  linkType: hard
+
 "@vitest/pretty-format@npm:4.1.9":
   version: 4.1.9
   resolution: "@vitest/pretty-format@npm:4.1.9"
@@ -2149,7 +2158,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/snapshot@npm:4.1.9, @vitest/snapshot@npm:^4.1.9":
+"@vitest/snapshot@npm:4.1.9":
   version: 4.1.9
   resolution: "@vitest/snapshot@npm:4.1.9"
   dependencies:
@@ -2161,10 +2170,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/snapshot@npm:^4.1.10":
+  version: 4.1.10
+  resolution: "@vitest/snapshot@npm:4.1.10"
+  dependencies:
+    "@vitest/pretty-format": "npm:4.1.10"
+    "@vitest/utils": "npm:4.1.10"
+    magic-string: "npm:^0.30.21"
+    pathe: "npm:^2.0.3"
+  checksum: 10/7940d83ffd2fbebf9a04ea31e196b7e8bf981093ec739950959fe8dd29caa33c80823780fb4b1063d9459c44a0a8d8b2748c00dfb6941becd7404e6d687eea01
+  languageName: node
+  linkType: hard
+
 "@vitest/spy@npm:4.1.9":
   version: 4.1.9
   resolution: "@vitest/spy@npm:4.1.9"
   checksum: 10/8b8e42cc8e4b20d29bd8b312f34b9dbf2e20d4b4cdc24e3bcf6fd4d3b1f49e8924636d2730cca3946fbb45de893dfb531c77b832eb853c2624fdc2b800444e75
+  languageName: node
+  linkType: hard
+
+"@vitest/utils@npm:4.1.10":
+  version: 4.1.10
+  resolution: "@vitest/utils@npm:4.1.10"
+  dependencies:
+    "@vitest/pretty-format": "npm:4.1.10"
+    convert-source-map: "npm:^2.0.0"
+    tinyrainbow: "npm:^3.1.0"
+  checksum: 10/95484aad55c7b00bbcd4963e27cbb86fe207620a6093973d68da9d0a06bad37c388d84c9ab43d5f35d88e46c8f376a5592d9c54c025c958361160f4802bb25ee
   languageName: node
   linkType: hard
 
@@ -2234,7 +2266,7 @@ __metadata:
     "@types/lodash.chunk": "npm:^4"
     "@types/node": "npm:^26.0.0"
     "@vitest/runner": "npm:^4.1.9"
-    "@vitest/snapshot": "npm:^4.1.9"
+    "@vitest/snapshot": "npm:^4.1.10"
     allure: "npm:^3.13.1"
     allure-vitest: "npm:^3.10.1"
     d3-shape: "npm:^3.2.0"
