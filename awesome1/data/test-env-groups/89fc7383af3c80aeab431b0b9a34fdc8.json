@@ -1,0 +1,1 @@
+{"id":"89fc7383af3c80aeab431b0b9a34fdc8","fullName":"allure-action:test/spec/action.test.ts#action quality gate should create a quality gate PR comment with resolved related tests","name":"should create a quality gate PR comment with resolved related tests","status":"passed","testResultsByEnv":{"default":"54ec922e116d895b837f5df20edcf4f2"}}

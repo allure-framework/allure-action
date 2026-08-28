@@ -1,1 +1,1 @@
-{"id":"5ad4b2b30af6699ecbf6d4f3f21c7549","fullName":"allure-action:test/spec/utils.test.ts#utils parseSummarySections should support legacy section aliases","name":"should support legacy section aliases","status":"passed","testResultsByEnv":{"default":"d3cb8580d8de21b58cb9c98d59b2c48a"}}
+{"id":"5ad4b2b30af6699ecbf6d4f3f21c7549","fullName":"allure-action:test/spec/utils.test.ts#utils parseSummarySections should support legacy section aliases","name":"should support legacy section aliases","status":"passed","testResultsByEnv":{"default":"ad5f42d78d31e0a94e4f44fdf2531a75"}}
