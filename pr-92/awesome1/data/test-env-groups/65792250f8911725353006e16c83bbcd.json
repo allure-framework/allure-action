@@ -1,0 +1,1 @@
+{"id":"65792250f8911725353006e16c83bbcd","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should render environments and resolution counters when available","name":"should render environments and resolution counters when available","status":"passed","testResultsByEnv":{"default":"d3cdb9429465fc6b6762a33cf377ab8c"}}

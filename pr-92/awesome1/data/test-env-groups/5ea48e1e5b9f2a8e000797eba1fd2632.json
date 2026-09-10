@@ -1,0 +1,1 @@
+{"id":"5ea48e1e5b9f2a8e000797eba1fd2632","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should enrich the report summary with environments, resolutions, and artifacts","name":"should enrich the report summary with environments, resolutions, and artifacts","status":"passed","testResultsByEnv":{"default":"68e1fccf9b46ee16e2a6365f9e792d36"}}

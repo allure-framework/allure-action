@@ -1,0 +1,1 @@
+{"id":"4ea5246fdf34855abd1be58c2693ae2b","fullName":"allure-action:test/spec/utils.test.ts#utils readReportArtifacts should read, deduplicate, and sort report artifacts","name":"should read, deduplicate, and sort report artifacts","status":"passed","testResultsByEnv":{"default":"ce2f06fe9c0ec2119704748f693d6fd0"}}
