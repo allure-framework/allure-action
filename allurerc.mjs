@@ -8,6 +8,7 @@ const { ALLURE_SERVICE_ACCESS_TOKEN } = env;
  */
 const config = {
   output: "./out/allure-report",
+  globalAttachments: ["./test/quality-gate-preview/*.md"],
   plugins: {
     awesome1: {
       import: "@allurereport/plugin-awesome",

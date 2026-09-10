@@ -1,5 +1,7 @@
 import { formatDuration } from "@allurereport/core-api";
-import type { CompatiblePluginSummary, RemoteSummaryTestResult } from "../../model.js";
+import type { CompatiblePluginSummary, RemoteSummaryTestResult, ReportArtifact } from "../../model.js";
+
+const MAX_SUMMARY_COMMENT_BODY_LENGTH = 60_000;
 
 const escapeHtml = (value: string): string => {
   return value
@@ -12,6 +14,10 @@ const escapeHtml = (value: string): string => {
 
 const escapeMarkdownTableCell = (value: string): string => {
   return value.split("|").join("\\|");
+};
+
+const escapeTextTableCell = (value: string): string => {
+  return escapeMarkdownTableCell(escapeHtml(value));
 };
 
 export const createExternalLink = (href: string, label: string): string => {
@@ -31,17 +37,119 @@ export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => 
   return tests.map((test) => formatSummaryTest(test)).join("\n");
 };
 
+const getSummaryResolutions = (summary: CompatiblePluginSummary): Record<string, number> | undefined => {
+  const resolutions = summary.stats?.resolutions;
+
+  return resolutions && typeof resolutions === "object" && !Array.isArray(resolutions)
+    ? (resolutions as Record<string, number>)
+    : undefined;
+};
+
+const formatSummaryResolutions = (summary: CompatiblePluginSummary): string => {
+  const resolutions = getSummaryResolutions(summary);
+
+  if (!resolutions) {
+    return "";
+  }
+
+  return [
+    ["Issues", resolutions.issues],
+    ["Muted", resolutions.muted],
+    ["Accepted", resolutions.accepted],
+  ]
+    .flatMap(([label, count]) => (typeof count === "number" && count > 0 ? [`${label}: ${count}`] : []))
+    .join("<br/>");
+};
+
+const renderArtifactsDetails = (artifacts: ReportArtifact[], omittedCount = 0): string => {
+  const lines = [
+    "",
+    "<details>",
+    `<summary>Artifacts used (${artifacts.length + omittedCount})</summary>`,
+    "",
+    "| Name | Path |",
+    "|-|-|",
+    ...artifacts.map((artifact) => `| ${escapeTextTableCell(artifact.name)} | ${escapeTextTableCell(artifact.path)} |`),
+  ];
+
+  if (omittedCount > 0) {
+    lines.push("", `_${omittedCount} artifacts omitted due to comment size limit._`);
+  }
+
+  lines.push("</details>");
+
+  return lines.join("\n");
+};
+
+const appendArtifactsDetails = (
+  summaryMarkdown: string,
+  artifacts: ReportArtifact[],
+  maxCommentBodyLength: number,
+): string => {
+  if (!artifacts.length) {
+    return summaryMarkdown;
+  }
+
+  const fullMarkdown = `${summaryMarkdown}\n${renderArtifactsDetails(artifacts)}`;
+
+  if (fullMarkdown.length <= maxCommentBodyLength) {
+    return fullMarkdown;
+  }
+
+  const keptArtifacts: ReportArtifact[] = [];
+
+  artifacts.forEach((artifact, index) => {
+    const candidateArtifacts = [...keptArtifacts, artifact];
+    const candidate = `${summaryMarkdown}\n${renderArtifactsDetails(candidateArtifacts, artifacts.length - index - 1)}`;
+
+    if (candidate.length <= maxCommentBodyLength) {
+      keptArtifacts.push(artifact);
+    }
+  });
+
+  const truncated = `${summaryMarkdown}\n${renderArtifactsDetails(keptArtifacts, artifacts.length - keptArtifacts.length)}`;
+
+  return truncated.length <= maxCommentBodyLength
+    ? truncated
+    : summaryMarkdown.slice(0, Math.max(maxCommentBodyLength - 1, 0));
+};
+
 /**
  * Generates a markdown table based on information from all available Allure Reports
  * Doesn't include certain information about every test to keep the table compact
  */
 export const generateSummaryMarkdownTable = (
   summaries: CompatiblePluginSummary[],
-  options: { remoteHref?: string } = {},
+  options: {
+    artifacts?: ReportArtifact[];
+    environments?: string[];
+    maxCommentBodyLength?: number;
+    remoteHref?: string;
+  } = {},
 ): string => {
-  const { remoteHref: inputRemoteHref } = options;
-  const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
-  const delimiter = `|-|-|-|-|-|-|-|-|`;
+  const {
+    artifacts = [],
+    environments = [],
+    maxCommentBodyLength = MAX_SUMMARY_COMMENT_BODY_LENGTH,
+    remoteHref: inputRemoteHref,
+  } = options;
+  const hasEnvironments = environments.length > 0;
+  const hasResolutions = summaries.some((summary) => getSummaryResolutions(summary));
+  const environmentCell = environments.map(escapeTextTableCell).join("<br/>");
+  const headerCells = [
+    "",
+    "Name",
+    "Duration",
+    "Stats",
+    ...(hasEnvironments ? ["Environments"] : []),
+    ...(hasResolutions ? ["Resolutions"] : []),
+    "New",
+    "Flaky",
+    "Retry",
+    "Report",
+  ];
+  const header = `| ${headerCells.join(" | ")} |`;
+  const delimiter = `|${headerCells.map(() => "-").join("|")}|`;
   const rows = summaries.map((summary) => {
     const stats = {
       unknown: summary?.stats?.unknown ?? 0,
@@ -92,6 +200,14 @@ export const generateSummaryMarkdownTable = (
     const retryCount = summary?.retryTests?.length ?? 0;
     const cells: string[] = [img, name, duration, statsLabels.join("&nbsp;&nbsp;&nbsp;")];
 
+    if (hasEnvironments) {
+      cells.push(environmentCell);
+    }
+
+    if (hasResolutions) {
+      cells.push(formatSummaryResolutions(summary));
+    }
+
     if (!effectiveRemoteHref) {
       cells.push(newCount.toString());
       cells.push(flakyCount.toString());
@@ -120,5 +236,5 @@ export const generateSummaryMarkdownTable = (
   });
   const lines = ["# Allure Report Summary", header, delimiter, ...rows];
 
-  return lines.join("\n");
+  return appendArtifactsDetails(lines.join("\n"), artifacts, maxCommentBodyLength);
 };

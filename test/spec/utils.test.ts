@@ -1,10 +1,14 @@
 import type { PluginSummary, QualityGateValidationResult } from "@allurereport/plugin-api";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type {
   ActionSummary,
   CompatiblePluginSummary,
   QualityGateResultsContent,
   RemoteSummaryTestResult,
+  TestResultRegistry,
 } from "../../src/model.js";
 import {
   formatQualityGateResultsList,
@@ -14,8 +18,10 @@ import {
   generateSummaryMarkdownTable,
   generateSummarySectionComments,
   getSummarySectionMarker,
+  getTestResultEnvironments,
   isQualityGateFailed,
   parseSummarySections,
+  readReportArtifacts,
   resolveSummaryTests,
   stripAnsiCodes,
 } from "../../src/utils.js";
@@ -71,6 +77,93 @@ describe("utils", () => {
     it("should tolerate missing registry and unresolved IDs", () => {
       expect(resolveSummaryTests(["missing-test"])).toEqual([]);
       expect(resolveSummaryTests(undefined)).toEqual([]);
+    });
+  });
+
+  describe("getTestResultEnvironments", () => {
+    it("should extract sorted unique non-empty environments from the registry", () => {
+      const result = getTestResultEnvironments({
+        byId: {
+          "test-1": {
+            id: "test-1",
+            name: "Chrome test",
+            status: "passed",
+            duration: 100,
+            environment: "chrome",
+          },
+          "test-2": {
+            id: "test-2",
+            name: "Firefox test",
+            status: "failed",
+            duration: 200,
+            environment: "firefox",
+          },
+          "test-3": {
+            id: "test-3",
+            name: "Duplicate Chrome test",
+            status: "passed",
+            duration: 300,
+            environment: "chrome",
+          },
+          "test-4": {
+            id: "test-4",
+            name: "Default test",
+            status: "passed",
+            duration: 400,
+          },
+          "test-5": null,
+        },
+      } as unknown as TestResultRegistry);
+
+      expect(result).toEqual(["chrome", "firefox"]);
+    });
+  });
+
+  describe("readReportArtifacts", () => {
+    it("should read, deduplicate, and sort report artifacts", async () => {
+      const dir = await mkdtemp(join(tmpdir(), "allure-action-artifacts-"));
+      const file = join(dir, "artifacts.json");
+
+      await writeFile(
+        file,
+        JSON.stringify([
+          { name: "stage.log", path: "artifacts/stage.log" },
+          { name: "dump.zip", path: "../dump.zip" },
+          { name: "ignored duplicate", path: "artifacts/stage.log" },
+          { name: 1, path: "invalid.txt" },
+        ]),
+      );
+
+      try {
+        await expect(readReportArtifacts(file)).resolves.toEqual([
+          { name: "dump.zip", path: "../dump.zip" },
+          { name: "stage.log", path: "artifacts/stage.log" },
+        ]);
+      } finally {
+        await rm(dir, { force: true, recursive: true });
+      }
+    });
+
+    it("should ignore missing and malformed artifact manifests", async () => {
+      const dir = await mkdtemp(join(tmpdir(), "allure-action-artifacts-"));
+      const file = join(dir, "artifacts.json");
+      const errors: string[] = [];
+
+      try {
+        await expect(readReportArtifacts(file)).resolves.toEqual([]);
+
+        await writeFile(file, "{");
+        await expect(readReportArtifacts(file, { onError: (message) => errors.push(message) })).resolves.toEqual([]);
+
+        await writeFile(file, JSON.stringify({ artifacts: [] }));
+        await expect(readReportArtifacts(file, { onError: (message) => errors.push(message) })).resolves.toEqual([]);
+
+        expect(errors).toHaveLength(2);
+        expect(errors[0]).toContain("Artifacts manifest parse error");
+        expect(errors[1]).toContain("Artifacts manifest has unsupported shape");
+      } finally {
+        await rm(dir, { force: true, recursive: true });
+      }
     });
   });
 
@@ -467,6 +560,155 @@ describe("utils", () => {
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toContain("| 2 | 1 | 3 |  |");
+    });
+
+    it("should render environments and resolution counters when available", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 0,
+            unknown: 0,
+            resolutions: {
+              issues: 2,
+              muted: 1,
+              accepted: 0,
+            },
+          },
+          duration: 5000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+        {
+          name: "Test Suite 2",
+          stats: {
+            passed: 5,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+            resolutions: {
+              issues: 0,
+              muted: 0,
+              accepted: 3,
+            },
+          },
+          duration: 3000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as CompatiblePluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries, {
+        environments: ["chrome", "firefox"],
+      });
+
+      expect(result).toContain(
+        "|  | Name | Duration | Stats | Environments | Resolutions | New | Flaky | Retry | Report |",
+      );
+      expect(result).toContain("chrome<br/>firefox");
+      expect(result).toContain("Issues: 2<br/>Muted: 1");
+      expect(result).toContain("Accepted: 3");
+    });
+
+    it("should render an empty resolutions cell for zero counters", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+            resolutions: {
+              issues: 0,
+              muted: 0,
+              accepted: 0,
+            },
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as CompatiblePluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries);
+
+      expect(result).toContain("|  | Name | Duration | Stats | Resolutions | New | Flaky | Retry | Report |");
+      expect(result).toContain(" |  | 0 | 0 | 0 |  |");
+    });
+
+    it("should render artifacts in a collapsible table and escape untrusted cells", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as CompatiblePluginSummary[];
+
+      const result = generateSummaryMarkdownTable(summaries, {
+        artifacts: [
+          {
+            name: 'dump | "linux"',
+            path: '../dump-<linux>&"quotes".zip',
+          },
+        ],
+      });
+
+      expect(result).toContain("<summary>Artifacts used (1)</summary>");
+      expect(result).toContain("| Name | Path |");
+      expect(result).toContain("dump \\| &quot;linux&quot;");
+      expect(result).toContain("../dump-&lt;linux&gt;&amp;&quot;quotes&quot;.zip");
+    });
+
+    it("should truncate artifacts when the summary comment would exceed the limit", () => {
+      const summaries = [
+        {
+          name: "Test Suite 1",
+          stats: {
+            passed: 1,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 1000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        },
+      ] as unknown as CompatiblePluginSummary[];
+      const artifacts = Array.from({ length: 8 }, (_, index) => ({
+        name: `artifact-${index}`,
+        path: `artifacts/${"very-long-path-".repeat(4)}${index}.txt`,
+      }));
+
+      const result = generateSummaryMarkdownTable(summaries, {
+        artifacts,
+        maxCommentBodyLength: 760,
+      });
+
+      expect(result.length).toBeLessThanOrEqual(760);
+      expect(result).toContain("<summary>Artifacts used (8)</summary>");
+      expect(result).toContain("artifacts omitted due to comment size limit");
+      expect(result).not.toContain("artifact-7");
     });
 
     it("should generate a table for a single summary without remoteHref", () => {
