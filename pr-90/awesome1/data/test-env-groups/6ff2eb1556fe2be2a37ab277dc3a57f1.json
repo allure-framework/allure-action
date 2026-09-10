@@ -1,0 +1,1 @@
+{"id":"6ff2eb1556fe2be2a37ab277dc3a57f1","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should render artifacts in a collapsible table and escape untrusted cells","name":"should render artifacts in a collapsible table and escape untrusted cells","status":"passed","testResultsByEnv":{"default":"7380d83fc928ed563bb9cc03df44c909"}}

@@ -1,0 +1,1 @@
+{"id":"584f116fab6e0029f9f9458783c1b9e2","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should truncate artifacts when the summary comment would exceed the limit","name":"should truncate artifacts when the summary comment would exceed the limit","status":"passed","testResultsByEnv":{"default":"2a459bf0bd430fe91537fc96703ef59b"}}

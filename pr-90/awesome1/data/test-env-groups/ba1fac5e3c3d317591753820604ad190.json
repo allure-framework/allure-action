@@ -1,0 +1,1 @@
+{"id":"ba1fac5e3c3d317591753820604ad190","fullName":"allure-action:test/spec/utils.test.ts#utils getTestResultEnvironments should extract sorted unique non-empty environments from the registry","name":"should extract sorted unique non-empty environments from the registry","status":"passed","testResultsByEnv":{"default":"97516bd0bae8672ce3b1cf8b2bf5658f"}}
