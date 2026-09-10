@@ -1,1 +1,1 @@
-{"id":"576040ed01f7493dfb1ca77d39dd1d34","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI color codes from string","name":"should strip ANSI color codes from string","status":"passed","testResultsByEnv":{"default":"54f63cee6bb705b812b958450db7abc1"}}
+{"id":"576040ed01f7493dfb1ca77d39dd1d34","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip ANSI color codes from string","name":"should strip ANSI color codes from string","status":"passed","testResultsByEnv":{"default":"7e55e972e734b4bee3fc189f1a1b8c90"}}
