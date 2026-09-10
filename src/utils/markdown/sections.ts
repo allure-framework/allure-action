@@ -7,28 +7,24 @@ import {
   type TestResultRegistry,
 } from "../../model.js";
 import { resolveSummaryTests } from "../testResults.js";
-import { createExternalLink, formatSummaryTest } from "./table.js";
+import { createExternalLink, createReportFilterHref, formatSummaryTest } from "./table.js";
 
 const SUMMARY_SECTION_DEFINITIONS: Record<
   SummarySection,
   {
-    filter: SummarySection;
     title: string;
     testsKey: "newTests" | "flakyTests" | "retryTests";
   }
 > = {
   new: {
-    filter: "new",
     title: "New Tests",
     testsKey: "newTests",
   },
   flaky: {
-    filter: "flaky",
     title: "Flaky Tests",
     testsKey: "flakyTests",
   },
   retry: {
-    filter: "retry",
     title: "Retry Tests",
     testsKey: "retryTests",
   },
@@ -115,7 +111,7 @@ const getSummarySectionFilterHref = (summary: CompatiblePluginSummary, section: 
     return undefined;
   }
 
-  return `${summary.remoteHref}?filter=${SUMMARY_SECTION_DEFINITIONS[section].filter}`;
+  return createReportFilterHref(summary.remoteHref, section);
 };
 
 const formatSummarySectionToggleLabel = (section: SummarySection, testsCount: number): string => {

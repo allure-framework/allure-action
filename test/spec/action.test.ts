@@ -166,6 +166,144 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
 
+    it("should enrich the report summary with environments, resolutions, and artifacts", async () => {
+      const summaryFile = "test/fixtures/action/report1/summary.json";
+      const registryFile = "test/fixtures/action/test-results.json";
+      const artifactsFile = "test/fixtures/action/artifacts.json";
+      const fixtures = {
+        [summaryFile]: JSON.stringify({
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 2,
+            broken: 1,
+            skipped: 0,
+            unknown: 0,
+            resolutions: {
+              issues: 2,
+              muted: 1,
+              accepted: 0,
+            },
+          },
+          duration: 5000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        }),
+        [registryFile]: JSON.stringify({
+          byId: {
+            "test-1": {
+              id: "test-1",
+              name: "Chrome test",
+              status: "passed",
+              duration: 100,
+              environment: "chrome",
+            },
+            "test-2": {
+              id: "test-2",
+              name: "Firefox test",
+              status: "failed",
+              duration: 200,
+              environment: "firefox",
+            },
+          },
+        }),
+        [artifactsFile]: JSON.stringify([
+          {
+            name: "dump.zip",
+            path: "../dump.zip",
+          },
+          {
+            name: "stage.log",
+            path: "artifacts/stage.log",
+          },
+        ]),
+      };
+
+      (fg as unknown as Mock).mockResolvedValue([summaryFile]);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return filePath === registryFile || filePath === artifactsFile;
+      });
+      (fs.readFile as unknown as Mock).mockImplementation(async (filePath: string) => {
+        return fixtures[filePath as keyof typeof fixtures];
+      });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(fs.readFile).toHaveBeenCalledWith(summaryFile, "utf-8");
+      expect(fs.readFile).toHaveBeenCalledWith(registryFile, "utf-8");
+      expect(fs.readFile).toHaveBeenCalledWith(artifactsFile, "utf-8");
+
+      const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+
+      expect(body).toContain("|  | Name | Duration | Stats | Resolutions | New | Flaky | Retry | Report |");
+      expect(body).toContain("**Environments:** <code>chrome</code>, <code>firefox</code>");
+      expect(body).toContain("Issues: 2<br/>Muted: 1");
+      expect(body).toContain("<summary>Artifacts used (2)</summary>");
+      expect(body).toContain("| dump.zip | ../dump.zip |");
+      expect(body).toContain("| stage.log | artifacts/stage.log |");
+    });
+
+    it("should ignore malformed optional report context files and log them in debug mode", async () => {
+      const summaryFile = "test/fixtures/action/report1/summary.json";
+      const registryFile = "test/fixtures/action/test-results.json";
+      const artifactsFile = "test/fixtures/action/artifacts.json";
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "debug":
+            return "true";
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          default:
+            return "";
+        }
+      });
+      (fg as unknown as Mock).mockResolvedValue([summaryFile]);
+      (existsSync as unknown as Mock).mockImplementation((filePath: string) => {
+        return filePath === registryFile || filePath === artifactsFile;
+      });
+      (fs.readFile as unknown as Mock).mockImplementation(async (filePath: string) => {
+        if (filePath === registryFile) {
+          return JSON.stringify({ byId: [] });
+        }
+
+        if (filePath === artifactsFile) {
+          return "{";
+        }
+
+        return JSON.stringify({
+          name: "Test Suite 1",
+          stats: {
+            passed: 10,
+            failed: 0,
+            broken: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          duration: 5000,
+          newTests: [],
+          flakyTests: [],
+          retryTests: [],
+        });
+      });
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+
+      expect(body).not.toContain("Environments");
+      expect(body).not.toContain("Artifacts used");
+      expect(core.info).toHaveBeenCalledWith(
+        expect.stringContaining("[debug] Test result registry has unsupported shape"),
+      );
+      expect(core.info).toHaveBeenCalledWith(expect.stringContaining("[debug] Artifacts manifest parse error"));
+    });
+
     it("should print debug information when debug is enabled", async () => {
       const fixtures = {
         summaryFiles: [
@@ -1737,6 +1875,8 @@ describe("action", () => {
       });
       expect(octokitMock.rest.issues.listComments).not.toHaveBeenCalled();
       expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+      expect(fs.readFile).not.toHaveBeenCalledWith("test/fixtures/action/test-results.json", "utf-8");
+      expect(fs.readFile).not.toHaveBeenCalledWith("test/fixtures/action/artifacts.json", "utf-8");
     });
 
     it("should create a failed check when quality gate fails", async () => {

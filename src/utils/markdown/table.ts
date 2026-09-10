@@ -1,5 +1,7 @@
 import { formatDuration } from "@allurereport/core-api";
-import type { CompatiblePluginSummary, RemoteSummaryTestResult } from "../../model.js";
+import type { CompatiblePluginSummary, RemoteSummaryTestResult, ReportArtifact, SummarySection } from "../../model.js";
+
+const MAX_SUMMARY_COMMENT_BODY_LENGTH = 60_000;
 
 const escapeHtml = (value: string): string => {
   return value
@@ -14,8 +16,27 @@ const escapeMarkdownTableCell = (value: string): string => {
   return value.split("|").join("\\|");
 };
 
+const escapeTextTableCell = (value: string): string => {
+  return escapeMarkdownTableCell(escapeHtml(value));
+};
+
 export const createExternalLink = (href: string, label: string): string => {
   return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+};
+
+const REPORT_FILTERS: Record<SummarySection, string> = {
+  new: "transition=new",
+  flaky: "flaky=true",
+  retry: "retry=true",
+};
+
+export const createReportFilterHref = (href: string, section: SummarySection): string => {
+  const hashIndex = href.indexOf("#");
+  const baseHref = hashIndex === -1 ? href : href.slice(0, hashIndex);
+  const hash = hashIndex === -1 ? "" : href.slice(hashIndex);
+  const separator = baseHref.includes("?") ? "&" : "?";
+
+  return `${baseHref}${separator}${REPORT_FILTERS[section]}${hash}`;
 };
 
 export const formatSummaryTest = (test: RemoteSummaryTestResult): string => {
@@ -31,17 +52,117 @@ export const formatSummaryTests = (tests: RemoteSummaryTestResult[]): string => 
   return tests.map((test) => formatSummaryTest(test)).join("\n");
 };
 
+const getSummaryResolutions = (summary: CompatiblePluginSummary): Record<string, number> | undefined => {
+  const resolutions = summary.stats?.resolutions;
+
+  return resolutions && typeof resolutions === "object" && !Array.isArray(resolutions)
+    ? (resolutions as Record<string, number>)
+    : undefined;
+};
+
+const formatSummaryResolutions = (summary: CompatiblePluginSummary): string => {
+  const resolutions = getSummaryResolutions(summary);
+
+  if (!resolutions) {
+    return "";
+  }
+
+  return [
+    ["Issues", resolutions.issues],
+    ["Muted", resolutions.muted],
+    ["Accepted", resolutions.accepted],
+  ]
+    .flatMap(([label, count]) => (typeof count === "number" && count > 0 ? [`${label}: ${count}`] : []))
+    .join("<br/>");
+};
+
+const renderArtifactsDetails = (artifacts: ReportArtifact[], omittedCount = 0): string => {
+  const lines = [
+    "",
+    "<details>",
+    `<summary>Artifacts used (${artifacts.length + omittedCount})</summary>`,
+    "",
+    "| Name | Path |",
+    "|-|-|",
+    ...artifacts.map((artifact) => `| ${escapeTextTableCell(artifact.name)} | ${escapeTextTableCell(artifact.path)} |`),
+  ];
+
+  if (omittedCount > 0) {
+    lines.push("", `_${omittedCount} artifacts omitted due to comment size limit._`);
+  }
+
+  lines.push("</details>");
+
+  return lines.join("\n");
+};
+
+const appendArtifactsDetails = (
+  summaryMarkdown: string,
+  artifacts: ReportArtifact[],
+  maxCommentBodyLength: number,
+): string => {
+  if (!artifacts.length) {
+    return summaryMarkdown;
+  }
+
+  const fullMarkdown = `${summaryMarkdown}\n${renderArtifactsDetails(artifacts)}`;
+
+  if (fullMarkdown.length <= maxCommentBodyLength) {
+    return fullMarkdown;
+  }
+
+  const keptArtifacts: ReportArtifact[] = [];
+
+  artifacts.forEach((artifact, index) => {
+    const candidateArtifacts = [...keptArtifacts, artifact];
+    const candidate = `${summaryMarkdown}\n${renderArtifactsDetails(candidateArtifacts, artifacts.length - index - 1)}`;
+
+    if (candidate.length <= maxCommentBodyLength) {
+      keptArtifacts.push(artifact);
+    }
+  });
+
+  const truncated = `${summaryMarkdown}\n${renderArtifactsDetails(keptArtifacts, artifacts.length - keptArtifacts.length)}`;
+
+  return truncated.length <= maxCommentBodyLength
+    ? truncated
+    : summaryMarkdown.slice(0, Math.max(maxCommentBodyLength - 1, 0));
+};
+
 /**
  * Generates a markdown table based on information from all available Allure Reports
  * Doesn't include certain information about every test to keep the table compact
  */
 export const generateSummaryMarkdownTable = (
   summaries: CompatiblePluginSummary[],
-  options: { remoteHref?: string } = {},
+  options: {
+    artifacts?: ReportArtifact[];
+    environments?: string[];
+    maxCommentBodyLength?: number;
+    remoteHref?: string;
+  } = {},
 ): string => {
-  const { remoteHref: inputRemoteHref } = options;
-  const header = `|  | Name | Duration | Stats | New | Flaky | Retry | Report |`;
-  const delimiter = `|-|-|-|-|-|-|-|-|`;
+  const {
+    artifacts = [],
+    environments = [],
+    maxCommentBodyLength = MAX_SUMMARY_COMMENT_BODY_LENGTH,
+    remoteHref: inputRemoteHref,
+  } = options;
+  const hasEnvironments = environments.length > 0;
+  const hasResolutions = summaries.some((summary) => getSummaryResolutions(summary));
+  const headerCells = [
+    "",
+    "Name",
+    "Duration",
+    "Stats",
+    ...(hasResolutions ? ["Resolutions"] : []),
+    "New",
+    "Flaky",
+    "Retry",
+    "Report",
+  ];
+  const header = `| ${headerCells.join(" | ")} |`;
+  const delimiter = `|${headerCells.map(() => "-").join("|")}|`;
   const rows = summaries.map((summary) => {
     const stats = {
       unknown: summary?.stats?.unknown ?? 0,
@@ -90,7 +211,13 @@ export const generateSummaryMarkdownTable = (
     const newCount = summary?.newTests?.length ?? 0;
     const flakyCount = summary?.flakyTests?.length ?? 0;
     const retryCount = summary?.retryTests?.length ?? 0;
-    const cells: string[] = [img, name, duration, statsLabels.join("&nbsp;&nbsp;&nbsp;")];
+    const cells: string[] = [img, name];
+
+    cells.push(duration, statsLabels.join("&nbsp;&nbsp;&nbsp;"));
+
+    if (hasResolutions) {
+      cells.push(formatSummaryResolutions(summary));
+    }
 
     if (!effectiveRemoteHref) {
       cells.push(newCount.toString());
@@ -100,17 +227,17 @@ export const generateSummaryMarkdownTable = (
     } else {
       cells.push(
         newCount > 0
-          ? createExternalLink(`${effectiveRemoteHref}?filter=new`, newCount.toString())
+          ? createExternalLink(createReportFilterHref(effectiveRemoteHref, "new"), newCount.toString())
           : newCount.toString(),
       );
       cells.push(
         flakyCount > 0
-          ? createExternalLink(`${effectiveRemoteHref}?filter=flaky`, flakyCount.toString())
+          ? createExternalLink(createReportFilterHref(effectiveRemoteHref, "flaky"), flakyCount.toString())
           : flakyCount.toString(),
       );
       cells.push(
         retryCount > 0
-          ? createExternalLink(`${effectiveRemoteHref}?filter=retry`, retryCount.toString())
+          ? createExternalLink(createReportFilterHref(effectiveRemoteHref, "retry"), retryCount.toString())
           : retryCount.toString(),
       );
       cells.push(createExternalLink(effectiveRemoteHref, "View"));
@@ -118,7 +245,13 @@ export const generateSummaryMarkdownTable = (
 
     return `| ${cells.join(" | ")} |`;
   });
-  const lines = ["# Allure Report Summary", header, delimiter, ...rows];
+  const environmentLine = hasEnvironments
+    ? [
+        `**Environments:** ${environments.map((environment) => `<code>${escapeHtml(environment)}</code>`).join(", ")}`,
+        "",
+      ]
+    : [];
+  const lines = ["# Allure Report Summary", ...environmentLine, header, delimiter, ...rows];
 
-  return lines.join("\n");
+  return appendArtifactsDetails(lines.join("\n"), artifacts, maxCommentBodyLength);
 };

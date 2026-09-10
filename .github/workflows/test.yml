@@ -56,12 +56,28 @@ jobs:
         run: yarn build
 
       - name: Run tests
-        run: yarn test
+        run: |
+          rm -rf ./out/allure-results
+          ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=chrome-ubuntu --dump=./out/allure-results-chrome-ubuntu -- yarn run test:unit
+        continue-on-error: true
+
+      - name: Add Firefox environment preview
+        if: always()
+        run: |
+          rm -rf ./out/allure-results
+          ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=firefox-windows --dump=./out/allure-results-firefox-windows -- yarn run test:unit test/spec/action.test.ts -t "should handle quality gate in per-environment record format"
+        continue-on-error: true
+
+      - name: Add Safari environment preview
+        if: always()
+        run: |
+          rm -rf ./out/allure-results
+          ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=safari-macos --dump=./out/allure-results-safari-macos -- yarn run test:unit test/spec/utils.test.ts -t "should render generation environments once above the table and per-summary resolution counters"
         continue-on-error: true
 
       - name: Build report
         if: always()
-        run: yarn report
+        run: yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --dump=./out/allure-results-firefox-windows.zip --dump=./out/allure-results-safari-macos.zip
         continue-on-error: true
 
       - name: Build quality gate notification preview
@@ -69,13 +85,24 @@ jobs:
         run: yarn report:quality-gate-preview
         continue-on-error: true
 
+      - name: Deploy to GitHub Pages
+        id: deploy
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: peaceiris/actions-gh-pages@v4
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          publish_dir: ./out/allure-report
+          publish_branch: gh-pages
+          destination_dir: ${{ steps.path.outputs.subdir }}
+          keep_files: true
+
       - name: Run Allure Action
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./
         with:
           report-directory: "./out/allure-report"
           remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
-          sections: "all"
           debug: "true"
 
       - name: Keep quality gate preview non-blocking
@@ -111,13 +138,3 @@ jobs:
                   "The quality gate notification preview was rendered in the pull request comment. This demo check is neutral so the preview fixture does not fail the pull request.",
               },
             });
-
-      - name: Deploy to GitHub Pages
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ github.token }}
-          publish_dir: ./out/allure-report
-          publish_branch: gh-pages
-          destination_dir: ${{ steps.path.outputs.subdir }}
-          keep_files: true

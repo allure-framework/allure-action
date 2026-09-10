@@ -25454,70 +25454,137 @@ const formatDuration = (duration) => {
 };
 //#endregion
 //#region src/utils/markdown/table.ts
+const MAX_SUMMARY_COMMENT_BODY_LENGTH = 6e4;
 const escapeHtml = (value) => {
 	return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
 };
 const escapeMarkdownTableCell = (value) => {
 	return value.split("|").join("\\|");
 };
+const escapeTextTableCell = (value) => {
+	return escapeMarkdownTableCell(escapeHtml(value));
+};
 const createExternalLink = (href, label) => {
 	return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
 };
+const REPORT_FILTERS = {
+	new: "transition=new",
+	flaky: "flaky=true",
+	retry: "retry=true"
+};
+const createReportFilterHref = (href, section) => {
+	const hashIndex = href.indexOf("#");
+	const baseHref = hashIndex === -1 ? href : href.slice(0, hashIndex);
+	const hash = hashIndex === -1 ? "" : href.slice(hashIndex);
+	return `${baseHref}${baseHref.includes("?") ? "&" : "?"}${REPORT_FILTERS[section]}${hash}`;
+};
 const formatSummaryTest = (test) => {
 	return `- ${`${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`} ${test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name} (${formatDuration(test.duration)})`;
+};
+const getSummaryResolutions = (summary) => {
+	const resolutions = summary.stats?.resolutions;
+	return resolutions && typeof resolutions === "object" && !Array.isArray(resolutions) ? resolutions : void 0;
+};
+const formatSummaryResolutions = (summary) => {
+	const resolutions = getSummaryResolutions(summary);
+	if (!resolutions) return "";
+	return [
+		["Issues", resolutions.issues],
+		["Muted", resolutions.muted],
+		["Accepted", resolutions.accepted]
+	].flatMap(([label, count]) => typeof count === "number" && count > 0 ? [`${label}: ${count}`] : []).join("<br/>");
+};
+const renderArtifactsDetails = (artifacts, omittedCount = 0) => {
+	const lines = [
+		"",
+		"<details>",
+		`<summary>Artifacts used (${artifacts.length + omittedCount})</summary>`,
+		"",
+		"| Name | Path |",
+		"|-|-|",
+		...artifacts.map((artifact) => `| ${escapeTextTableCell(artifact.name)} | ${escapeTextTableCell(artifact.path)} |`)
+	];
+	if (omittedCount > 0) lines.push("", `_${omittedCount} artifacts omitted due to comment size limit._`);
+	lines.push("</details>");
+	return lines.join("\n");
+};
+const appendArtifactsDetails = (summaryMarkdown, artifacts, maxCommentBodyLength) => {
+	if (!artifacts.length) return summaryMarkdown;
+	const fullMarkdown = `${summaryMarkdown}\n${renderArtifactsDetails(artifacts)}`;
+	if (fullMarkdown.length <= maxCommentBodyLength) return fullMarkdown;
+	const keptArtifacts = [];
+	artifacts.forEach((artifact, index) => {
+		if (`${summaryMarkdown}\n${renderArtifactsDetails([...keptArtifacts, artifact], artifacts.length - index - 1)}`.length <= maxCommentBodyLength) keptArtifacts.push(artifact);
+	});
+	const truncated = `${summaryMarkdown}\n${renderArtifactsDetails(keptArtifacts, artifacts.length - keptArtifacts.length)}`;
+	return truncated.length <= maxCommentBodyLength ? truncated : summaryMarkdown.slice(0, Math.max(maxCommentBodyLength - 1, 0));
 };
 /**
 * Generates a markdown table based on information from all available Allure Reports
 * Doesn't include certain information about every test to keep the table compact
 */
 const generateSummaryMarkdownTable = (summaries, options = {}) => {
-	const { remoteHref: inputRemoteHref } = options;
-	return [
+	const { artifacts = [], environments = [], maxCommentBodyLength = MAX_SUMMARY_COMMENT_BODY_LENGTH, remoteHref: inputRemoteHref } = options;
+	const hasEnvironments = environments.length > 0;
+	const hasResolutions = summaries.some((summary) => getSummaryResolutions(summary));
+	const headerCells = [
+		"",
+		"Name",
+		"Duration",
+		"Stats",
+		...hasResolutions ? ["Resolutions"] : [],
+		"New",
+		"Flaky",
+		"Retry",
+		"Report"
+	];
+	const header = `| ${headerCells.join(" | ")} |`;
+	const delimiter = `|${headerCells.map(() => "-").join("|")}|`;
+	const rows = summaries.map((summary) => {
+		const stats = {
+			unknown: summary?.stats?.unknown ?? 0,
+			passed: summary?.stats?.passed ?? 0,
+			failed: summary?.stats?.failed ?? 0,
+			broken: summary?.stats?.broken ?? 0,
+			skipped: summary?.stats?.skipped ?? 0,
+			...summary.stats
+		};
+		const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
+		const name = escapeMarkdownTableCell(summary?.name ?? "Allure Report");
+		const duration = formatDuration(summary?.duration ?? 0);
+		const statsLabels = [];
+		if (stats.passed > 0) statsLabels.push(`<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`);
+		if (stats.failed > 0) statsLabels.push(`<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`);
+		if (stats.broken > 0) statsLabels.push(`<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`);
+		if (stats.skipped > 0) statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
+		if (stats.unknown > 0) statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
+		const effectiveRemoteHref = inputRemoteHref ?? summary.remoteHref;
+		const newCount = summary?.newTests?.length ?? 0;
+		const flakyCount = summary?.flakyTests?.length ?? 0;
+		const retryCount = summary?.retryTests?.length ?? 0;
+		const cells = [img, name];
+		cells.push(duration, statsLabels.join("&nbsp;&nbsp;&nbsp;"));
+		if (hasResolutions) cells.push(formatSummaryResolutions(summary));
+		if (!effectiveRemoteHref) {
+			cells.push(newCount.toString());
+			cells.push(flakyCount.toString());
+			cells.push(retryCount.toString());
+			cells.push("");
+		} else {
+			cells.push(newCount > 0 ? createExternalLink(createReportFilterHref(effectiveRemoteHref, "new"), newCount.toString()) : newCount.toString());
+			cells.push(flakyCount > 0 ? createExternalLink(createReportFilterHref(effectiveRemoteHref, "flaky"), flakyCount.toString()) : flakyCount.toString());
+			cells.push(retryCount > 0 ? createExternalLink(createReportFilterHref(effectiveRemoteHref, "retry"), retryCount.toString()) : retryCount.toString());
+			cells.push(createExternalLink(effectiveRemoteHref, "View"));
+		}
+		return `| ${cells.join(" | ")} |`;
+	});
+	return appendArtifactsDetails([
 		"# Allure Report Summary",
-		`|  | Name | Duration | Stats | New | Flaky | Retry | Report |`,
-		`|-|-|-|-|-|-|-|-|`,
-		...summaries.map((summary) => {
-			const stats = {
-				unknown: summary?.stats?.unknown ?? 0,
-				passed: summary?.stats?.passed ?? 0,
-				failed: summary?.stats?.failed ?? 0,
-				broken: summary?.stats?.broken ?? 0,
-				skipped: summary?.stats?.skipped ?? 0,
-				...summary.stats
-			};
-			const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-			const name = escapeMarkdownTableCell(summary?.name ?? "Allure Report");
-			const duration = formatDuration(summary?.duration ?? 0);
-			const statsLabels = [];
-			if (stats.passed > 0) statsLabels.push(`<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`);
-			if (stats.failed > 0) statsLabels.push(`<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`);
-			if (stats.broken > 0) statsLabels.push(`<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`);
-			if (stats.skipped > 0) statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
-			if (stats.unknown > 0) statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
-			const effectiveRemoteHref = inputRemoteHref ?? summary.remoteHref;
-			const newCount = summary?.newTests?.length ?? 0;
-			const flakyCount = summary?.flakyTests?.length ?? 0;
-			const retryCount = summary?.retryTests?.length ?? 0;
-			const cells = [
-				img,
-				name,
-				duration,
-				statsLabels.join("&nbsp;&nbsp;&nbsp;")
-			];
-			if (!effectiveRemoteHref) {
-				cells.push(newCount.toString());
-				cells.push(flakyCount.toString());
-				cells.push(retryCount.toString());
-				cells.push("");
-			} else {
-				cells.push(newCount > 0 ? createExternalLink(`${effectiveRemoteHref}?filter=new`, newCount.toString()) : newCount.toString());
-				cells.push(flakyCount > 0 ? createExternalLink(`${effectiveRemoteHref}?filter=flaky`, flakyCount.toString()) : flakyCount.toString());
-				cells.push(retryCount > 0 ? createExternalLink(`${effectiveRemoteHref}?filter=retry`, retryCount.toString()) : retryCount.toString());
-				cells.push(createExternalLink(effectiveRemoteHref, "View"));
-			}
-			return `| ${cells.join(" | ")} |`;
-		})
-	].join("\n");
+		...hasEnvironments ? [`**Environments:** ${environments.map((environment) => `<code>${escapeHtml(environment)}</code>`).join(", ")}`, ""] : [],
+		header,
+		delimiter,
+		...rows
+	].join("\n"), artifacts, maxCommentBodyLength);
 };
 //#endregion
 //#region src/quality-gate.ts
@@ -25527,7 +25594,7 @@ const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-
 const stripAnsiCodes = (str, replacement) => {
 	return str.replace(ansiCodePattern, replacement ?? "");
 };
-const isRecord = (value) => {
+const isRecord$1 = (value) => {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 const stringifyValue = (value) => {
@@ -25594,7 +25661,7 @@ const readTestResultFile = async (testResultId, reportDir) => {
 	try {
 		const content = await (0, node_fs_promises.readFile)(file, "utf-8");
 		const testResult = JSON.parse(content);
-		if (!isRecord(testResult)) return;
+		if (!isRecord$1(testResult)) return;
 		return {
 			duration: getTestResultDuration(testResult),
 			environment: typeof testResult.environment === "string" ? testResult.environment : void 0,
@@ -25703,6 +25770,47 @@ const generateQualityGateComment = async (qualityGateResultsContent, options) =>
 	return truncatedBody.length <= maxCommentBodyLength ? truncatedBody : truncatedBody.slice(0, Math.max(maxCommentBodyLength - 1, 0));
 };
 //#endregion
+//#region src/report-context.ts
+const isRecord = (value) => {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+const artifactSort = (left, right) => {
+	return left.path.localeCompare(right.path) || left.name.localeCompare(right.name);
+};
+const readReportArtifacts = async (artifactsFile, options = {}) => {
+	if (!(0, node_fs.existsSync)(artifactsFile)) return [];
+	try {
+		const content = await (0, node_fs_promises.readFile)(artifactsFile, "utf-8");
+		const artifacts = JSON.parse(content);
+		if (!Array.isArray(artifacts)) {
+			options.onError?.(`Artifacts manifest has unsupported shape: ${artifactsFile}`);
+			return [];
+		}
+		const byPath = /* @__PURE__ */ new Map();
+		artifacts.forEach((artifact) => {
+			if (!isRecord(artifact) || typeof artifact.name !== "string" || typeof artifact.path !== "string") return;
+			if (!byPath.has(artifact.path)) byPath.set(artifact.path, {
+				name: artifact.name,
+				path: artifact.path
+			});
+		});
+		return [...byPath.values()].toSorted(artifactSort);
+	} catch (error) {
+		options.onError?.(`Artifacts manifest parse error: ${String(error)}`);
+		return [];
+	}
+};
+const getTestResultEnvironments = (registry) => {
+	if (!registry) return [];
+	const environments = Object.values(registry.byId).flatMap((testResult) => {
+		if (!isRecord(testResult)) return [];
+		if (typeof testResult.environment !== "string") return [];
+		const environment = testResult.environment.trim();
+		return environment && environment !== "default" ? [environment] : [];
+	});
+	return [...new Set(environments)].toSorted((left, right) => left.localeCompare(right));
+};
+//#endregion
 //#region src/model.ts
 const SUMMARY_SECTIONS = [
 	"new",
@@ -25711,14 +25819,18 @@ const SUMMARY_SECTIONS = [
 ];
 //#endregion
 //#region src/utils/testResults.ts
-const readTestResultRegistry = async (registryFile) => {
+const readTestResultRegistry = async (registryFile, options = {}) => {
 	if (!(0, node_fs.existsSync)(registryFile)) return;
 	try {
 		const content = await (0, node_fs_promises.readFile)(registryFile, "utf-8");
 		const registry = JSON.parse(content);
-		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) return;
+		if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) {
+			options.onError?.(`Test result registry has unsupported shape: ${registryFile}`);
+			return;
+		}
 		return registry;
-	} catch {
+	} catch (error) {
+		options.onError?.(`Test result registry parse error: ${String(error)}`);
 		return;
 	}
 };
@@ -25733,17 +25845,14 @@ const resolveSummaryTests = (values, registry) => {
 //#region src/utils/markdown/sections.ts
 const SUMMARY_SECTION_DEFINITIONS = {
 	new: {
-		filter: "new",
 		title: "New Tests",
 		testsKey: "newTests"
 	},
 	flaky: {
-		filter: "flaky",
 		title: "Flaky Tests",
 		testsKey: "flakyTests"
 	},
 	retry: {
-		filter: "retry",
 		title: "Retry Tests",
 		testsKey: "retryTests"
 	}
@@ -25790,7 +25899,7 @@ const getSummarySectionMarker = (summaryId, section) => {
 };
 const getSummarySectionFilterHref = (summary, section) => {
 	if (!summary.remoteHref) return;
-	return `${summary.remoteHref}?filter=${SUMMARY_SECTION_DEFINITIONS[section].filter}`;
+	return createReportFilterHref(summary.remoteHref, section);
 };
 const formatSummarySectionToggleLabel = (section, testsCount) => {
 	return `Show ${testsCount} ${section} ${testsCount === 1 ? "test" : "tests"}`;
@@ -25922,7 +26031,7 @@ const isDebugEnabled = (debugInput) => [
 	"on"
 ].includes(debugInput.trim().toLowerCase());
 const printDebugInfo = (params) => {
-	const { eventName, headSha, isPullRequest, qualityGateFile, qualityGateFileExists, qualityGateParseError, remoteHref, reportDir, summaryCheckRuns, summaryFiles, summaryFilesContent } = params;
+	const { eventName, headSha, isPullRequest, qualityGateFile, qualityGateFileExists, qualityGateParseError, reportArtifactsCount, remoteHref, reportDir, summaryCheckRuns, summaryEnvironments, summaryFiles, summaryFilesContent } = params;
 	const checksCount = summaryFilesContent.reduce((acc, summary) => acc + (summary.checks?.length ?? 0), 0);
 	const summariesWithChecks = summaryFilesContent.filter((summary) => (summary.checks?.length ?? 0) > 0).length;
 	info("[debug] Allure Action diagnostics");
@@ -25939,6 +26048,8 @@ const printDebugInfo = (params) => {
 	info(`[debug] Unique check names: ${summaryCheckRuns.map((checkRun) => checkRun.name).join(", ") || "none"}`);
 	info(`[debug] Quality gate file: ${qualityGateFile}`);
 	info(`[debug] Quality gate file exists: ${qualityGateFileExists}`);
+	info(`[debug] Summary environments: ${summaryEnvironments.join(", ") || "none"}`);
+	info(`[debug] Report artifacts: ${reportArtifactsCount}`);
 	if (qualityGateParseError) info(`[debug] Quality gate parse error: ${String(qualityGateParseError)}`);
 	if (!summaryFilesContent.length) return;
 	summaryFilesContent.forEach((summary) => {
@@ -25962,6 +26073,7 @@ const run = async () => {
 	const debug = isDebugEnabled(getGithubInput("debug"));
 	const qualityGateFile = node_path.posix.join(reportDir, "quality-gate.json");
 	const testResultsFile = node_path.posix.join(reportDir, "test-results.json");
+	const artifactsFile = node_path.posix.join(reportDir, "artifacts.json");
 	const summaryFiles = await (0, import_out.default)([node_path.posix.join(reportDir, "**", "summary.json")], { onlyFiles: true });
 	const summaryFilesContent = await Promise.all(summaryFiles.map(async (file) => {
 		const content = await node_fs_promises.readFile(file, "utf-8");
@@ -25990,7 +26102,15 @@ const run = async () => {
 		}
 	}
 	const qualityGateFailed = isQualityGateFailed(qualityGateResults);
-	const testResultRegistry = enabledSections.length || qualityGateFailed ? await readTestResultRegistry(testResultsFile) : void 0;
+	const debugOptionalFileError = debug ? (message) => info(`[debug] ${message}`) : void 0;
+	let testResultRegistry;
+	let summaryEnvironments = [];
+	let reportArtifacts = [];
+	if (isPullRequest && pullRequest) {
+		testResultRegistry = enabledSections.length || qualityGateFailed || summaryFilesContent.length ? await readTestResultRegistry(testResultsFile, { onError: debugOptionalFileError }) : void 0;
+		summaryEnvironments = getTestResultEnvironments(testResultRegistry);
+		reportArtifacts = summaryFilesContent.length ? await readReportArtifacts(artifactsFile, { onError: debugOptionalFileError }) : [];
+	}
 	if (debug) printDebugInfo({
 		eventName,
 		headSha,
@@ -25998,9 +26118,11 @@ const run = async () => {
 		qualityGateFile,
 		qualityGateFileExists,
 		qualityGateParseError,
+		reportArtifactsCount: reportArtifacts.length,
 		remoteHref,
 		reportDir,
 		summaryCheckRuns,
+		summaryEnvironments,
 		summaryFiles,
 		summaryFilesContent
 	});
@@ -26068,7 +26190,10 @@ const run = async () => {
 		info("No published reports found");
 		return;
 	}
-	const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+	const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent, {
+		artifacts: reportArtifacts,
+		environments: summaryEnvironments
+	});
 	const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, { testResultRegistry });
 	await findOrCreateComment({
 		octokit,
