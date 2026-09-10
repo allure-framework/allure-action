@@ -10,6 +10,11 @@ export type TestResultRegistry = {
   byId: Record<string, SummaryTestResult>;
 };
 
+export type ReportArtifact = {
+  name: string;
+  path: string;
+};
+
 /**
  * Supports both Allure summary formats during migration to the shared test-result registry.
  * Older reports embed test metadata in each summary collection, while newer reports store IDs
