@@ -1,1 +1,1 @@
-{"id":"e2feafc4c0572b0fccfe9cfda4e64888","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip compound ANSI codes","name":"should strip compound ANSI codes","status":"passed","testResultsByEnv":{"ubuntu-latest":"eba151a6562d34c2ed3d2ec1d382e6d3"}}
+{"id":"e2feafc4c0572b0fccfe9cfda4e64888","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip compound ANSI codes","name":"should strip compound ANSI codes","status":"passed","testResultsByEnv":{"chrome-ubuntu":"12d73ddb64fbbe9a53181fb39a8f626a"}}

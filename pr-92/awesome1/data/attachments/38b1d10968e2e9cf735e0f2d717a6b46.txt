@@ -1,0 +1,11 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.9 [39m[90m/home/runner/work/allure-action/allure-action[39m
+
+ [32m✓[39m test/spec/utils.test.ts [2m([22m[2m85 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+ [32m✓[39m test/spec/action.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m125 passed[39m[22m[90m (125)[39m
+[2m   Start at [22m 12:28:53
+[2m   Duration [22m 647ms[2m (transform 405ms, setup 107ms, import 678ms, tests 169ms, environment 0ms)[22m
+

@@ -1,1 +1,1 @@
-[{"name":"allure-results-ubuntu-latest.zip","path":"out/allure-results-ubuntu-latest.zip"},{"name":"runtime.properties","path":"test/quality-gate-preview/runtime.properties"}]
+[{"name":"allure-results-chrome-ubuntu.zip","path":"out/allure-results-chrome-ubuntu.zip"},{"name":"allure-results-firefox-windows.zip","path":"out/allure-results-firefox-windows.zip"},{"name":"allure-results-safari-macos.zip","path":"out/allure-results-safari-macos.zip"},{"name":"runtime.properties","path":"test/quality-gate-preview/runtime.properties"}]

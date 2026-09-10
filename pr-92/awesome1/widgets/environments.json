@@ -1,1 +1,1 @@
-[{"id":"default","name":"default"},{"id":"ubuntu-latest","name":"ubuntu-latest"}]
+[{"id":"default","name":"default"},{"id":"chrome-ubuntu","name":"Chrome on Ubuntu"},{"id":"firefox-windows","name":"Firefox on Windows"},{"id":"safari-macos","name":"Safari on macOS"}]
