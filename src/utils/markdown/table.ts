@@ -30,6 +30,31 @@ const REPORT_FILTERS: Record<SummarySection, string> = {
   retry: "retry=true",
 };
 
+const STATUS_KEYS = ["passed", "failed", "broken", "skipped", "unknown"] as const;
+
+const getSummaryStats = (summary: CompatiblePluginSummary) => ({
+  unknown: summary?.stats?.unknown ?? 0,
+  passed: summary?.stats?.passed ?? 0,
+  failed: summary?.stats?.failed ?? 0,
+  broken: summary?.stats?.broken ?? 0,
+  skipped: summary?.stats?.skipped ?? 0,
+  ...summary.stats,
+});
+
+const getStatsHeader = (summaries: CompatiblePluginSummary[]): string => {
+  const maxDigits = summaries.reduce((max, summary) => {
+    const stats = getSummaryStats(summary);
+    const summaryMaxDigits = Math.max(
+      ...STATUS_KEYS.map((status) => (stats[status] > 0 ? stats[status].toString().length : 0)),
+    );
+
+    return Math.max(max, summaryMaxDigits);
+  }, 0);
+  const spacer = "&nbsp;".repeat(Math.max(0, maxDigits + 2));
+
+  return `Stats${spacer}`;
+};
+
 export const createReportFilterHref = (href: string, section: SummarySection): string => {
   const hashIndex = href.indexOf("#");
   const baseHref = hashIndex === -1 ? href : href.slice(0, hashIndex);
@@ -81,7 +106,7 @@ const formatStatsLabel = (
   label: string,
   count: number,
 ): string =>
-  `<span><img alt="${label}" src="https://allurecharts.qameta.workers.dev/dot?type=${status}&size=8" width="8px" height="8px" />&nbsp;${count}</span>`;
+  `<img alt="${label}" src="https://allurecharts.qameta.workers.dev/dot?type=${status}&size=8" width="8" height="8" />&#8288;&nbsp;${count}`;
 
 const renderArtifactsDetails = (artifacts: ReportArtifact[], omittedCount = 0): string => {
   const lines = [
@@ -161,7 +186,7 @@ export const generateSummaryMarkdownTable = (
     "&nbsp;&nbsp;&nbsp;&nbsp;",
     "Name",
     "Duration",
-    "Stats",
+    getStatsHeader(summaries),
     ...(hasResolutions ? ["Resolutions"] : []),
     "New",
     "Flaky",
@@ -171,14 +196,7 @@ export const generateSummaryMarkdownTable = (
   const header = `| ${headerCells.join(" | ")} |`;
   const delimiter = `|${headerCells.map(() => "-").join("|")}|`;
   const rows = summaries.map((summary) => {
-    const stats = {
-      unknown: summary?.stats?.unknown ?? 0,
-      passed: summary?.stats?.passed ?? 0,
-      failed: summary?.stats?.failed ?? 0,
-      broken: summary?.stats?.broken ?? 0,
-      skipped: summary?.stats?.skipped ?? 0,
-      ...summary.stats,
-    };
+    const stats = getSummaryStats(summary);
     const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp;`;
     const name = escapeTextTableCell(summary?.name ?? "Allure Report");
     const duration = formatDuration(summary?.duration ?? 0);

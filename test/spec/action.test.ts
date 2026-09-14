@@ -238,7 +238,7 @@ describe("action", () => {
       const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
 
       expect(body).toContain(
-        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats | Resolutions | New | Flaky | Retry | Report |",
+        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | Resolutions | New | Flaky | Retry | Report |",
       );
       expect(body).toContain("**Environments:** <code>chrome</code>, <code>firefox</code>");
       expect(body).toContain("Issues: 2<br/>Muted: 1");

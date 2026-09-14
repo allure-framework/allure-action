@@ -610,12 +610,12 @@ describe("utils", () => {
       });
 
       expect(result).toContain(
-        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats | Resolutions | New | Flaky | Retry | Report |",
+        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | Resolutions | New | Flaky | Retry | Report |",
       );
       expect(result).toContain("**Environments:** <code>chrome</code>, <code>firefox</code>");
       expect(result.match(/\*\*Environments:\*\*/g)).toHaveLength(1);
       expect(result).toContain(
-        '<span><img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8px" height="8px" />&nbsp;10</span>',
+        '<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10',
       );
       expect(result).toContain("<br/>");
       expect(result).toContain("Issues: 2<br/>Muted: 1");
@@ -658,7 +658,7 @@ describe("utils", () => {
       const result = generateSummaryMarkdownTable(summaries);
 
       expect(result).toContain(
-        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats | Resolutions | New | Flaky | Retry | Report |",
+        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp; | Resolutions | New | Flaky | Retry | Report |",
       );
       expect(result).toContain(" |  | 0 | 0 | 0 |  |");
     });
@@ -720,10 +720,10 @@ describe("utils", () => {
 
       const result = generateSummaryMarkdownTable(summaries, {
         artifacts,
-        maxCommentBodyLength: 900,
+        maxCommentBodyLength: 1000,
       });
 
-      expect(result.length).toBeLessThanOrEqual(900);
+      expect(result.length).toBeLessThanOrEqual(1000);
       expect(result).toContain("<summary>Artifacts used (8)</summary>");
       expect(result).toContain("artifacts omitted due to comment size limit");
       expect(result).not.toContain("artifact-7");

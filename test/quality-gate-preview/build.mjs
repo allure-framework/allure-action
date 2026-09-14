@@ -11,11 +11,11 @@ const previewResolutions = [
   { issues: 1, muted: 2, accepted: 1 },
 ];
 const previewStats = [
-  { total: 128, passed: 128, failed: 0, broken: 0, skipped: 0, unknown: 0, retries: 1 },
-  { total: 128, passed: 116, failed: 0, broken: 0, skipped: 12, unknown: 0, retries: 1 },
-  { total: 128, passed: 0, failed: 82, broken: 46, skipped: 0, unknown: 0, retries: 1 },
-  { total: 128, passed: 101, failed: 14, broken: 13, skipped: 0, unknown: 0, retries: 1 },
-  { total: 128, passed: 100, failed: 9, broken: 7, skipped: 8, unknown: 4, retries: 1 },
+  { total: 128989, passed: 128989, failed: 0, broken: 0, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128989, passed: 128900, failed: 0, broken: 0, skipped: 89, unknown: 0, retries: 1 },
+  { total: 128989, passed: 0, failed: 82000, broken: 46989, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128989, passed: 128000, failed: 800, broken: 189, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128989, passed: 128900, failed: 39, broken: 25, skipped: 16, unknown: 9, retries: 1 },
 ];
 
 const readExistingRegistry = async () => {
