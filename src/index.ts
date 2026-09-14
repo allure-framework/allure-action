@@ -4,7 +4,13 @@ import fg from "fast-glob";
 import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { ActionSummary, CompatiblePluginSummary, QualityGateResultsContent } from "./model.js";
+import type {
+  ActionSummary,
+  CompatiblePluginSummary,
+  QualityGateResultsContent,
+  ReportArtifact,
+  TestResultRegistry,
+} from "./model.js";
 import {
   SUMMARY_SECTION_MARKER_PREFIX,
   QUALITY_GATE_COMMENT_MARKER,
@@ -14,12 +20,14 @@ import {
   generateQualityGateComment,
   generateSummaryMarkdownTable,
   generateSummarySectionComments,
+  getTestResultEnvironments,
   getGithubContext,
   getGithubInput,
   getOctokit,
   isQualityGateFailed,
   normalizePathForUrl,
   parseSummarySections,
+  readReportArtifacts,
   readTestResultRegistry,
 } from "./utils.js";
 
@@ -151,9 +159,11 @@ const printDebugInfo = (params: {
   qualityGateFile: string;
   qualityGateFileExists: boolean;
   qualityGateParseError?: unknown;
+  reportArtifactsCount: number;
   remoteHref?: string;
   reportDir: string;
   summaryCheckRuns: SummaryCheckRun[];
+  summaryEnvironments: string[];
   summaryFiles: string[];
   summaryFilesContent: ActionSummary[];
 }): void => {
@@ -164,9 +174,11 @@ const printDebugInfo = (params: {
     qualityGateFile,
     qualityGateFileExists,
     qualityGateParseError,
+    reportArtifactsCount,
     remoteHref,
     reportDir,
     summaryCheckRuns,
+    summaryEnvironments,
     summaryFiles,
     summaryFilesContent,
   } = params;
@@ -187,6 +199,8 @@ const printDebugInfo = (params: {
   core.info(`[debug] Unique check names: ${summaryCheckRuns.map((checkRun) => checkRun.name).join(", ") || "none"}`);
   core.info(`[debug] Quality gate file: ${qualityGateFile}`);
   core.info(`[debug] Quality gate file exists: ${qualityGateFileExists}`);
+  core.info(`[debug] Summary environments: ${summaryEnvironments.join(", ") || "none"}`);
+  core.info(`[debug] Report artifacts: ${reportArtifactsCount}`);
 
   if (qualityGateParseError) {
     core.info(`[debug] Quality gate parse error: ${String(qualityGateParseError)}`);
@@ -223,6 +237,7 @@ const run = async (): Promise<void> => {
   const debug = isDebugEnabled(getGithubInput("debug"));
   const qualityGateFile = path.posix.join(reportDir, "quality-gate.json");
   const testResultsFile = path.posix.join(reportDir, "test-results.json");
+  const artifactsFile = path.posix.join(reportDir, "artifacts.json");
   const summaryFiles = await fg([path.posix.join(reportDir, "**", "summary.json")], {
     onlyFiles: true,
   });
@@ -259,8 +274,21 @@ const run = async (): Promise<void> => {
   }
 
   const qualityGateFailed = isQualityGateFailed(qualityGateResults);
-  const testResultRegistry =
-    enabledSections.length || qualityGateFailed ? await readTestResultRegistry(testResultsFile) : undefined;
+  const debugOptionalFileError = debug ? (message: string) => core.info(`[debug] ${message}`) : undefined;
+  let testResultRegistry: TestResultRegistry | undefined;
+  let summaryEnvironments: string[] = [];
+  let reportArtifacts: ReportArtifact[] = [];
+
+  if (isPullRequest && pullRequest) {
+    testResultRegistry =
+      enabledSections.length || qualityGateFailed || summaryFilesContent.length
+        ? await readTestResultRegistry(testResultsFile, { onError: debugOptionalFileError })
+        : undefined;
+    summaryEnvironments = getTestResultEnvironments(testResultRegistry);
+    reportArtifacts = summaryFilesContent.length
+      ? await readReportArtifacts(artifactsFile, { onError: debugOptionalFileError })
+      : [];
+  }
 
   if (debug) {
     printDebugInfo({
@@ -270,9 +298,11 @@ const run = async (): Promise<void> => {
       qualityGateFile,
       qualityGateFileExists,
       qualityGateParseError,
+      reportArtifactsCount: reportArtifacts.length,
       remoteHref,
       reportDir,
       summaryCheckRuns,
+      summaryEnvironments,
       summaryFiles,
       summaryFilesContent,
     });
@@ -367,7 +397,10 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent);
+  const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent, {
+    artifacts: reportArtifacts,
+    environments: summaryEnvironments,
+  });
   const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, {
     testResultRegistry,
   });

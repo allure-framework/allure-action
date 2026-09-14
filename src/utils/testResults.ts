@@ -2,7 +2,14 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import type { RemoteSummaryTestResult, SummaryTestReference, TestResultRegistry } from "../model.js";
 
-export const readTestResultRegistry = async (registryFile: string): Promise<TestResultRegistry | undefined> => {
+type ReadTestResultRegistryOptions = {
+  onError?: (message: string) => void;
+};
+
+export const readTestResultRegistry = async (
+  registryFile: string,
+  options: ReadTestResultRegistryOptions = {},
+): Promise<TestResultRegistry | undefined> => {
   if (!existsSync(registryFile)) {
     return undefined;
   }
@@ -12,11 +19,13 @@ export const readTestResultRegistry = async (registryFile: string): Promise<Test
     const registry = JSON.parse(content) as Partial<TestResultRegistry>;
 
     if (!registry.byId || typeof registry.byId !== "object" || Array.isArray(registry.byId)) {
+      options.onError?.(`Test result registry has unsupported shape: ${registryFile}`);
       return undefined;
     }
 
     return registry as TestResultRegistry;
-  } catch {
+  } catch (error) {
+    options.onError?.(`Test result registry parse error: ${String(error)}`);
     return undefined;
   }
 };

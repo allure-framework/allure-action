@@ -1,20 +1,22 @@
+import fg from "fast-glob";
 import { existsSync } from "node:fs";
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const reportOutput = "./out/allure-report";
-const sourceReportDir = join(reportOutput, "awesome1");
-const sourceTestResultsDir = join(sourceReportDir, "data", "test-results");
 const qualityGateOutput = join(reportOutput, "quality-gate.json");
 const testResultRegistryOutput = join(reportOutput, "test-results.json");
-
-const toRegistryEntry = (test) => ({
-  id: test.id,
-  name: test.name,
-  status: test.status,
-  duration: typeof test.duration === "number" ? test.duration : Math.max((test.stop ?? 0) - (test.start ?? 0), 0),
-  ...(test.environment ? { environment: test.environment } : {}),
-});
+const previewResolutions = [
+  { issues: 2, muted: 1, accepted: 1 },
+  { issues: 1, muted: 2, accepted: 1 },
+];
+const previewStats = [
+  { total: 128989, passed: 128989, failed: 0, broken: 0, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128989, passed: 128900, failed: 0, broken: 0, skipped: 89, unknown: 0, retries: 1 },
+  { total: 128989, passed: 0, failed: 82000, broken: 46989, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128989, passed: 128000, failed: 800, broken: 189, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128989, passed: 128900, failed: 39, broken: 25, skipped: 16, unknown: 9, retries: 1 },
+];
 
 const readExistingRegistry = async () => {
   if (!existsSync(testResultRegistryOutput)) {
@@ -30,31 +32,47 @@ const readExistingRegistry = async () => {
   }
 };
 
-const readReportTestResults = async () => {
-  const byId = {};
-  const files = await readdir(sourceTestResultsDir);
+const addPreviewResolutions = async () => {
+  const summaryFiles = await fg([join(reportOutput, "**", "summary.json")], { onlyFiles: true });
 
   await Promise.all(
-    files
-      .filter((file) => file.endsWith(".json"))
-      .map(async (file) => {
-        const test = JSON.parse(await readFile(join(sourceTestResultsDir, file), "utf-8"));
+    summaryFiles.toSorted().map(async (file, index) => {
+      const summary = JSON.parse(await readFile(file, "utf-8"));
+      const stats = previewStats[index % previewStats.length];
 
-        if (test.id && !test.isRetry) {
-          byId[test.id] = toRegistryEntry(test);
-        }
-      }),
+      summary.stats = { ...summary.stats, ...stats };
+      summary.stats.resolutions = previewResolutions[index % previewResolutions.length];
+      summary.status = stats.failed > 0 || stats.broken > 0 ? "failed" : "passed";
+      await writeFile(file, `${JSON.stringify(summary)}\n`);
+    }),
   );
-
-  return { byId };
 };
 
 const byDurationDesc = (left, right) => {
   return right.duration - left.duration || left.name.localeCompare(right.name) || left.id.localeCompare(right.id);
 };
 
+const groupTestsByEnvironment = (tests) => {
+  return tests.reduce((groups, test) => {
+    if (typeof test.environment !== "string" || test.environment.length === 0) {
+      return groups;
+    }
+
+    const environmentTests = groups.get(test.environment) ?? [];
+
+    environmentTests.push(test);
+    groups.set(test.environment, environmentTests);
+
+    return groups;
+  }, new Map());
+};
+
 const createQualityGatePreview = (tests) => {
-  const relatedTests = tests.toSorted(byDurationDesc).slice(0, 3);
+  const testsByEnvironment = groupTestsByEnvironment(tests);
+  const [environmentTests = []] = [...testsByEnvironment.values()].toSorted(
+    (left, right) => right.length - left.length,
+  );
+  const relatedTests = (environmentTests.length ? environmentTests : tests).toSorted(byDurationDesc).slice(0, 3);
   const maxDuration = relatedTests[0]?.duration ?? 0;
 
   return [
@@ -79,14 +97,7 @@ const createQualityGatePreview = (tests) => {
 };
 
 const existingRegistry = await readExistingRegistry();
-const reportRegistry = await readReportTestResults();
-const registry = {
-  byId: {
-    ...existingRegistry.byId,
-    ...reportRegistry.byId,
-  },
-};
-const tests = Object.values(reportRegistry.byId);
+const tests = Object.values(existingRegistry.byId);
 
-await writeFile(testResultRegistryOutput, `${JSON.stringify(registry)}\n`);
 await writeFile(qualityGateOutput, `${JSON.stringify(createQualityGatePreview(tests))}\n`);
+await addPreviewResolutions();
