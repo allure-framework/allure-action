@@ -1,0 +1,1 @@
+{"id":"98dfb8fb1efbb9a63df412319d44ab36","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should escape untrusted environment names","name":"should escape untrusted environment names","status":"passed","testResultsByEnv":{"chrome-ubuntu":"48660b2746c5ea742d5d109e289e2a97"}}
