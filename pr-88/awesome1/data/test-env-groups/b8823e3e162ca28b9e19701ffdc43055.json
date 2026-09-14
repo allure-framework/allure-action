@@ -1,0 +1,1 @@
+{"id":"b8823e3e162ca28b9e19701ffdc43055","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should render an empty resolutions cell for zero counters","name":"should render an empty resolutions cell for zero counters","status":"passed","testResultsByEnv":{"chrome-ubuntu":"83879751d33227da4462e34eabd7185a"}}
