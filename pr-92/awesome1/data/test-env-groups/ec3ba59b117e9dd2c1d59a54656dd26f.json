@@ -1,1 +1,1 @@
-{"id":"ec3ba59b117e9dd2c1d59a54656dd26f","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should format tests with remoteHref","name":"should format tests with remoteHref","status":"passed","testResultsByEnv":{"chrome-ubuntu":"4484f3475d00752cbe5d32a9d0befc84"}}
+{"id":"ec3ba59b117e9dd2c1d59a54656dd26f","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should format tests with remoteHref","name":"should format tests with remoteHref","status":"passed","testResultsByEnv":{"chrome-ubuntu":"537ea044f3e8ef983b9a340e07a58516"}}
