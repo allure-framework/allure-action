@@ -25,7 +25,7 @@
     "report:open": "allure open ./out/allure-report"
   },
   "resolutions": {
-    "adm-zip": "0.6.0",
+    "adm-zip": "0.6.1",
     "axios": "1.18.0",
     "axois": "^1.15.0",
     "ip-address": "10.3.1",
@@ -36,9 +36,7 @@
     "tar": "7.5.21",
     "fast-xml-parser": "5.10.1",
     "undici": "6.28.0",
-    "postcss": "8.5.23",
-    "nanoid@npm:^3.3.12": "3.3.17",
-    "nanoid@npm:^3.3.16": "3.3.17",
+    "postcss": "8.5.28",
     "nanoid@npm:^5.1.6": "5.1.16",
     "linkify-it": "5.0.2",
     "vite": "8.0.16"
@@ -60,8 +58,8 @@
     "@types/d3-shape": "^3",
     "@types/lodash.chunk": "^4",
     "@types/node": "^26.0.0",
-    "@vitest/runner": "^4.1.9",
-    "@vitest/snapshot": "^4.1.9",
+    "@vitest/runner": "^4.1.11",
+    "@vitest/snapshot": "^4.1.11",
     "allure": "^3.17.0",
     "allure-vitest": "^3.10.1",
     "lefthook": "^2.1.9",
@@ -71,7 +69,7 @@
     "rollup-plugin-license": "^3.7.1",
     "tsdown": "^0.22.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.11"
   },
   "packageManager": "yarn@4.13.0"
 }
