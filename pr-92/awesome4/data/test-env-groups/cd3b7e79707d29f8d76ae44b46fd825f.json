@@ -1,1 +1,1 @@
-{"id":"cd3b7e79707d29f8d76ae44b46fd825f","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should handle empty tests array","name":"should handle empty tests array","status":"passed","testResultsByEnv":{"chrome-ubuntu":"ff609d945c62df51f17dd58f35e1d168"}}
+{"id":"cd3b7e79707d29f8d76ae44b46fd825f","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should handle empty tests array","name":"should handle empty tests array","status":"passed","testResultsByEnv":{"chrome-ubuntu":"cd9ba7c3c8a8d278df984c6f4740253d"}}
