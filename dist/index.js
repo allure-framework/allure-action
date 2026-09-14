@@ -25494,6 +25494,7 @@ const formatSummaryResolutions = (summary) => {
 		["Accepted", resolutions.accepted]
 	].flatMap(([label, count]) => typeof count === "number" && count > 0 ? [`${label}: ${count}`] : []).join("<br/>");
 };
+const formatStatsLabel = (status, label, count) => `<span><img alt="${label}" src="https://allurecharts.qameta.workers.dev/dot?type=${status}&size=8" width="8px" height="8px" />&nbsp;${count}</span>`;
 const renderArtifactsDetails = (artifacts, omittedCount = 0) => {
 	const lines = [
 		"",
@@ -25528,7 +25529,7 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 	const hasEnvironments = environments.length > 0;
 	const hasResolutions = summaries.some((summary) => getSummaryResolutions(summary));
 	const headerCells = [
-		"",
+		"&nbsp;&nbsp;&nbsp;&nbsp;",
 		"Name",
 		"Duration",
 		"Stats",
@@ -25549,21 +25550,21 @@ const generateSummaryMarkdownTable = (summaries, options = {}) => {
 			skipped: summary?.stats?.skipped ?? 0,
 			...summary.stats
 		};
-		const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />`;
-		const name = escapeMarkdownTableCell(summary?.name ?? "Allure Report");
+		const img = `<img src="https://allurecharts.qameta.workers.dev/pie?passed=${stats.passed}&failed=${stats.failed}&broken=${stats.broken}&skipped=${stats.skipped}&unknown=${stats.unknown}&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp;`;
+		const name = escapeTextTableCell(summary?.name ?? "Allure Report");
 		const duration = formatDuration(summary?.duration ?? 0);
 		const statsLabels = [];
-		if (stats.passed > 0) statsLabels.push(`<img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" />&nbsp;<span>${stats.passed}</span>`);
-		if (stats.failed > 0) statsLabels.push(`<img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" />&nbsp;<span>${stats.failed}</span>`);
-		if (stats.broken > 0) statsLabels.push(`<img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" />&nbsp;<span>${stats.broken}</span>`);
-		if (stats.skipped > 0) statsLabels.push(`<img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" />&nbsp;<span>${stats.skipped}</span>`);
-		if (stats.unknown > 0) statsLabels.push(`<img alt="Unknown tests" src="https://allurecharts.qameta.workers.dev/dot?type=unknown&size=8" />&nbsp;<span>${stats.unknown}</span>`);
+		if (stats.passed > 0) statsLabels.push(formatStatsLabel("passed", "Passed tests", stats.passed));
+		if (stats.failed > 0) statsLabels.push(formatStatsLabel("failed", "Failed tests", stats.failed));
+		if (stats.broken > 0) statsLabels.push(formatStatsLabel("broken", "Broken tests", stats.broken));
+		if (stats.skipped > 0) statsLabels.push(formatStatsLabel("skipped", "Skipped tests", stats.skipped));
+		if (stats.unknown > 0) statsLabels.push(formatStatsLabel("unknown", "Unknown tests", stats.unknown));
 		const effectiveRemoteHref = inputRemoteHref ?? summary.remoteHref;
 		const newCount = summary?.newTests?.length ?? 0;
 		const flakyCount = summary?.flakyTests?.length ?? 0;
 		const retryCount = summary?.retryTests?.length ?? 0;
 		const cells = [img, name];
-		cells.push(duration, statsLabels.join("&nbsp;&nbsp;&nbsp;"));
+		cells.push(duration, statsLabels.join("<br/>"));
 		if (hasResolutions) cells.push(formatSummaryResolutions(summary));
 		if (!effectiveRemoteHref) {
 			cells.push(newCount.toString());

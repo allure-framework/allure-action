@@ -56,6 +56,11 @@ jobs:
         run: yarn build
 
       - name: Run tests
+        env:
+          ALLURE_SERVICE_ACCESS_TOKEN: ""
+          ALLURE_TOKEN: ""
+          ALLURE_ENDPOINT: ""
+          ALLURE_PROJECT_ID: ""
         run: |
           rm -rf ./out/allure-results
           ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=chrome-ubuntu --dump=./out/allure-results-chrome-ubuntu -- yarn run test:unit
@@ -63,6 +68,11 @@ jobs:
 
       - name: Add Firefox environment preview
         if: always()
+        env:
+          ALLURE_SERVICE_ACCESS_TOKEN: ""
+          ALLURE_TOKEN: ""
+          ALLURE_ENDPOINT: ""
+          ALLURE_PROJECT_ID: ""
         run: |
           rm -rf ./out/allure-results
           ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=firefox-windows --dump=./out/allure-results-firefox-windows -- yarn run test:unit test/spec/action.test.ts -t "should handle quality gate in per-environment record format"
@@ -70,24 +80,69 @@ jobs:
 
       - name: Add Safari environment preview
         if: always()
+        env:
+          ALLURE_SERVICE_ACCESS_TOKEN: ""
+          ALLURE_TOKEN: ""
+          ALLURE_ENDPOINT: ""
+          ALLURE_PROJECT_ID: ""
         run: |
           rm -rf ./out/allure-results
           ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=safari-macos --dump=./out/allure-results-safari-macos -- yarn run test:unit test/spec/utils.test.ts -t "should render generation environments once above the table and per-summary resolution counters"
         continue-on-error: true
 
-      - name: Build report
+      - name: Verify preview dumps
+        id: preview-dumps
         if: always()
-        run: yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --dump=./out/allure-results-firefox-windows.zip --dump=./out/allure-results-safari-macos.zip
-        continue-on-error: true
+        run: |
+          for dump in \
+            ./out/allure-results-chrome-ubuntu.zip \
+            ./out/allure-results-firefox-windows.zip \
+            ./out/allure-results-safari-macos.zip
+          do
+            if [ ! -s "$dump" ]; then
+              echo "::error::Expected preview dump was not created: $dump"
+              exit 1
+            fi
+          done
+
+      - name: Build report
+        id: report
+        if: always() && steps.preview-dumps.outcome == 'success'
+        env:
+          ALLURE_SERVICE_ACCESS_TOKEN: ""
+          ALLURE_TOKEN: ""
+          ALLURE_ENDPOINT: ""
+          ALLURE_PROJECT_ID: ""
+        run: ALLURE_PREVIEW_REPORT_VARIANTS=1 yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --dump=./out/allure-results-firefox-windows.zip --dump=./out/allure-results-safari-macos.zip
 
       - name: Build quality gate notification preview
-        if: always()
+        id: quality-gate-preview
+        if: always() && steps.report.outcome == 'success'
         run: yarn report:quality-gate-preview
-        continue-on-error: true
+
+      - name: Verify report notification preview
+        if: always() && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success'
+        run: |
+          node --input-type=module <<'NODE'
+          import fg from "fast-glob";
+          import { readFile } from "node:fs/promises";
+
+          const summaries = await fg(["./out/allure-report/**/summary.json"], { onlyFiles: true });
+
+          if (summaries.length !== 5) {
+            throw new Error(`Expected 5 preview summaries, found ${summaries.length}`);
+          }
+
+          const artifacts = JSON.parse(await readFile("./out/allure-report/artifacts.json", "utf-8"));
+
+          if (!Array.isArray(artifacts) || artifacts.length !== 4) {
+            throw new Error(`Expected 4 preview artifacts, found ${Array.isArray(artifacts) ? artifacts.length : "unknown"}`);
+          }
+          NODE
 
       - name: Deploy to GitHub Pages
         id: deploy
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        if: always() && steps.report.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: peaceiris/actions-gh-pages@v4
         continue-on-error: true
         with:
@@ -98,11 +153,12 @@ jobs:
           keep_files: true
 
       - name: Run Allure Action
-        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: always() && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./
         with:
           report-directory: "./out/allure-report"
           remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
+          github-token: ${{ github.token }}
           debug: "true"
 
       - name: Keep quality gate preview non-blocking

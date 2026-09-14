@@ -10,6 +10,13 @@ const previewResolutions = [
   { issues: 2, muted: 1, accepted: 1 },
   { issues: 1, muted: 2, accepted: 1 },
 ];
+const previewStats = [
+  { total: 128, passed: 128, failed: 0, broken: 0, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128, passed: 116, failed: 0, broken: 0, skipped: 12, unknown: 0, retries: 1 },
+  { total: 128, passed: 0, failed: 82, broken: 46, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128, passed: 101, failed: 14, broken: 13, skipped: 0, unknown: 0, retries: 1 },
+  { total: 128, passed: 100, failed: 9, broken: 7, skipped: 8, unknown: 4, retries: 1 },
+];
 
 const readExistingRegistry = async () => {
   if (!existsSync(testResultRegistryOutput)) {
@@ -31,9 +38,11 @@ const addPreviewResolutions = async () => {
   await Promise.all(
     summaryFiles.toSorted().map(async (file, index) => {
       const summary = JSON.parse(await readFile(file, "utf-8"));
+      const stats = previewStats[index % previewStats.length];
 
-      summary.stats ??= {};
+      summary.stats = { ...summary.stats, ...stats };
       summary.stats.resolutions = previewResolutions[index % previewResolutions.length];
+      summary.status = stats.failed > 0 || stats.broken > 0 ? "failed" : "passed";
       await writeFile(file, `${JSON.stringify(summary)}\n`);
     }),
   );
