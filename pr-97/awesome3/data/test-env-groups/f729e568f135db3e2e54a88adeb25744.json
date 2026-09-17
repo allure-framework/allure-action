@@ -1,0 +1,1 @@
+{"id":"f729e568f135db3e2e54a88adeb25744","fullName":"allure-action:test/spec/utils.test.ts#utils readReportArtifacts should ignore missing and malformed artifact manifests","name":"should ignore missing and malformed artifact manifests","status":"passed","testResultsByEnv":{"chrome-ubuntu":"1b3b9485c255c4d5685e43160cb7992e"}}
