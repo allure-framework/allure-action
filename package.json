@@ -57,7 +57,7 @@
     "@allurereport/plugin-testops": "^3.17.0",
     "@types/d3-shape": "^3",
     "@types/lodash.chunk": "^4",
-    "@types/node": "^26.0.0",
+    "@types/node": "^26.5.1",
     "@vitest/runner": "^4.1.11",
     "@vitest/snapshot": "^4.1.11",
     "allure": "^3.17.0",
