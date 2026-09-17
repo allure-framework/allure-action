@@ -1,0 +1,1 @@
+{"id":"8467427d3786833593d9cc734b440c0e","fullName":"allure-action:test/spec/action.test.ts#action quality gate should create a successful check when quality gate passes","name":"should create a successful check when quality gate passes","status":"passed","testResultsByEnv":{"chrome-ubuntu":"3bdcea996421b4bfc2ec60fdb8e68a8a"}}
