@@ -59,7 +59,7 @@
     "@types/lodash.chunk": "^4",
     "@types/node": "^26.0.0",
     "@vitest/runner": "^4.1.11",
-    "@vitest/snapshot": "^4.1.11",
+    "@vitest/snapshot": "^5.0.0",
     "allure": "^3.17.0",
     "allure-vitest": "^3.10.1",
     "lefthook": "^2.1.9",
