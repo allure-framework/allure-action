@@ -1,0 +1,1 @@
+{"id":"25ed07c0a1f98bf5509376dc2fcc8528","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should tolerate report summary files without a name","name":"should tolerate report summary files without a name","status":"passed","testResultsByEnv":{"chrome-ubuntu":"8a8adc9835bf50ac28d444bd02a1d14d"}}
