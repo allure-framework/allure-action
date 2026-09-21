@@ -238,10 +238,12 @@ describe("action", () => {
       const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
 
       expect(body).toContain(
-        "| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | Resolutions | New | Flaky | Retry | Report |",
+        "| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | Resolutions | New | Flaky | Retry |",
       );
-      expect(body).toContain("**Environments:** <code>chrome</code>, <code>firefox</code>");
-      expect(body).toContain("Issues: 2<br/>Muted: 1");
+      expect(body).toContain("| All tests |");
+      expect(body).toContain("| chrome |");
+      expect(body).toContain("| firefox |");
+      expect(body).toContain("Issues: 2<br>Muted: 1");
       expect(body).toContain("<summary>Artifacts used (2)</summary>");
       expect(body).toContain("| dump.zip | ../dump.zip |");
       expect(body).toContain("| stage.log | artifacts/stage.log |");
@@ -1493,7 +1495,7 @@ describe("action", () => {
         comment_id: existingCommentId,
         body: expect.stringContaining("<!-- allure-report-summary -->"),
       });
-      expect(octokitMock.rest.issues.updateComment.mock.calls[0][0].body).toContain("Test Suite 1");
+      expect(octokitMock.rest.issues.updateComment.mock.calls[0][0].body).toContain("All tests");
     });
 
     it("should update existing summary and section comments when their markers already exist", async () => {
