@@ -1,0 +1,1 @@
+{"id":"4ea5246fdf34855abd1be58c2693ae2b","fullName":"allure-action:test/spec/utils.test.ts#utils readReportArtifacts should read, deduplicate, and sort report artifacts","name":"should read, deduplicate, and sort report artifacts","status":"passed","testResultsByEnv":{"chrome-ubuntu":"0b8a7829dda3579954eec79a3b9ee027"}}
