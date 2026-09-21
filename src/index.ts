@@ -112,6 +112,43 @@ const getSummaryCheckKey = (check: SummaryCheck): string => check.id?.trim() ?? 
 
 type GithubCheckConclusion = ReturnType<typeof getGithubCheckConclusion>;
 type SummaryCheck = NonNullable<PluginSummary["checks"]>[number];
+type SummaryStats = CompatiblePluginSummary["stats"];
+type SummaryStatus = CompatiblePluginSummary["status"];
+
+const SUMMARY_STATUSES = ["failed", "broken", "passed", "skipped", "unknown"] as const;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isSummaryStatus = (value: unknown): value is SummaryStatus =>
+  typeof value === "string" && SUMMARY_STATUSES.includes(value as (typeof SUMMARY_STATUSES)[number]);
+
+const getFiniteNumber = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+const getSummaryStats = (summary: CompatiblePluginSummary): SummaryStats => {
+  const rawStats = isRecord(summary.stats) ? summary.stats : {};
+  const stats = {
+    ...rawStats,
+    failed: getFiniteNumber(rawStats.failed),
+    broken: getFiniteNumber(rawStats.broken),
+    passed: getFiniteNumber(rawStats.passed),
+    skipped: getFiniteNumber(rawStats.skipped),
+    unknown: getFiniteNumber(rawStats.unknown),
+  } as SummaryStats;
+
+  stats.total = getFiniteNumber(
+    rawStats.total,
+    SUMMARY_STATUSES.reduce((acc, status) => acc + getFiniteNumber(stats[status]), 0),
+  );
+
+  return stats;
+};
+
+const getSummaryStatus = (summary: CompatiblePluginSummary): SummaryStatus =>
+  isSummaryStatus(summary.status) ? summary.status : "passed";
+
+const getSummaryDuration = (summary: CompatiblePluginSummary): number => getFiniteNumber(summary.duration);
 
 type SummaryCheckRun = {
   conclusion: GithubCheckConclusion;
@@ -255,6 +292,9 @@ const run = async (): Promise<void> => {
       return {
         ...summary,
         name: getSummaryName(summary),
+        stats: getSummaryStats(summary),
+        status: getSummaryStatus(summary),
+        duration: getSummaryDuration(summary),
         summaryId: getSummaryId(reportDir, file),
         remoteHref: resolveSummaryRemoteHref({
           reportDir,

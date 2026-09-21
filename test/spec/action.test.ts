@@ -202,6 +202,36 @@ describe("action", () => {
       );
     });
 
+    it("should tolerate report summary files without stats", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Nameless stats report",
+              duration: 5000,
+              remoteHref: "https://example.com/report/",
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledTimes(1);
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain("All tests");
+      expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toContain(
+        '<a href="https://example.com/report/">Nameless stats report</a>',
+      );
+    });
+
     it("should enrich the report summary with environments, resolutions, and artifacts", async () => {
       const summaryFile = "test/fixtures/action/report1/summary.json";
       const registryFile = "test/fixtures/action/test-results.json";
