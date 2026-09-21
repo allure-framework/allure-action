@@ -1,0 +1,1 @@
+{"id":"4a5dfc1ccc7c49b12bfcc7d1a9f089e4","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should use canonical Allure 3 filter parameters","name":"should use canonical Allure 3 filter parameters","status":"passed","testResultsByEnv":{"chrome-ubuntu":"f7d032a45899e4d90d0e5453c471d636"}}
