@@ -70,6 +70,12 @@ const getSummaryId = (reportDir: string, summaryFile: string): string => {
   return normalizePathForUrl(path.normalize(summaryFile));
 };
 
+const getSummaryName = (summary: CompatiblePluginSummary): string => {
+  const { name } = summary as CompatiblePluginSummary & { name?: unknown };
+
+  return typeof name === "string" && name.trim() ? name : "Allure Report";
+};
+
 const resolveSummaryRemoteHref = (params: {
   reportDir: string;
   summaryFile: string;
@@ -248,6 +254,7 @@ const run = async (): Promise<void> => {
 
       return {
         ...summary,
+        name: getSummaryName(summary),
         summaryId: getSummaryId(reportDir, file),
         remoteHref: resolveSummaryRemoteHref({
           reportDir,
