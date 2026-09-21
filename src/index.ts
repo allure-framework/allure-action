@@ -1,4 +1,6 @@
 import * as core from "@actions/core";
+import { createReportContextFromData } from "@allurereport/ci/report-context";
+import { renderReportSummaryMarkdown } from "@allurereport/ci/report-markdown";
 import type { PluginSummary } from "@allurereport/plugin-api";
 import fg from "fast-glob";
 import { existsSync } from "node:fs";
@@ -18,9 +20,7 @@ import {
   findOrCreateComment,
   formatQualityGateResults,
   generateQualityGateComment,
-  generateSummaryMarkdownTable,
   generateSummarySectionComments,
-  getTestResultEnvironments,
   getGithubContext,
   getGithubInput,
   getOctokit,
@@ -276,7 +276,6 @@ const run = async (): Promise<void> => {
   const qualityGateFailed = isQualityGateFailed(qualityGateResults);
   const debugOptionalFileError = debug ? (message: string) => core.info(`[debug] ${message}`) : undefined;
   let testResultRegistry: TestResultRegistry | undefined;
-  let summaryEnvironments: string[] = [];
   let reportArtifacts: ReportArtifact[] = [];
 
   if (isPullRequest && pullRequest) {
@@ -284,11 +283,16 @@ const run = async (): Promise<void> => {
       enabledSections.length || qualityGateFailed || summaryFilesContent.length
         ? await readTestResultRegistry(testResultsFile, { onError: debugOptionalFileError })
         : undefined;
-    summaryEnvironments = getTestResultEnvironments(testResultRegistry);
     reportArtifacts = summaryFilesContent.length
       ? await readReportArtifacts(artifactsFile, { onError: debugOptionalFileError })
       : [];
   }
+  const reportContext = createReportContextFromData({
+    artifacts: reportArtifacts,
+    qualityGate: qualityGateResults,
+    reports: summaryFilesContent,
+    testResults: testResultRegistry,
+  });
 
   if (debug) {
     printDebugInfo({
@@ -302,7 +306,7 @@ const run = async (): Promise<void> => {
       remoteHref,
       reportDir,
       summaryCheckRuns,
-      summaryEnvironments,
+      summaryEnvironments: reportContext.environments.map((environment) => environment.name),
       summaryFiles,
       summaryFilesContent,
     });
@@ -397,10 +401,7 @@ const run = async (): Promise<void> => {
     return;
   }
 
-  const summaryCommentMarkdown = generateSummaryMarkdownTable(summaryFilesContent, {
-    artifacts: reportArtifacts,
-    environments: summaryEnvironments,
-  });
+  const summaryCommentMarkdown = renderReportSummaryMarkdown(reportContext);
   const sectionComments = generateSummarySectionComments(summaryFilesContent, enabledSections, {
     testResultRegistry,
   });

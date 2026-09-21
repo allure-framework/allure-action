@@ -8,7 +8,6 @@ import type {
   CompatiblePluginSummary,
   QualityGateResultsContent,
   RemoteSummaryTestResult,
-  TestResultRegistry,
 } from "../../src/model.js";
 import {
   formatQualityGateResultsList,
@@ -18,7 +17,6 @@ import {
   generateSummaryMarkdownTable,
   generateSummarySectionComments,
   getSummarySectionMarker,
-  getTestResultEnvironments,
   isQualityGateFailed,
   parseSummarySections,
   readReportArtifacts,
@@ -77,46 +75,6 @@ describe("utils", () => {
     it("should tolerate missing registry and unresolved IDs", () => {
       expect(resolveSummaryTests(["missing-test"])).toEqual([]);
       expect(resolveSummaryTests(undefined)).toEqual([]);
-    });
-  });
-
-  describe("getTestResultEnvironments", () => {
-    it("should extract sorted unique non-empty environments from the registry", () => {
-      const result = getTestResultEnvironments({
-        byId: {
-          "test-1": {
-            id: "test-1",
-            name: "Chrome test",
-            status: "passed",
-            duration: 100,
-            environment: "chrome",
-          },
-          "test-2": {
-            id: "test-2",
-            name: "Firefox test",
-            status: "failed",
-            duration: 200,
-            environment: "firefox",
-          },
-          "test-3": {
-            id: "test-3",
-            name: "Duplicate Chrome test",
-            status: "passed",
-            duration: 300,
-            environment: "chrome",
-          },
-          "test-4": {
-            id: "test-4",
-            name: "Default test",
-            status: "passed",
-            duration: 400,
-            environment: "default",
-          },
-          "test-5": null,
-        },
-      } as unknown as TestResultRegistry);
-
-      expect(result).toEqual(["chrome", "firefox"]);
     });
   });
 

@@ -3,56 +3,79 @@
 exports[`action > when the action should be run > should create comments for all test types 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | <a href="https://example.com/report/?transition=new" target="_blank" rel="noopener noreferrer">1</a> | <a href="https://example.com/report/?flaky=true" target="_blank" rel="noopener noreferrer">1</a> | <a href="https://example.com/report/?retry=true" target="_blank" rel="noopener noreferrer">1</a> | <a href="https://example.com/report/" target="_blank" rel="noopener noreferrer">View</a> |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 1 | 1 |
+
+**Reports:** <a href="https://example.com/report/">Test Suite 1</a>
+"
 `;
 
 exports[`action > when the action should be run > should create comments for flaky tests 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 2 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | <a href="https://example.com/report/?flaky=true" target="_blank" rel="noopener noreferrer">1</a> | 0 | <a href="https://example.com/report/" target="_blank" rel="noopener noreferrer">View</a> |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 1 | 0 |
+
+**Reports:** <a href="https://example.com/report/">Test Suite 2</a>
+"
 `;
 
 exports[`action > when the action should be run > should create comments for new tests 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | <a href="https://example.com/report/?transition=new" target="_blank" rel="noopener noreferrer">1</a> | 0 | 0 | <a href="https://example.com/report/" target="_blank" rel="noopener noreferrer">View</a> |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 0 | 0 |
+
+**Reports:** <a href="https://example.com/report/">Test Suite 1</a>
+"
 `;
 
 exports[`action > when the action should be run > should create comments for retry tests 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | <a href="https://example.com/report/?retry=true" target="_blank" rel="noopener noreferrer">1</a> | <a href="https://example.com/report/" target="_blank" rel="noopener noreferrer">View</a> |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 1 |
+
+**Reports:** <a href="https://example.com/report/">Test Suite 1</a>
+"
 `;
 
 exports[`action > when the action should be run > should generate markdown table from collected summary files and print it to the output 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;2<br/><img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 |  |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;2<br><img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 |
+"
 `;
 
 exports[`action > when the action should be run > should handle multiple summary files 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;2<br/><img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 |  |
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=5&failed=0&broken=0&skipped=1&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 2 | 3s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;5<br/><img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 | <a href="https://example.com/report/" target="_blank" rel="noopener noreferrer">View</a> |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=1&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;2<br><img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" width="8" height="8" />&#8288;&nbsp;1<br><img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 |
+
+**Reports:** <a href="https://example.com/report/">Test Suite 2</a>
+"
 `;
 
 exports[`action > when the action should be run > should handle summary files without remoteHref 1`] = `
 "<!-- allure-report-summary -->
 # Allure Report Summary
-| &nbsp;&nbsp;&nbsp;&nbsp; | Name | Duration | Stats&nbsp;&nbsp;&nbsp;&nbsp; | New | Flaky | Retry | Report |
-|-|-|-|-|-|-|-|-|
-| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | Test Suite 1 | 5s 0ms | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br/><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 0 | 0 |  |"
+
+| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 0 | 0 |
+"
 `;

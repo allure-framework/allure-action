@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import type { ReportArtifact, TestResultRegistry } from "./model.js";
+import type { ReportArtifact } from "./model.js";
 
 type ReadReportArtifactsOptions = {
   onError?: (message: string) => void;
@@ -53,26 +53,4 @@ export const readReportArtifacts = async (
     options.onError?.(`Artifacts manifest parse error: ${String(error)}`);
     return [];
   }
-};
-
-export const getTestResultEnvironments = (registry?: TestResultRegistry): string[] => {
-  if (!registry) {
-    return [];
-  }
-
-  const environments = Object.values(registry.byId).flatMap((testResult) => {
-    if (!isRecord(testResult)) {
-      return [];
-    }
-
-    if (typeof testResult.environment !== "string") {
-      return [];
-    }
-
-    const environment = testResult.environment.trim();
-
-    return environment && environment !== "default" ? [environment] : [];
-  });
-
-  return [...new Set(environments)].toSorted((left, right) => left.localeCompare(right));
 };
