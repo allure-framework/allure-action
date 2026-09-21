@@ -19587,7 +19587,7 @@ const emptyResolutionStats = () => ({
 	muted: 0,
 	accepted: 0
 });
-const isRecord$2 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+const isRecord$3 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 const isTestStatus = (value) => typeof value === "string" && TEST_STATUSES.includes(value);
 const addStatus = (stats, status) => {
 	stats[status] += 1;
@@ -19615,7 +19615,7 @@ const createTotals = (registry, summaries) => {
 		return totals;
 	}
 	Object.values(registry.byId).forEach((testResult) => {
-		if (!isRecord$2(testResult) || !isTestStatus(testResult.status)) return;
+		if (!isRecord$3(testResult) || !isTestStatus(testResult.status)) return;
 		addStatus(totals.stats, testResult.status);
 		if (typeof testResult.duration === "number") totals.duration += testResult.duration;
 	});
@@ -19633,7 +19633,7 @@ const createEnvironmentContext = (registry, summaries) => {
 	const retryTestIds = getSummaryIdSet(summaries, "retryTests");
 	const environmentsByName = /* @__PURE__ */ new Map();
 	Object.entries(registry.byId).forEach(([testResultId, testResult]) => {
-		if (!isRecord$2(testResult) || !isTestStatus(testResult.status) || typeof testResult.environment !== "string") return;
+		if (!isRecord$3(testResult) || !isTestStatus(testResult.status) || typeof testResult.environment !== "string") return;
 		const environment = testResult.environment.trim();
 		if (!environment || environment === "default") return;
 		const context = environmentsByName.get(environment) ?? {
@@ -28926,7 +28926,7 @@ const ansiCodePattern = new RegExp(`${String.fromCharCode(27)}\\[[0-?]*[ -/]*[@-
 const stripAnsiCodes = (str, replacement) => {
 	return str.replace(ansiCodePattern, replacement ?? "");
 };
-const isRecord$1 = (value) => {
+const isRecord$2 = (value) => {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 const stringifyValue = (value) => {
@@ -28993,7 +28993,7 @@ const readTestResultFile = async (testResultId, reportDir) => {
 	try {
 		const content = await (0, node_fs_promises.readFile)(file, "utf-8");
 		const testResult = JSON.parse(content);
-		if (!isRecord$1(testResult)) return;
+		if (!isRecord$2(testResult)) return;
 		return {
 			duration: getTestResultDuration(testResult),
 			environment: typeof testResult.environment === "string" ? testResult.environment : void 0,
@@ -29103,7 +29103,7 @@ const generateQualityGateComment = async (qualityGateResultsContent, options) =>
 };
 //#endregion
 //#region src/report-context.ts
-const isRecord = (value) => {
+const isRecord$1 = (value) => {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 const artifactSort = (left, right) => {
@@ -29120,7 +29120,7 @@ const readReportArtifacts = async (artifactsFile, options = {}) => {
 		}
 		const byPath = /* @__PURE__ */ new Map();
 		artifacts.forEach((artifact) => {
-			if (!isRecord(artifact) || typeof artifact.name !== "string" || typeof artifact.path !== "string") return;
+			if (!isRecord$1(artifact) || typeof artifact.name !== "string" || typeof artifact.path !== "string") return;
 			if (!byPath.has(artifact.path)) byPath.set(artifact.path, {
 				name: artifact.name,
 				path: artifact.path
@@ -29327,6 +29327,31 @@ const resolveSummaryRemoteHref = (params) => {
 };
 const getGithubCheckConclusion = (status) => status === "passed" ? "success" : "failure";
 const getSummaryCheckKey = (check) => check.id?.trim() ?? "";
+const SUMMARY_STATUSES = [
+	"failed",
+	"broken",
+	"passed",
+	"skipped",
+	"unknown"
+];
+const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+const isSummaryStatus = (value) => typeof value === "string" && SUMMARY_STATUSES.includes(value);
+const getFiniteNumber = (value, fallback = 0) => typeof value === "number" && Number.isFinite(value) ? value : fallback;
+const getSummaryStats = (summary) => {
+	const rawStats = isRecord(summary.stats) ? summary.stats : {};
+	const stats = {
+		...rawStats,
+		failed: getFiniteNumber(rawStats.failed),
+		broken: getFiniteNumber(rawStats.broken),
+		passed: getFiniteNumber(rawStats.passed),
+		skipped: getFiniteNumber(rawStats.skipped),
+		unknown: getFiniteNumber(rawStats.unknown)
+	};
+	stats.total = getFiniteNumber(rawStats.total, SUMMARY_STATUSES.reduce((acc, status) => acc + getFiniteNumber(stats[status]), 0));
+	return stats;
+};
+const getSummaryStatus = (summary) => isSummaryStatus(summary.status) ? summary.status : "passed";
+const getSummaryDuration = (summary) => getFiniteNumber(summary.duration);
 const getSummaryCheckRuns = (summaries) => {
 	const checkRuns = /* @__PURE__ */ new Map();
 	summaries.forEach((summary) => {
@@ -29407,6 +29432,9 @@ const run = async () => {
 		return {
 			...summary,
 			name: getSummaryName(summary),
+			stats: getSummaryStats(summary),
+			status: getSummaryStatus(summary),
+			duration: getSummaryDuration(summary),
 			summaryId: getSummaryId(reportDir, file),
 			remoteHref: resolveSummaryRemoteHref({
 				reportDir,
