@@ -29312,6 +29312,10 @@ const getSummaryId = (reportDir, summaryFile) => {
 	if (resolvedSummaryFile.startsWith(`${resolvedReportDir}${node_path.sep}`)) return normalizePathForUrl(node_path.relative(resolvedReportDir, resolvedSummaryFile));
 	return normalizePathForUrl(node_path.normalize(summaryFile));
 };
+const getSummaryName = (summary) => {
+	const { name } = summary;
+	return typeof name === "string" && name.trim() ? name : "Allure Report";
+};
 const resolveSummaryRemoteHref = (params) => {
 	const { reportDir, summaryFile, inputRemoteHref, summaryRemoteHref } = params;
 	if (!inputRemoteHref) return summaryRemoteHref;
@@ -29402,6 +29406,7 @@ const run = async () => {
 		const summary = JSON.parse(content);
 		return {
 			...summary,
+			name: getSummaryName(summary),
 			summaryId: getSummaryId(reportDir, file),
 			remoteHref: resolveSummaryRemoteHref({
 				reportDir,
