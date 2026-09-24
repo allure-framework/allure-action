@@ -1581,7 +1581,7 @@ __metadata:
     "@vitest/runner": "npm:^4.1.11"
     "@vitest/snapshot": "npm:^5.0.1"
     allure: "npm:^3.18.0"
-    allure-vitest: "npm:^3.10.1"
+    allure-vitest: "npm:^3.12.2"
     d3-shape: "npm:^3.2.0"
     fast-glob: "npm:^3.3.3"
     lefthook: "npm:^2.1.12"
@@ -1596,29 +1596,29 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"allure-js-commons@npm:3.10.1":
-  version: 3.10.1
-  resolution: "allure-js-commons@npm:3.10.1"
+"allure-js-commons@npm:3.12.2":
+  version: 3.12.2
+  resolution: "allure-js-commons@npm:3.12.2"
   dependencies:
     md5: "npm:^2.3.0"
   peerDependencies:
-    allure-playwright: 3.10.1
+    allure-playwright: 3.12.2
   peerDependenciesMeta:
     allure-playwright:
       optional: true
-  checksum: 10/890e22f3f002baf6c9e95a16d10b6d954a10709ac7f918abdb135cf554219220c1b5ec29728ad952c87cf416d514ab7d9656d0b37dece98863cf09046fc837e5
+  checksum: 10/28cc7e6dbdb654376305dc8c1779a791b12c2e4f4b82aab8935315a3ac6a31618b40ff7661373a10cad00f98ddc3781c15273b391a983ebdee78c104f125db63
   languageName: node
   linkType: hard
 
-"allure-vitest@npm:^3.10.1":
-  version: 3.10.1
-  resolution: "allure-vitest@npm:3.10.1"
+"allure-vitest@npm:^3.12.2":
+  version: 3.12.2
+  resolution: "allure-vitest@npm:3.12.2"
   dependencies:
-    allure-js-commons: "npm:3.10.1"
+    allure-js-commons: "npm:3.12.2"
   peerDependencies:
     "@vitest/runner": ">=1.3.0"
     vitest: ">=1.3.0"
-  checksum: 10/7209ce138902c88513a54312a22913ca2dac4df4841acd8b78155e89f03af82345d6e18d7e13daa2a76f0814bf48974f27e2116a06e66051a0671b9c86d600b3
+  checksum: 10/1aca2f7c56a0081b4cff01b6f491d1f7c0d255db7564637dc5542a95b0e6fd9943217f43763ebcd590a35ad67bb85bcf93d566eccb963e8554537c1ca70208ba
   languageName: node
   linkType: hard
 
