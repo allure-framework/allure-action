@@ -62,7 +62,7 @@
     "@vitest/runner": "^4.1.11",
     "@vitest/snapshot": "^5.0.1",
     "allure": "^3.18.0",
-    "allure-vitest": "^3.10.1",
+    "allure-vitest": "^3.12.2",
     "lefthook": "^2.1.12",
     "npm-run-all2": "^9.0.3",
     "oxfmt": "^0.62.0",
