@@ -1,0 +1,1 @@
+{"id":"7bcc5de95826bdf6f232306e76c08be6","fullName":"allure-action:test/spec/utils.test.ts#utils isQualityGateFailed should return false for successful quality gate results","name":"should return false for successful quality gate results","status":"passed","testResultsByEnv":{"chrome-ubuntu":"5b3f208eaf8d0f584025fd4c4c99a79f"}}

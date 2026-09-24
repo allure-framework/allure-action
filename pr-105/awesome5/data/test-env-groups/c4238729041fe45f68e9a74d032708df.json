@@ -1,0 +1,1 @@
+{"id":"c4238729041fe45f68e9a74d032708df","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle custom stats properties","name":"should handle custom stats properties","status":"passed","testResultsByEnv":{"chrome-ubuntu":"74bd1d1899f4a01d1f74c4781b7fab8e"}}

@@ -1,0 +1,1 @@
+{"id":"b16655bd24574f6f3000a244276b3790","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should display new tests in table format","name":"should display new tests in table format","status":"passed","testResultsByEnv":{"chrome-ubuntu":"162df9d24c9cd39f17f891ab509a7813"}}

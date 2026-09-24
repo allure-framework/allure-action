@@ -1,0 +1,1 @@
+{"id":"31e9157a1f9e1fd99dcddd3a69d2d113","fullName":"allure-action:test/spec/utils.test.ts#utils generateQualityGateComment should render failed rules with registry-resolved related tests","name":"should render failed rules with registry-resolved related tests","status":"passed","testResultsByEnv":{"chrome-ubuntu":"b4eb4cddbabfb10307a58407b3c1352b"}}
