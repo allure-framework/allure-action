@@ -1,0 +1,18 @@
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Startup Error [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯⎯[39m
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from /home/runner/work/allure-action/allure-action/node_modules/vitest/dist/chunks/index.DzobfTyw.js
+[90m    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)[39m
+[90m    at packageResolve (node:internal/modules/esm/resolve:784:25)[39m
+[90m    at moduleResolve (node:internal/modules/esm/resolve:873:18)[39m
+[90m    at defaultResolve (node:internal/modules/esm/resolve:1006:11)[39m
+[90m    at #cachedDefaultResolve (node:internal/modules/esm/loader:705:20)[39m
+[90m    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:725:38)[39m
+[90m    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:763:56)[39m
+[90m    at #resolve (node:internal/modules/esm/loader:687:17)[39m
+[90m    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:607:35)[39m
+[90m    at ModuleJob.syncLink (node:internal/modules/esm/module_job:276:33)[39m {
+  code: [32m'ERR_MODULE_NOT_FOUND'[39m
+}
+
+
+

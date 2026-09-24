@@ -1,0 +1,1 @@
+[{"success":false,"expected":0,"actual":0,"rule":"maxDuration","message":"The slowest test duration 0ms exceeds the allowed threshold value 0ms","testResults":[]},{"success":false,"expected":1,"actual":0,"rule":"minTestsCount","message":"The total number of tests is below the expected threshold","testResults":[]}]
