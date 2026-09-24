@@ -1,0 +1,1 @@
+{"id":"afceb5259742268b128942f6af604222","fullName":"allure-action:test/spec/utils.test.ts#utils isQualityGateFailed should return true for a non-empty array","name":"should return true for a non-empty array","status":"passed","testResultsByEnv":{"chrome-ubuntu":"c2aaa6785e441c131716a2cd0145fd54"}}
