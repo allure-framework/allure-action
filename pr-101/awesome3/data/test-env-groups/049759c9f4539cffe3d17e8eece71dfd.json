@@ -1,0 +1,1 @@
+{"id":"049759c9f4539cffe3d17e8eece71dfd","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResultsList should format a single violation","name":"should format a single violation","status":"passed","testResultsByEnv":{"chrome-ubuntu":"5b315187d7c51f1dbdf402dcb1932be4"}}

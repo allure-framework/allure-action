@@ -1,0 +1,1 @@
+{"id":"60d9d4f2fe8007c756355cf46878343a","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResults should format array content (legacy format)","name":"should format array content (legacy format)","status":"passed","testResultsByEnv":{"chrome-ubuntu":"b76ec2755d7c28a795b37db7d72052fa"}}
