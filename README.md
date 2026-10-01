@@ -51,6 +51,13 @@ Then, add the action to your workflow right after your tests, which produce Allu
     # GitHub token used to create checks and post comments in pull requests
     # Defaults to ${{ github.token }}
     github-token: ${{ github.token }}
+    # Optional pull request number for non-pull_request workflows
+    # See "Non-pull request workflows" for issue_comment head SHA lookup
+    # Default: ""
+    pr-number: ""
+    # Optional commit SHA for checks when pr-number is used
+    # Default: current GitHub context SHA
+    head-sha: ""
     # Optional extra section comments to publish alongside the summary table
     # Supported values: new, flaky, retry, all
     # Default: hidden
@@ -66,6 +73,41 @@ If everything is set up correctly and required reports data is present, the Acti
 ## Configuration
 
 The action utilizes Allure 3 Runtime configuration file (`allurerc.js` or `allurerc.mjs`) and use `output` field as a path, where it should search for the generated reports.
+
+### Non-pull request workflows
+
+For workflows triggered by events such as `issue_comment`, `workflow_dispatch`, or `workflow_run`, pass `pr-number` so the action knows which Pull Request should receive comments. Pass `head-sha` when checks should be attached to the PR head commit instead of the triggering event SHA.
+
+For `issue_comment`, `${{ github.sha }}` points to the default branch, not the pull request head. Resolve the PR head SHA explicitly before passing it to the action:
+
+```yaml
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  report:
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/run-tests') }}
+    permissions:
+      pull-requests: write
+      checks: write
+    steps:
+      - name: Resolve pull request head
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          head_sha="$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)"
+          echo "head-sha=$head_sha" >> "$GITHUB_OUTPUT"
+
+      - uses: allure-framework/allure-action@v0
+        with:
+          report-directory: "./allure-report"
+          github-token: ${{ github.token }}
+          pr-number: ${{ github.event.issue.number }}
+          head-sha: ${{ steps.pr.outputs.head-sha }}
+```
 
 ### Comment sections
 

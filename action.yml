@@ -18,6 +18,14 @@ inputs:
     description: "GitHub token for creating checks and comments"
     required: false
     default: "${{ github.token }}"
+  pr-number:
+    description: "Pull request number to comment on when the workflow is not triggered by pull_request, such as issue_comment, workflow_dispatch, or workflow_run. pull_request event payload data takes precedence when available."
+    required: false
+    default: ""
+  head-sha:
+    description: "Commit SHA to use for GitHub checks when pr-number is used on a non-pull_request event."
+    required: false
+    default: ""
   sections:
     description: "Optional collapsible section comments to publish alongside the summary table. Supported values: `new`, `flaky`, `retry`, or `all`. Accepts comma- or newline-separated values."
     required: false

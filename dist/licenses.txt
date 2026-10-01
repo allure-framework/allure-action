@@ -252,7 +252,7 @@ software or this license, under any kind of legal claim.***
 ---
 
 Name: @allurereport/ci
-Version: 3.18.0
+Version: 3.19.1
 License: Apache-2.0
 Private: false
 Description: Utilities set to get useful report data from different CI
@@ -1519,7 +1519,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: @allurereport/core-api
-Version: 3.18.0
+Version: 3.19.1
 License: Apache-2.0
 Private: false
 Description: Allure Core API

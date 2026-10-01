@@ -195,10 +195,51 @@ const getSummaryCheckRuns = (summaries: ActionSummary[]): SummaryCheckRun[] => {
 const isDebugEnabled = (debugInput: string): boolean =>
   ["1", "true", "yes", "on"].includes(debugInput.trim().toLowerCase());
 
+const nonBlank = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : undefined;
+};
+
+const normalizePullRequestNumberInput = (value: string | undefined): number | undefined => {
+  const trimmed = nonBlank(value);
+
+  if (!trimmed || !/^\d+$/.test(trimmed)) {
+    return undefined;
+  }
+
+  return Number(trimmed);
+};
+
+const resolvePullRequestContext = (params: {
+  eventName: string;
+  inputPrNumber?: string;
+  inputHeadSha?: string;
+  payloadPullRequest?: {
+    number?: number;
+    head?: {
+      sha?: string;
+    };
+  };
+  sha?: string;
+}): { headSha?: string; issueNumber?: number; isPullRequest: boolean } => {
+  const { eventName, inputPrNumber, inputHeadSha, payloadPullRequest, sha } = params;
+  const isPullRequestEvent = eventName === "pull_request";
+  const issueNumber = isPullRequestEvent ? payloadPullRequest?.number : normalizePullRequestNumberInput(inputPrNumber);
+  const headSha = isPullRequestEvent ? (payloadPullRequest?.head?.sha ?? sha) : (nonBlank(inputHeadSha) ?? sha);
+
+  return {
+    headSha,
+    issueNumber,
+    isPullRequest: issueNumber !== undefined,
+  };
+};
+
 const printDebugInfo = (params: {
   eventName: string;
   headSha?: string;
   isPullRequest: boolean;
+  issueNumber?: number;
   qualityGateFile: string;
   qualityGateFileExists: boolean;
   qualityGateParseError?: unknown;
@@ -214,6 +255,7 @@ const printDebugInfo = (params: {
     eventName,
     headSha,
     isPullRequest,
+    issueNumber,
     qualityGateFile,
     qualityGateFileExists,
     qualityGateParseError,
@@ -230,7 +272,8 @@ const printDebugInfo = (params: {
 
   core.info("[debug] Allure Action diagnostics");
   core.info(`[debug] Event: ${eventName || "unknown"}`);
-  core.info(`[debug] Pull request event: ${isPullRequest}`);
+  core.info(`[debug] Pull request context: ${isPullRequest}`);
+  core.info(`[debug] Pull request number: ${issueNumber ?? "unknown"}`);
   core.info(`[debug] Head SHA: ${headSha ?? "unknown"}`);
   core.info(`[debug] Report directory: ${reportDir}`);
   core.info(`[debug] Remote href: ${remoteHref ?? "not provided"}`);
@@ -272,8 +315,13 @@ const run = async (): Promise<void> => {
   }
 
   const pullRequest = payload?.pull_request;
-  const isPullRequest = eventName === "pull_request" && Boolean(pullRequest);
-  const headSha = pullRequest?.head.sha ?? sha;
+  const { headSha, issueNumber, isPullRequest } = resolvePullRequestContext({
+    eventName,
+    inputPrNumber: getGithubInput("pr-number"),
+    inputHeadSha: getGithubInput("head-sha"),
+    payloadPullRequest: pullRequest,
+    sha,
+  });
   const reportDir = getGithubInput("report-directory") || path.posix.join(process.cwd(), "allure-report");
   const remoteHref = getGithubInput("remote-href") || undefined;
   const enabledSections = parseSummarySections(getGithubInput("sections"));
@@ -325,7 +373,7 @@ const run = async (): Promise<void> => {
   let testResultRegistry: TestResultRegistry | undefined;
   let reportArtifacts: ReportArtifact[] = [];
 
-  if (isPullRequest && pullRequest) {
+  if (isPullRequest) {
     testResultRegistry =
       enabledSections.length || qualityGateFailed || summaryFilesContent.length
         ? await readTestResultRegistry(testResultsFile, { onError: debugOptionalFileError })
@@ -346,6 +394,7 @@ const run = async (): Promise<void> => {
       eventName,
       headSha,
       isPullRequest,
+      issueNumber,
       qualityGateFile,
       qualityGateFileExists,
       qualityGateParseError,
@@ -405,12 +454,12 @@ const run = async (): Promise<void> => {
     }),
   );
 
-  if (!isPullRequest || !pullRequest) {
+  if (issueNumber === undefined) {
     core.info("Not a pull request event, skipping comments");
     return;
   }
 
-  const issue_number = pullRequest.number;
+  const issue_number = issueNumber;
   const { data: existingComments } = await octokit.rest.issues.listComments({
     owner: repo.owner,
     repo: repo.repo,
