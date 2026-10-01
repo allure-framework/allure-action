@@ -4,7 +4,7 @@ exports[`action > when the action should be run > should create comments for all
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 1 | 1 |
 
@@ -16,7 +16,7 @@ exports[`action > when the action should be run > should create comments for fla
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 1 | 0 |
 
@@ -28,7 +28,7 @@ exports[`action > when the action should be run > should create comments for new
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 0 | 0 |
 
@@ -40,7 +40,7 @@ exports[`action > when the action should be run > should create comments for ret
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 1 |
 
@@ -52,7 +52,7 @@ exports[`action > when the action should be run > should generate markdown table
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;2<br><img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 |
 "
@@ -62,7 +62,7 @@ exports[`action > when the action should be run > should handle multiple summary
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=2&broken=1&skipped=1&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;2<br><img alt="Broken tests" src="https://allurecharts.qameta.workers.dev/dot?type=broken&size=8" width="8" height="8" />&#8288;&nbsp;1<br><img alt="Skipped tests" src="https://allurecharts.qameta.workers.dev/dot?type=skipped&size=8" width="8" height="8" />&#8288;&nbsp;1 | 0 | 0 | 0 |
 
@@ -74,7 +74,7 @@ exports[`action > when the action should be run > should handle summary files wi
 "<!-- allure-report-summary -->
 # Allure Report Summary
 
-| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | New | Flaky | Retry |
+| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | New | Flaky | Retry |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="https://allurecharts.qameta.workers.dev/pie?passed=10&failed=1&broken=0&skipped=0&unknown=0&size=32" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp; | All tests | 5s | <img alt="Passed tests" src="https://allurecharts.qameta.workers.dev/dot?type=passed&size=8" width="8" height="8" />&#8288;&nbsp;10<br><img alt="Failed tests" src="https://allurecharts.qameta.workers.dev/dot?type=failed&size=8" width="8" height="8" />&#8288;&nbsp;1 | 1 | 0 | 0 |
 "

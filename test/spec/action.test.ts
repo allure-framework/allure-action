@@ -304,15 +304,15 @@ describe("action", () => {
       const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
 
       expect(body).toContain(
-        "| &nbsp;&nbsp;&nbsp;&nbsp; | Scope | Duration | Stats | Resolutions | New | Flaky | Retry |",
+        "| &nbsp;&nbsp;&nbsp;&nbsp; | Environment | Duration | Stats | Resolutions | New | Flaky | Retry |",
       );
       expect(body).toContain("| All tests |");
       expect(body).toContain("| chrome |");
       expect(body).toContain("| firefox |");
       expect(body).toContain("Issues: 2<br>Muted: 1");
       expect(body).toContain("<summary>Artifacts used (2)</summary>");
-      expect(body).toContain("| dump.zip | ../dump.zip |");
-      expect(body).toContain("| stage.log | artifacts/stage.log |");
+      expect(body).toContain("- <code>../dump.zip</code>");
+      expect(body).toContain("- <code>artifacts/stage.log</code>");
     });
 
     it("should ignore malformed optional report context files and log them in debug mode", async () => {

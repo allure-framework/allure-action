@@ -19589,6 +19589,31 @@ const emptyResolutionStats = () => ({
 });
 const isRecord$3 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 const isTestStatus = (value) => typeof value === "string" && TEST_STATUSES.includes(value);
+const getFiniteNumber$1 = (value, fallback = 0) => typeof value === "number" && Number.isFinite(value) ? value : fallback;
+const getReportName = (summary) => {
+	if (typeof summary.name === "string" && summary.name.trim()) return summary.name;
+	return "Allure Report";
+};
+const normalizePluginSummaryStats = (summary) => {
+	const rawStats = isRecord$3(summary.stats) ? summary.stats : {};
+	const stats = {
+		...rawStats,
+		failed: getFiniteNumber$1(rawStats.failed),
+		broken: getFiniteNumber$1(rawStats.broken),
+		passed: getFiniteNumber$1(rawStats.passed),
+		skipped: getFiniteNumber$1(rawStats.skipped),
+		unknown: getFiniteNumber$1(rawStats.unknown)
+	};
+	stats.total = getFiniteNumber$1(rawStats.total, TEST_STATUSES.reduce((acc, status) => acc + getFiniteNumber$1(stats[status]), 0));
+	return stats;
+};
+const normalizePluginSummary = (summary) => ({
+	...summary,
+	name: getReportName(summary),
+	stats: normalizePluginSummaryStats(summary),
+	status: isTestStatus(summary.status) ? summary.status : "passed",
+	duration: getFiniteNumber$1(summary.duration)
+});
 const addStatus = (stats, status) => {
 	stats[status] += 1;
 	stats.total += 1;
@@ -19649,8 +19674,8 @@ const createEnvironmentContext = (registry, summaries) => {
 	});
 	return [...environmentsByName.values()].toSorted((left, right) => left.name.localeCompare(right.name));
 };
-const createReport = (summary) => ({ ...summary });
-const sortReports = (reports) => reports.toSorted((left, right) => left.name.localeCompare(right.name));
+const createReport = (summary) => normalizePluginSummary(summary);
+const sortReports = (reports) => reports.map((report) => normalizePluginSummary(report)).toSorted((left, right) => left.name.localeCompare(right.name));
 const getResolutionStats = (summaries) => {
 	const stats = emptyResolutionStats();
 	summaries.forEach((summary) => {
@@ -19700,6 +19725,7 @@ const STATUS_ICON_BASE_URL = "https://allurecharts.qameta.workers.dev/dot";
 const STATUS_PIE_BASE_URL = "https://allurecharts.qameta.workers.dev/pie";
 const escapeHtml$1 = (value) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;");
 const tableCell = (value) => escapeHtml$1(String(value)).replaceAll("|", "&#124;").replaceAll("\n", "<br>");
+const inlineCode = (value) => `<code>${escapeHtml$1(value)}</code>`;
 const isSafeHref = (href) => {
 	try {
 		const url = new URL(href);
@@ -19752,11 +19778,17 @@ const formatResolutions = (resolutions) => {
 	].filter(Boolean).join("<br>");
 };
 const hasResolutions = (resolutions) => resolutions.issues > 0 || resolutions.muted > 0 || resolutions.accepted > 0;
-const formatFlag = (value) => value > 0 ? String(value) : "0";
-const renderTable = (rows, includeResolutions) => {
+const formatFlag = (flag, row, options) => {
+	const value = row.flags[flag];
+	if (value <= 0) return "0";
+	const label = String(value);
+	const href = options.getReportFilterHref?.(flag, row);
+	return href ? link(label, href) : label;
+};
+const renderTable = (rows, includeResolutions, options) => {
 	const headers = [
 		"&nbsp;&nbsp;&nbsp;&nbsp;",
-		"Scope",
+		"Environment",
 		"Duration",
 		"Stats",
 		...includeResolutions ? ["Resolutions"] : [],
@@ -19771,9 +19803,9 @@ const renderTable = (rows, includeResolutions) => {
 		tableCell(formatDuration$1(row.duration)),
 		formatStats(row.stats),
 		...includeResolutions ? [formatResolutions(row.resolutions)] : [],
-		tableCell(formatFlag(row.flags.new)),
-		tableCell(formatFlag(row.flags.flaky)),
-		tableCell(formatFlag(row.flags.retry))
+		formatFlag("new", row, options),
+		formatFlag("flaky", row, options),
+		formatFlag("retry", row, options)
 	].join(" | "));
 	return [
 		`| ${headers.join(" | ")} |`,
@@ -19783,6 +19815,21 @@ const renderTable = (rows, includeResolutions) => {
 };
 const reportHref = (report) => report.remoteHref ?? report.href;
 const reportLabel = (report) => report.plugin ?? report.name;
+const isAwesomeReport = (report) => report?.pluginId?.toLowerCase() === "awesome" || report?.plugin?.toLowerCase() === "awesome";
+const appendReportFilter = (href, filter) => {
+	const hashIndex = href.indexOf("#");
+	const base = hashIndex === -1 ? href : href.slice(0, hashIndex);
+	const hash = hashIndex === -1 ? "" : href.slice(hashIndex);
+	return `${base}${base.includes("?") ? "&" : "?"}${filter === "new" ? "transition=new" : `${filter}=true`}${hash}`;
+};
+const createDefaultReportFilterHref = (reports) => {
+	const defaultReport = reports.find(isAwesomeReport);
+	return (filter, row) => {
+		const report = isAwesomeReport(row.report) ? row.report : defaultReport;
+		const href = report ? reportHref(report) : void 0;
+		return href ? appendReportFilter(href, filter) : void 0;
+	};
+};
 const reportLinkKind = (report) => report.plugin?.toLowerCase() === "testops" ? "testops" : "report";
 const toReportLink = (report) => {
 	const href = reportHref(report);
@@ -19821,32 +19868,35 @@ const pluginSummaryToResolutions = (report) => ({
 	muted: report.stats.resolutions?.muted ?? 0,
 	accepted: report.stats.resolutions?.accepted ?? 0
 });
-const renderFilteredReports = (reports) => {
+const renderFilteredReports = (reports, options) => {
 	const rows = reports.map((report) => ({
+		kind: "report",
 		name: report.name,
 		duration: report.duration,
 		stats: pluginSummaryToStatusStats(report),
 		flags: pluginSummaryToFlags(report),
-		resolutions: pluginSummaryToResolutions(report)
+		resolutions: pluginSummaryToResolutions(report),
+		report
 	}));
 	if (!rows.length) return;
 	const includeResolutions = rows.some(({ resolutions }) => resolutions && hasResolutions(resolutions));
 	const links = renderReportLinks(reports);
 	return [
 		"**Filtered Reports**",
-		renderTable(rows, includeResolutions),
+		renderTable(rows, includeResolutions, options),
 		...links
 	].join("\n\n");
 };
 const renderArtifacts = (artifacts) => {
 	if (!artifacts.length) return;
-	const rows = artifacts.map(({ name, path }) => `| ${tableCell(name)} | ${tableCell(path)} |`);
+	const rows = artifacts.map(({ name, path }) => {
+		const normalizedPath = path.replaceAll("\\", "/");
+		return `- ${name === path || normalizedPath.endsWith(`/${name}`) ? inlineCode(path) : `${inlineCode(name)} &mdash; ${inlineCode(path)}`}`;
+	});
 	return [
 		`<details>`,
 		`<summary>Artifacts used (${artifacts.length})</summary>`,
 		"",
-		"| Name | Path |",
-		"| --- | --- |",
 		...rows,
 		"",
 		"</details>"
@@ -19856,13 +19906,19 @@ const renderReportSummaryMarkdown = (context, options = {}) => {
 	const { title = "Allure Report Summary", includeArtifacts = true } = options;
 	const regularReports = context.reports.filter((report) => report.filtered !== true);
 	const filteredReports = context.reports.filter((report) => report.filtered === true);
+	const renderOptions = {
+		...options,
+		getReportFilterHref: options.getReportFilterHref ?? createDefaultReportFilterHref(regularReports)
+	};
 	const aggregateRows = [{
+		kind: "total",
 		name: "All tests",
 		duration: context.totals.duration,
 		stats: context.totals.stats,
 		flags: context.totals.flags,
 		resolutions: context.totals.resolutions
 	}, ...context.environments.map((environment) => ({
+		kind: "environment",
 		name: environment.name,
 		duration: environment.duration,
 		stats: environment.stats,
@@ -19871,9 +19927,9 @@ const renderReportSummaryMarkdown = (context, options = {}) => {
 	const includeResolutions = hasResolutions(context.totals.resolutions);
 	return `${[
 		`# ${escapeHtml$1(title)}`,
-		renderTable(aggregateRows, includeResolutions),
+		renderTable(aggregateRows, includeResolutions, renderOptions),
 		...renderReportLinks(regularReports),
-		renderFilteredReports(filteredReports),
+		renderFilteredReports(filteredReports, renderOptions),
 		includeArtifacts ? renderArtifacts(context.artifacts) : void 0
 	].filter((section) => Boolean(section)).join("\n\n")}\n`;
 };
@@ -28896,6 +28952,7 @@ const formatDuration = (duration) => {
 	}
 	return res.join(" ");
 };
+new TextEncoder();
 //#endregion
 //#region src/utils/markdown/table.ts
 const escapeHtml = (value) => {
