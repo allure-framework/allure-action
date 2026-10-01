@@ -70,6 +70,7 @@
     "rollup-plugin-license": "^3.7.1",
     "tsdown": "^0.23.0",
     "typescript": "^6.0.3",
+    "vite": "8.0.16",
     "vitest": "^5.0.2"
   },
   "packageManager": "yarn@4.13.0"
