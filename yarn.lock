@@ -1279,12 +1279,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^26.6.1":
-  version: 26.6.1
-  resolution: "@types/node@npm:26.6.1"
+"@types/node@npm:^26.6.3":
+  version: 26.6.3
+  resolution: "@types/node@npm:26.6.3"
   dependencies:
     undici-types: "npm:~8.9.0"
-  checksum: 10/86e4bbb49b696e1183d42e1e8653b13b969146969e6e30635aa5de7d4340f06fcdd748284bcc68ea6a3f8300d9dc54569ec377f312cdeb1c1ae0a5996ec075d7
+  checksum: 10/278d5241522520fbadd46b41065d7587bbb214adb3c6f8a2a9a28754d374c578d090f7387866d09c79be1e9bbf5adc7eeea453032a52f77e70b06077f85c5c14
   languageName: node
   linkType: hard
 
@@ -1638,7 +1638,7 @@ __metadata:
     "@allurereport/plugin-testops": "npm:^3.19.1"
     "@types/d3-shape": "npm:^3"
     "@types/lodash.chunk": "npm:^4"
-    "@types/node": "npm:^26.6.1"
+    "@types/node": "npm:^26.6.3"
     "@vitest/runner": "npm:^4.1.11"
     "@vitest/snapshot": "npm:^5.0.1"
     allure: "npm:^3.19.1"
