@@ -1,0 +1,1 @@
+{"id":"ffd8074bda876fb718d1d5707fbd4744.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResultsList should format multiple violations","name":"should format multiple violations","status":"passed","testResultsByEnv":{"chrome-ubuntu":"19861dd66c59a1cb683fd00356a4e23b"}}

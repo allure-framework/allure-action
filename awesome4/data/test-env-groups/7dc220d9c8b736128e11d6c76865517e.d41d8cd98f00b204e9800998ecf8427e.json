@@ -1,0 +1,1 @@
+{"id":"7dc220d9c8b736128e11d6c76865517e.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/action.test.ts#action when actions should be skipped should not run action when there's no github token","name":"should not run action when there's no github token","status":"passed","testResultsByEnv":{"chrome-ubuntu":"a2dab6526df6e83bdd34d0f9e9c2f1f4"}}

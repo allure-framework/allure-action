@@ -1,0 +1,1 @@
+{"id":"380adc110c154b89bf1405e3bfa818a3.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResults should format record content with multiple environments","name":"should format record content with multiple environments","status":"passed","testResultsByEnv":{"chrome-ubuntu":"468c319431ff757af6bd01f7767ea9b3"}}

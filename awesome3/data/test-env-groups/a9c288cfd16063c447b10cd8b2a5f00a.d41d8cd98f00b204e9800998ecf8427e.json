@@ -1,0 +1,1 @@
+{"id":"a9c288cfd16063c447b10cd8b2a5f00a.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils formatQualityGateResultsList should return empty string for empty array","name":"should return empty string for empty array","status":"passed","testResultsByEnv":{"chrome-ubuntu":"dcceb22e77cd35fc49112562aae50b64"}}

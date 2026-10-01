@@ -1,0 +1,1 @@
+{"id":"a65a6f6a43796b339a2b23208350e169.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/action.test.ts#action quality gate should strip ANSI codes from quality gate messages","name":"should strip ANSI codes from quality gate messages","status":"passed","testResultsByEnv":{"chrome-ubuntu":"68412de38dd20d8640503f82410d6dd4"}}

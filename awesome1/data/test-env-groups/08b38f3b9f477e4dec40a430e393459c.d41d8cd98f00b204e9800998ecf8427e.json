@@ -1,0 +1,1 @@
+{"id":"08b38f3b9f477e4dec40a430e393459c.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils resolveSummaryTests should tolerate missing registry and unresolved IDs","name":"should tolerate missing registry and unresolved IDs","status":"passed","testResultsByEnv":{"chrome-ubuntu":"c4129f95bf4c6c64cd1a8bca2266c9fb"}}

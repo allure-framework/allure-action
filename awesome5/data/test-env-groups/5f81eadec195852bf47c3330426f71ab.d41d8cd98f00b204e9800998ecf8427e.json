@@ -1,0 +1,1 @@
+{"id":"5f81eadec195852bf47c3330426f71ab.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummarySectionComments should escape special characters in generated test links","name":"should escape special characters in generated test links","status":"passed","testResultsByEnv":{"chrome-ubuntu":"d31775022354c9e4e3106353871982b9"}}
