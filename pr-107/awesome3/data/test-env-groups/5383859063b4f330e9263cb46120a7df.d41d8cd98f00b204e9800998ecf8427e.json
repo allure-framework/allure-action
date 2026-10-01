@@ -1,0 +1,1 @@
+{"id":"5383859063b4f330e9263cb46120a7df.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/action.test.ts#action quality gate should ignore invalid pr-number input on non-pull request events","name":"should ignore invalid pr-number input on non-pull request events","status":"passed","testResultsByEnv":{"chrome-ubuntu":"8ed8d2b9042df8bfe3afc7b7be60539f"}}

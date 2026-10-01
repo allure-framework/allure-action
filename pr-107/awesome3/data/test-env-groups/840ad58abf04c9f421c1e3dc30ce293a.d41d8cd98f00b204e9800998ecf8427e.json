@@ -1,0 +1,1 @@
+{"id":"840ad58abf04c9f421c1e3dc30ce293a.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should strip various ANSI codes (bold, underline, etc.)","name":"should strip various ANSI codes (bold, underline, etc.)","status":"passed","testResultsByEnv":{"chrome-ubuntu":"f34f45693f67e8cab307220f92241998"}}

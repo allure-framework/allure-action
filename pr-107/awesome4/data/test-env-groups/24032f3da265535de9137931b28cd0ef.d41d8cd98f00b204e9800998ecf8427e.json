@@ -1,0 +1,1 @@
+{"id":"24032f3da265535de9137931b28cd0ef.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle complex durations","name":"should handle complex durations","status":"passed","testResultsByEnv":{"chrome-ubuntu":"92e33dc249f81fe8581afd9c70a5a76e"}}

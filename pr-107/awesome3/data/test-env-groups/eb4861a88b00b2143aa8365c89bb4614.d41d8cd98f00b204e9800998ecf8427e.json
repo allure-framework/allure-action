@@ -1,0 +1,1 @@
+{"id":"eb4861a88b00b2143aa8365c89bb4614.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable shouldn't display link for non-existing retry tests","name":"shouldn't display link for non-existing retry tests","status":"passed","testResultsByEnv":{"chrome-ubuntu":"aeb7c4d55391c134dae71b832deb9177"}}

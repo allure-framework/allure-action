@@ -1,0 +1,1 @@
+{"id":"b526c26792c6d6224caa6129efd459b2.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/action.test.ts#action quality gate should create checks on push events without PR comments","name":"should create checks on push events without PR comments","status":"passed","testResultsByEnv":{"chrome-ubuntu":"a2189802b4a92ab0d12aba3b41303181"}}
