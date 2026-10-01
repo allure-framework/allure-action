@@ -1,0 +1,1 @@
+{"id":"4a84bffe44936fe39c1ca1489076e0f3.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils stripAnsiCodes should handle empty string","name":"should handle empty string","status":"passed","testResultsByEnv":{"chrome-ubuntu":"d62699f30c375a8a5789e5b0fb05cf7b"}}

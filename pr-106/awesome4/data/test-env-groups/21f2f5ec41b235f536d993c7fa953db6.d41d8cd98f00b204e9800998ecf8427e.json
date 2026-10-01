@@ -1,0 +1,1 @@
+{"id":"21f2f5ec41b235f536d993c7fa953db6.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/action.test.ts#action when the action should be run should use custom report directory when specified","name":"should use custom report directory when specified","status":"passed","testResultsByEnv":{"chrome-ubuntu":"6b706266fb3f47e40929d5df54ff5619"}}

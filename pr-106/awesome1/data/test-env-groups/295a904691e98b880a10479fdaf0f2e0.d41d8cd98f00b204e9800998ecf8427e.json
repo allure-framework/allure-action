@@ -1,0 +1,1 @@
+{"id":"295a904691e98b880a10479fdaf0f2e0.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle zero unknown stats","name":"should handle zero unknown stats","status":"passed","testResultsByEnv":{"chrome-ubuntu":"a5b7bb7dd61dd4e33258c30f0899b832"}}

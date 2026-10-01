@@ -1,0 +1,1 @@
+{"id":"364e114f50135fac82ad3b17a9c3ac1f.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should ignore pluginId when there is only one summary","name":"should ignore pluginId when there is only one summary","status":"passed","testResultsByEnv":{"chrome-ubuntu":"93ae92c9519725c893b29f104a908fb4"}}

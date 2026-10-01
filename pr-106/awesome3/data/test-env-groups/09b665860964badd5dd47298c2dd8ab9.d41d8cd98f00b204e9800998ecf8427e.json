@@ -1,0 +1,1 @@
+{"id":"09b665860964badd5dd47298c2dd8ab9.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils formatSummaryTests should format tests without remoteHref","name":"should format tests without remoteHref","status":"passed","testResultsByEnv":{"chrome-ubuntu":"ad16e173a38aaece3647063e13a0f567"}}
