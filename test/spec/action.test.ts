@@ -1949,6 +1949,384 @@ describe("action", () => {
       expect(fs.readFile).not.toHaveBeenCalledWith("test/fixtures/action/artifacts.json", "utf-8");
     });
 
+    it("should create pull request comments on issue_comment events when pr-number is provided", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          case "pr-number":
+            return "42";
+          case "head-sha":
+            return "pr-head-sha";
+          default:
+            return "";
+        }
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "issue_comment",
+        sha: "comment-event-sha",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+        payload: {
+          issue: {
+            number: 42,
+            pull_request: {},
+          },
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "pr-head-sha",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        issue_number: 42,
+      });
+      expect(octokitMock.rest.issues.createComment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner: "owner",
+          repo: "repo",
+          issue_number: 42,
+          body: expect.stringContaining("<!-- allure-report-summary -->"),
+        }),
+      );
+    });
+
+    it("should fall back to the event sha for non-pull request checks when head-sha is not provided", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          case "pr-number":
+            return "42";
+          default:
+            return "";
+        }
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "issue_comment",
+        sha: "comment-event-sha",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "comment-event-sha",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        issue_number: 42,
+      });
+    });
+
+    it("should ignore invalid pr-number input on non-pull request events", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          case "pr-number":
+            return "not-a-number";
+          case "head-sha":
+            return "pr-head-sha";
+          default:
+            return "";
+        }
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "issue_comment",
+        sha: "comment-event-sha",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "pr-head-sha",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+      expect(fs.readFile).not.toHaveBeenCalledWith("test/fixtures/action/test-results.json", "utf-8");
+      expect(fs.readFile).not.toHaveBeenCalledWith("test/fixtures/action/artifacts.json", "utf-8");
+    });
+
+    it("should not use pull request payload on non-pull request events without pr-number", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          default:
+            return "";
+        }
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "pull_request_target",
+        sha: "target-event-sha",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+        payload: {
+          pull_request: {
+            number: 42,
+            head: {
+              sha: "payload-head-sha",
+            },
+          },
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "target-event-sha",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).not.toHaveBeenCalled();
+      expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+    });
+
+    it("should prefer pull_request payload context over explicit inputs", async () => {
+      const fixtures = {
+        summaryFiles: [
+          {
+            path: "report1/summary.json",
+            content: JSON.stringify({
+              name: "Test Suite 1",
+              stats: {
+                passed: 10,
+                failed: 0,
+                broken: 0,
+              },
+              duration: 5000,
+              checks: [
+                {
+                  id: "lint",
+                  name: "Lint",
+                  status: "passed",
+                },
+              ],
+              newTests: [],
+              flakyTests: [],
+              retryTests: [],
+            }),
+          },
+        ],
+      };
+
+      (getGithubInput as unknown as Mock).mockImplementation((input: string) => {
+        switch (input) {
+          case "report-directory":
+            return "test/fixtures/action";
+          case "github-token":
+            return "token";
+          case "pr-number":
+            return "42";
+          case "head-sha":
+            return "input-head-sha";
+          default:
+            return "";
+        }
+      });
+      (getGithubContext as unknown as Mock).mockReturnValue({
+        eventName: "pull_request",
+        sha: "event-sha",
+        repo: {
+          owner: "owner",
+          repo: "repo",
+        },
+        payload: {
+          pull_request: {
+            number: 1,
+            head: {
+              sha: "payload-head-sha",
+            },
+          },
+        },
+      });
+      (fg as unknown as Mock).mockResolvedValue(fixtures.summaryFiles.map((file) => file.path));
+      (fs.readFile as unknown as Mock).mockResolvedValueOnce(fixtures.summaryFiles[0].content);
+      (existsSync as unknown as Mock).mockReturnValue(false);
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      expect(octokitMock.rest.checks.create).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        name: "Allure external check: Lint",
+        head_sha: "payload-head-sha",
+        status: "completed",
+        conclusion: "success",
+      });
+      expect(octokitMock.rest.issues.listComments).toHaveBeenCalledWith({
+        owner: "owner",
+        repo: "repo",
+        issue_number: 1,
+      });
+    });
+
     it("should create a failed check when quality gate fails", async () => {
       const fixtures = {
         summaryFiles: [

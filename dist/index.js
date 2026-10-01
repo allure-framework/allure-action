@@ -29381,13 +29381,33 @@ const isDebugEnabled = (debugInput) => [
 	"yes",
 	"on"
 ].includes(debugInput.trim().toLowerCase());
+const nonBlank = (value) => {
+	const trimmed = value?.trim();
+	return trimmed ? trimmed : void 0;
+};
+const normalizePullRequestNumberInput = (value) => {
+	const trimmed = nonBlank(value);
+	if (!trimmed || !/^\d+$/.test(trimmed)) return;
+	return Number(trimmed);
+};
+const resolvePullRequestContext = (params) => {
+	const { eventName, inputPrNumber, inputHeadSha, payloadPullRequest, sha } = params;
+	const isPullRequestEvent = eventName === "pull_request";
+	const issueNumber = isPullRequestEvent ? payloadPullRequest?.number : normalizePullRequestNumberInput(inputPrNumber);
+	return {
+		headSha: isPullRequestEvent ? payloadPullRequest?.head?.sha ?? sha : nonBlank(inputHeadSha) ?? sha,
+		issueNumber,
+		isPullRequest: issueNumber !== void 0
+	};
+};
 const printDebugInfo = (params) => {
-	const { eventName, headSha, isPullRequest, qualityGateFile, qualityGateFileExists, qualityGateParseError, reportArtifactsCount, remoteHref, reportDir, summaryCheckRuns, summaryEnvironments, summaryFiles, summaryFilesContent } = params;
+	const { eventName, headSha, isPullRequest, issueNumber, qualityGateFile, qualityGateFileExists, qualityGateParseError, reportArtifactsCount, remoteHref, reportDir, summaryCheckRuns, summaryEnvironments, summaryFiles, summaryFilesContent } = params;
 	const checksCount = summaryFilesContent.reduce((acc, summary) => acc + (summary.checks?.length ?? 0), 0);
 	const summariesWithChecks = summaryFilesContent.filter((summary) => (summary.checks?.length ?? 0) > 0).length;
 	info("[debug] Allure Action diagnostics");
 	info(`[debug] Event: ${eventName || "unknown"}`);
-	info(`[debug] Pull request event: ${isPullRequest}`);
+	info(`[debug] Pull request context: ${isPullRequest}`);
+	info(`[debug] Pull request number: ${issueNumber ?? "unknown"}`);
 	info(`[debug] Head SHA: ${headSha ?? "unknown"}`);
 	info(`[debug] Report directory: ${reportDir}`);
 	info(`[debug] Remote href: ${remoteHref ?? "not provided"}`);
@@ -29416,8 +29436,13 @@ const run = async () => {
 		return;
 	}
 	const pullRequest = payload?.pull_request;
-	const isPullRequest = eventName === "pull_request" && Boolean(pullRequest);
-	const headSha = pullRequest?.head.sha ?? sha;
+	const { headSha, issueNumber, isPullRequest } = resolvePullRequestContext({
+		eventName,
+		inputPrNumber: getGithubInput("pr-number"),
+		inputHeadSha: getGithubInput("head-sha"),
+		payloadPullRequest: pullRequest,
+		sha
+	});
 	const reportDir = getGithubInput("report-directory") || node_path.posix.join(process.cwd(), "allure-report");
 	const remoteHref = getGithubInput("remote-href") || void 0;
 	const enabledSections = parseSummarySections(getGithubInput("sections"));
@@ -29460,7 +29485,7 @@ const run = async () => {
 	const debugOptionalFileError = debug ? (message) => info(`[debug] ${message}`) : void 0;
 	let testResultRegistry;
 	let reportArtifacts = [];
-	if (isPullRequest && pullRequest) {
+	if (isPullRequest) {
 		testResultRegistry = enabledSections.length || qualityGateFailed || summaryFilesContent.length ? await readTestResultRegistry(testResultsFile, { onError: debugOptionalFileError }) : void 0;
 		reportArtifacts = summaryFilesContent.length ? await readReportArtifacts(artifactsFile, { onError: debugOptionalFileError }) : [];
 	}
@@ -29474,6 +29499,7 @@ const run = async () => {
 		eventName,
 		headSha,
 		isPullRequest,
+		issueNumber,
 		qualityGateFile,
 		qualityGateFileExists,
 		qualityGateParseError,
@@ -29513,11 +29539,11 @@ const run = async () => {
 		});
 		if (debug) info(`[debug] Created check "${checkRun.name}": id=${response?.data?.id ?? "unknown"}, htmlUrl=${response?.data?.html_url ?? "not provided"}`);
 	}));
-	if (!isPullRequest || !pullRequest) {
+	if (issueNumber === void 0) {
 		info("Not a pull request event, skipping comments");
 		return;
 	}
-	const issue_number = pullRequest.number;
+	const issue_number = issueNumber;
 	const { data: existingComments } = await octokit.rest.issues.listComments({
 		owner: repo.owner,
 		repo: repo.repo,
