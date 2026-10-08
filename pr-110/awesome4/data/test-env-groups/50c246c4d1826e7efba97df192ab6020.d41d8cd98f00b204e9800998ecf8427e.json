@@ -1,0 +1,1 @@
+{"id":"50c246c4d1826e7efba97df192ab6020.d41d8cd98f00b204e9800998ecf8427e","fullName":"allure-action:test/spec/utils.test.ts#utils generateSummaryMarkdownTable should handle negative or zero duration","name":"should handle negative or zero duration","status":"passed","testResultsByEnv":{"chrome-ubuntu":"75ce8d3fb1d5b6660cf1760fac7137a1"}}
