@@ -60,7 +60,7 @@
     "@types/lodash.chunk": "^4",
     "@types/node": "^26.6.3",
     "@vitest/runner": "^4.1.11",
-    "@vitest/snapshot": "^5.0.1",
+    "@vitest/snapshot": "^5.0.3",
     "allure": "^3.19.1",
     "allure-vitest": "^3.13.0",
     "lefthook": "^2.1.12",
