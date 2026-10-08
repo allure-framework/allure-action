@@ -104,7 +104,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/ci@npm:3.19.1, @allurereport/ci@npm:^3.19.1":
+"@allurereport/ci@npm:3.19.1":
   version: 3.19.1
   resolution: "@allurereport/ci@npm:3.19.1"
   dependencies:
@@ -113,6 +113,18 @@ __metadata:
     axios: "npm:^1.20.0"
     glob: "npm:^13.0.6"
   checksum: 10/3e26952eef4ff8e4eb214db13fa389e39bdc257e702064d0246105e3c80d9e2da4e4145b5e192b5b74039237cea5b88aa803c7674c600849a2286e00d2594cbb
+  languageName: node
+  linkType: hard
+
+"@allurereport/ci@npm:^3.20.0":
+  version: 3.20.0
+  resolution: "@allurereport/ci@npm:3.20.0"
+  dependencies:
+    "@allurereport/core-api": "npm:3.20.0"
+    "@allurereport/plugin-api": "npm:3.20.0"
+    axios: "npm:^1.20.0"
+    glob: "npm:^13.0.6"
+  checksum: 10/774aac8a00c768c437bad4522010ee216540f40c653eb676afa2e10d6513eace8d3c4675449508413accf116b99986d4546ebda40b9a55bf2940a13466a181b9
   languageName: node
   linkType: hard
 
@@ -131,6 +143,15 @@ __metadata:
   dependencies:
     d3-shape: "npm:^3.2.0"
   checksum: 10/439a3a9b9400542ba4bd31015ad3f45916e822057b2df83d861c3df94472820f1bea42e465a6a5b9a270bed7ec81923a43c927e71a6a252fdb5550ef7f98d43b
+  languageName: node
+  linkType: hard
+
+"@allurereport/core-api@npm:3.20.0":
+  version: 3.20.0
+  resolution: "@allurereport/core-api@npm:3.20.0"
+  dependencies:
+    d3-shape: "npm:^3.2.0"
+  checksum: 10/c953eb5e48d0d019e438ceb9d433beb245bc8ebf872ae26d2399a751c6ff160d1d02be4891912167b7555d5d8bd8b5276fc8799c9e0b96b41ff352917a35acee
   languageName: node
   linkType: hard
 
@@ -217,6 +238,16 @@ __metadata:
     "@allurereport/core-api": "npm:3.19.1"
     tar-stream: "npm:3.1.7"
   checksum: 10/8c4db09fc41f22563a5ec3fbd9392477a8a1b5e12134daf4da097537038b04157704b30498a24e4a4e7ba2c1abca8954675d71109f096c5635be5672a7ab3adc
+  languageName: node
+  linkType: hard
+
+"@allurereport/plugin-api@npm:3.20.0":
+  version: 3.20.0
+  resolution: "@allurereport/plugin-api@npm:3.20.0"
+  dependencies:
+    "@allurereport/core-api": "npm:3.20.0"
+    tar-stream: "npm:3.1.7"
+  checksum: 10/9d4751939ea7361066485d7a9b3b3c867c99d3a35a49568c7b6929a0b2d9ab49a4c62f51dce6b540f86083a6dd01dfb672a1ef0c42cd53e56f4c439a86ec5c6e
   languageName: node
   linkType: hard
 
@@ -1571,7 +1602,7 @@ __metadata:
     "@actions/github": "npm:^9.1.1"
     "@actions/glob": "npm:^0.7.0"
     "@actions/io": "npm:^3.0.2"
-    "@allurereport/ci": "npm:^3.19.1"
+    "@allurereport/ci": "npm:^3.20.0"
     "@allurereport/core-api": "npm:^3.19.1"
     "@allurereport/plugin-api": "npm:^3.19.1"
     "@allurereport/plugin-awesome": "npm:^3.19.1"
