@@ -61,7 +61,7 @@
     "@types/node": "^26.6.3",
     "@vitest/runner": "^4.1.11",
     "@vitest/snapshot": "^5.0.1",
-    "allure": "^3.19.1",
+    "allure": "^3.20.0",
     "allure-vitest": "^3.13.0",
     "lefthook": "^2.1.12",
     "npm-run-all2": "^9.0.3",
