@@ -1296,12 +1296,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/pretty-format@npm:5.0.1":
-  version: 5.0.1
-  resolution: "@vitest/pretty-format@npm:5.0.1"
+"@vitest/pretty-format@npm:5.0.3":
+  version: 5.0.3
+  resolution: "@vitest/pretty-format@npm:5.0.3"
   dependencies:
     tinyrainbow: "npm:^3.1.1"
-  checksum: 10/d392e7e2ac5688e3ec3fe676d35c8dd224077022236df25fcb7d4c265fa8064aafcbb5312527774ce10c326f16b05c668149575b3e49e8323784aac51e530998
+  checksum: 10/61f8d6ca556f61e7a9616c08b8571a8c81dad05f726babd57f79f3bb21b9b8348bacf2995f3ddf640def0519726e6a8b3f7d53ab91b159be99bb38eea012fa24
   languageName: node
   linkType: hard
 
@@ -1315,15 +1315,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/snapshot@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "@vitest/snapshot@npm:5.0.1"
+"@vitest/snapshot@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "@vitest/snapshot@npm:5.0.3"
   dependencies:
-    "@vitest/pretty-format": "npm:5.0.1"
-    "@vitest/utils": "npm:5.0.1"
+    "@vitest/pretty-format": "npm:5.0.3"
+    "@vitest/utils": "npm:5.0.3"
     magic-string: "npm:^1.2.3"
     pathe: "npm:^2.0.3"
-  checksum: 10/98552f843ef24c651496e9d366fc8edf8609706b3d2e4ade810a745e37129ee2e282272994df6ab45470e0b045e0e8af52ac2c1954bb932f63c68a95559d2357
+  checksum: 10/d99629441df0e01ca062edb3089bb4eb1f34084f416dc12b988904eba1e30fac26d2fde2e18e8190f95e8d7eb211587f67c43e6609821d71917600c21a6e00a4
   languageName: node
   linkType: hard
 
@@ -1345,14 +1345,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/utils@npm:5.0.1":
-  version: 5.0.1
-  resolution: "@vitest/utils@npm:5.0.1"
+"@vitest/utils@npm:5.0.3":
+  version: 5.0.3
+  resolution: "@vitest/utils@npm:5.0.3"
   dependencies:
-    "@vitest/pretty-format": "npm:5.0.1"
+    "@vitest/pretty-format": "npm:5.0.3"
     convert-source-map: "npm:^2.0.0"
     tinyrainbow: "npm:^3.1.1"
-  checksum: 10/e5cdd65ecb3311d62cb9cb27890914706590ea01b97e10a6a0bdd1456bdf226f88b3827fc46dfb65b98d143802645dca432a82293ce0f031ae3b4cafe2d5db8f
+  checksum: 10/897654af10a4511921f843968a5510224af865cda943183defeab9e1bee11e5ef532aa617bc559cfceebb08a1cfb9a3145efaace0686861e621b14d0238dd8e7
   languageName: node
   linkType: hard
 
@@ -1580,7 +1580,7 @@ __metadata:
     "@types/lodash.chunk": "npm:^4"
     "@types/node": "npm:^26.6.3"
     "@vitest/runner": "npm:^4.1.11"
-    "@vitest/snapshot": "npm:^5.0.1"
+    "@vitest/snapshot": "npm:^5.0.3"
     allure: "npm:^3.19.1"
     allure-vitest: "npm:^3.13.0"
     d3-shape: "npm:^3.2.0"
