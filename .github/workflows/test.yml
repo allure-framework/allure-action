@@ -99,6 +99,7 @@ jobs:
           done
 
       - name: Publish real tests to Allure Service and TestOps
+        id: real-report
         if: always() && steps.preview-dumps.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         run: ALLURE_REAL_REPORT=1 yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --output=./out/allure-real-report
 
@@ -132,8 +133,39 @@ jobs:
           }
           NODE
 
-      - name: Run Allure Action against demo reports
-        if: always() && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      - name: Add real report links to notification
+        id: notification-reports
+        if: always() && steps.real-report.outcome == 'success' && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success'
+        run: |
+          for plugin in awesome1 testops
+          do
+            source="./out/allure-real-report/$plugin/summary.json"
+            destination="./out/allure-report/real/$plugin"
+
+            if [ ! -s "$source" ]; then
+              echo "::error::Expected published real report summary was not created: $source"
+              exit 1
+            fi
+
+            mkdir -p "$destination"
+            cp "$source" "$destination/summary.json"
+          done
+
+          node --input-type=module <<'NODE'
+          import { readFile } from "node:fs/promises";
+
+          for (const plugin of ["awesome1", "testops"]) {
+            const summaryFile = `./out/allure-report/real/${plugin}/summary.json`;
+            const summary = JSON.parse(await readFile(summaryFile, "utf-8"));
+
+            if (typeof summary.remoteHref !== "string" || !summary.remoteHref) {
+              throw new Error(`Expected published real report URL in ${summaryFile}`);
+            }
+          }
+          NODE
+
+      - name: Run Allure Action against published reports
+        if: always() && steps.notification-reports.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./
         with:
           report-directory: "./out/allure-report"
