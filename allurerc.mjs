@@ -1,10 +1,17 @@
 import { defineConfig } from "allure";
 import { env } from "node:process";
 
-const { ALLURE_PREVIEW_DUMP, ALLURE_PREVIEW_REPORT_VARIANTS, ALLURE_SERVICE_ACCESS_TOKEN } = env;
+const {
+  ALLURE_PREVIEW_DUMP,
+  ALLURE_PREVIEW_REPORT_VARIANTS,
+  ALLURE_REAL_TESTS_ENVIRONMENT,
+  ALLURE_REAL_REPORT,
+  ALLURE_SERVICE_ACCESS_TOKEN,
+} = env;
 const isPreviewDump = Boolean(ALLURE_PREVIEW_DUMP);
 const isPreviewReportVariants = Boolean(ALLURE_PREVIEW_REPORT_VARIANTS);
-const isPreviewLocalOnly = isPreviewDump || isPreviewReportVariants;
+const isRealReport = Boolean(ALLURE_REAL_REPORT);
+const realTestsEnvironment = ALLURE_REAL_TESTS_ENVIRONMENT || "chrome-ubuntu";
 
 const awesomePlugin = (reportName, singleFile = false) => ({
   import: "@allurereport/plugin-awesome",
@@ -19,9 +26,9 @@ const awesomePlugin = (reportName, singleFile = false) => ({
 
 const previewReportVariants = isPreviewReportVariants
   ? {
-      awesome3: awesomePlugin("Allure Action (failed + broken preview)"),
-      awesome4: awesomePlugin("Allure Action (passed + failed + broken preview)"),
-      awesome5: awesomePlugin("Allure Action (all statuses preview)"),
+      awesome3: awesomePlugin("Allure Action Demo (failed + broken)"),
+      awesome4: awesomePlugin("Allure Action Demo (passed + failed + broken)"),
+      awesome5: awesomePlugin("Allure Action Demo (all statuses)"),
     }
   : {};
 
@@ -30,9 +37,9 @@ const previewReportVariants = isPreviewReportVariants
  */
 const config = {
   output: "./out/allure-report",
-  globalAttachments: isPreviewDump ? [] : ["./test/quality-gate-preview/runtime.properties"],
+  globalAttachments: isPreviewDump || isRealReport ? [] : ["./test/quality-gate-preview/runtime.properties"],
   environments: {
-    "chrome-ubuntu": {
+    [realTestsEnvironment]: {
       name: "Chrome on Ubuntu",
       matcher: () => false,
     },
@@ -46,22 +53,30 @@ const config = {
     },
   },
   plugins: {
-    awesome1: awesomePlugin(isPreviewReportVariants ? "Allure Action (passed only preview)" : "Allure Action"),
-    awesome2: awesomePlugin(
-      isPreviewReportVariants ? "Allure Action (passed + skipped preview)" : "Allure Action (single mode)",
-      true,
-    ),
-    ...previewReportVariants,
-    log: {
-      options: {
-        groupBy: "none",
-      },
-    },
-    ...(!isPreviewLocalOnly
+    ...(isRealReport
+      ? {
+          awesome1: awesomePlugin("Allure Action Real Tests"),
+        }
+      : {
+          awesome1: awesomePlugin(isPreviewReportVariants ? "Allure Action Demo (passed only)" : "Allure Action"),
+          awesome2: awesomePlugin(
+            isPreviewReportVariants ? "Allure Action Demo (passed + skipped)" : "Allure Action (single mode)",
+            true,
+          ),
+          ...previewReportVariants,
+          log: {
+            options: {
+              groupBy: "none",
+            },
+          },
+        }
+      ),
+    ...(isRealReport
       ? {
           testops: {
             options: {
-              launchName: `Allure Action GitHub actions run (${new Date().toISOString()})`,
+              launchName: `Allure Action Real Tests GitHub actions run (${new Date().toISOString()})`,
+              filter: ({ environment }) => environment === realTestsEnvironment,
             },
           },
         }
@@ -69,7 +84,7 @@ const config = {
   },
 };
 
-if (ALLURE_SERVICE_ACCESS_TOKEN && !isPreviewLocalOnly) {
+if (ALLURE_SERVICE_ACCESS_TOKEN && !isPreviewDump) {
   config.allureService = {
     accessToken: ALLURE_SERVICE_ACCESS_TOKEN,
   };
