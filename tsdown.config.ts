@@ -31,7 +31,13 @@ export default defineConfig({
     build: true,
   },
   deps: {
-    alwaysBundle: [new RegExp("^@actions\\/"), "fast-glob", "d3-shape", "lodash.chunk"],
+    alwaysBundle: [
+      new RegExp("^@actions\\/"),
+      new RegExp("^@allurereport\\/"),
+      "fast-glob",
+      "d3-shape",
+      "lodash.chunk",
+    ],
   },
   clean: true,
   checks: {
