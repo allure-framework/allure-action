@@ -11,10 +11,10 @@ permissions:
   pull-requests: write
   issues: write
   checks: write
-  contents: write
+  contents: read
 
 concurrency:
-  group: pages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -26,17 +26,10 @@ jobs:
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
       ALLURE_ENDPOINT: ${{ secrets.ALLURE_ENDPOINT }}
       ALLURE_PROJECT_ID: ${{ secrets.ALLURE_PROJECT_ID }}
+      ALLURE_LAUNCH_TAGS: "${{ secrets.ALLURE_LAUNCH_TAGS }}, ${{ github.event_name }}"
+      ALLURE_REAL_TESTS_ENVIRONMENT: "chrome-ubuntu"
     steps:
       - uses: actions/checkout@v6
-
-      - name: Compute publish subpath
-        id: path
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "subdir=pr-${{ github.event.number }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "subdir=" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Enable Corepack
         run: corepack enable
@@ -55,7 +48,7 @@ jobs:
       - name: Build TypeScript
         run: yarn build
 
-      - name: Run tests
+      - name: Run real unit tests
         env:
           ALLURE_SERVICE_ACCESS_TOKEN: ""
           ALLURE_TOKEN: ""
@@ -63,10 +56,10 @@ jobs:
           ALLURE_PROJECT_ID: ""
         run: |
           rm -rf ./out/allure-results
-          ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=chrome-ubuntu --dump=./out/allure-results-chrome-ubuntu -- yarn run test:unit
+          ALLURE_PREVIEW_DUMP=1 yarn allure run --environment="$ALLURE_REAL_TESTS_ENVIRONMENT" --dump=./out/allure-results-chrome-ubuntu -- yarn run test:unit
         continue-on-error: true
 
-      - name: Add Firefox environment preview
+      - name: Add Firefox demo environment
         if: always()
         env:
           ALLURE_SERVICE_ACCESS_TOKEN: ""
@@ -78,7 +71,7 @@ jobs:
           ALLURE_PREVIEW_DUMP=1 yarn allure run --environment=firefox-windows --dump=./out/allure-results-firefox-windows -- yarn run test:unit test/spec/action.test.ts -t "should handle quality gate in per-environment record format"
         continue-on-error: true
 
-      - name: Add Safari environment preview
+      - name: Add Safari demo environment
         if: always()
         env:
           ALLURE_SERVICE_ACCESS_TOKEN: ""
@@ -105,22 +98,22 @@ jobs:
             fi
           done
 
-      - name: Build report
+      - name: Publish real tests to Allure Service and TestOps
+        id: real-report
+        if: always() && steps.preview-dumps.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        run: ALLURE_REAL_REPORT=1 yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --output=./out/allure-real-report
+
+      - name: Build and publish demo reports
         id: report
         if: always() && steps.preview-dumps.outcome == 'success'
-        env:
-          ALLURE_SERVICE_ACCESS_TOKEN: ""
-          ALLURE_TOKEN: ""
-          ALLURE_ENDPOINT: ""
-          ALLURE_PROJECT_ID: ""
         run: ALLURE_PREVIEW_REPORT_VARIANTS=1 yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --dump=./out/allure-results-firefox-windows.zip --dump=./out/allure-results-safari-macos.zip
 
-      - name: Build quality gate notification preview
+      - name: Build demo quality gate notification
         id: quality-gate-preview
         if: always() && steps.report.outcome == 'success'
         run: yarn report:quality-gate-preview
 
-      - name: Verify report notification preview
+      - name: Verify demo report notification
         if: always() && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success'
         run: |
           node --input-type=module <<'NODE'
@@ -140,24 +133,42 @@ jobs:
           }
           NODE
 
-      - name: Deploy to GitHub Pages
-        id: deploy
-        if: always() && steps.report.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: peaceiris/actions-gh-pages@v4
-        continue-on-error: true
-        with:
-          github_token: ${{ github.token }}
-          publish_dir: ./out/allure-report
-          publish_branch: gh-pages
-          destination_dir: ${{ steps.path.outputs.subdir }}
-          keep_files: true
+      - name: Add real report links to notification
+        id: notification-reports
+        if: always() && steps.real-report.outcome == 'success' && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success'
+        run: |
+          for plugin in awesome1 testops
+          do
+            source="./out/allure-real-report/$plugin/summary.json"
+            destination="./out/allure-report/real/$plugin"
 
-      - name: Run Allure Action
-        if: always() && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+            if [ ! -s "$source" ]; then
+              echo "::error::Expected published real report summary was not created: $source"
+              exit 1
+            fi
+
+            mkdir -p "$destination"
+            cp "$source" "$destination/summary.json"
+          done
+
+          node --input-type=module <<'NODE'
+          import { readFile } from "node:fs/promises";
+
+          for (const plugin of ["awesome1", "testops"]) {
+            const summaryFile = `./out/allure-report/real/${plugin}/summary.json`;
+            const summary = JSON.parse(await readFile(summaryFile, "utf-8"));
+
+            if (typeof summary.remoteHref !== "string" || !summary.remoteHref) {
+              throw new Error(`Expected published real report URL in ${summaryFile}`);
+            }
+          }
+          NODE
+
+      - name: Run Allure Action against published reports
+        if: always() && steps.notification-reports.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./
         with:
           report-directory: "./out/allure-report"
-          remote-href: "https://allure-framework.github.io/allure-action/${{ steps.path.outputs.subdir }}"
           github-token: ${{ github.token }}
           debug: "true"
 
