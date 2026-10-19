@@ -9,6 +9,7 @@
   "scripts": {
     "audit": "yarn npm audit --all --recursive",
     "build": "tsdown",
+    "ci:check-dist": "yarn build && node ./scripts/check-dist.mjs",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint": "run-s lint:oxlint lint:oxfmt",
