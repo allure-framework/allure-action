@@ -165,8 +165,36 @@ jobs:
           }
           NODE
 
-      - name: Run Allure Action against published reports
-        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && steps.notification-reports.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+      - name: Upload report for action e2e
+        if: ${{ !cancelled() && steps.notification-reports.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: ./out/allure-report
+          retention-days: 1
+
+  e2e:
+    name: Action e2e
+    needs: test
+    if: ${{ !cancelled() && needs.test.result == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download published reports
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: ./out/allure-report
+
+      - name: Ensure action runs without workspace node_modules
+        run: |
+          if [ -d node_modules ]; then
+            echo "::error::node_modules must not exist in the e2e job so the bundled action is exercised like a published install"
+            exit 1
+          fi
+
+      - name: Run Allure Action
         uses: ./
         with:
           report-directory: "./out/allure-report"
@@ -174,7 +202,7 @@ jobs:
           debug: "true"
 
       - name: Keep quality gate preview non-blocking
-        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v8
         with:
           script: |
