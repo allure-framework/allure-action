@@ -20,7 +20,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Unit tests
+    name: Quality checks
     env:
       ALLURE_SERVICE_ACCESS_TOKEN: ${{ secrets.ALLURE_SERVICE_ACCESS_TOKEN }}
       ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
@@ -45,8 +45,9 @@ jobs:
       - name: Lint and format check
         run: yarn lint
 
-      - name: Build TypeScript
-        run: yarn build
+      - name: Check committed dist/
+        id: check-dist
+        run: yarn ci:check-dist
 
       - name: Run real unit tests
         env:
@@ -60,7 +61,7 @@ jobs:
         continue-on-error: true
 
       - name: Add Firefox demo environment
-        if: always()
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' }}
         env:
           ALLURE_SERVICE_ACCESS_TOKEN: ""
           ALLURE_TOKEN: ""
@@ -72,7 +73,7 @@ jobs:
         continue-on-error: true
 
       - name: Add Safari demo environment
-        if: always()
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' }}
         env:
           ALLURE_SERVICE_ACCESS_TOKEN: ""
           ALLURE_TOKEN: ""
@@ -85,7 +86,7 @@ jobs:
 
       - name: Verify preview dumps
         id: preview-dumps
-        if: always()
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' }}
         run: |
           for dump in \
             ./out/allure-results-chrome-ubuntu.zip \
@@ -100,21 +101,21 @@ jobs:
 
       - name: Publish real tests to Allure Service and TestOps
         id: real-report
-        if: always() && steps.preview-dumps.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && steps.preview-dumps.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         run: ALLURE_REAL_REPORT=1 yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --output=./out/allure-real-report
 
       - name: Build and publish demo reports
         id: report
-        if: always() && steps.preview-dumps.outcome == 'success'
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && steps.preview-dumps.outcome == 'success' }}
         run: ALLURE_PREVIEW_REPORT_VARIANTS=1 yarn allure generate --dump=./out/allure-results-chrome-ubuntu.zip --dump=./out/allure-results-firefox-windows.zip --dump=./out/allure-results-safari-macos.zip
 
       - name: Build demo quality gate notification
         id: quality-gate-preview
-        if: always() && steps.report.outcome == 'success'
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && steps.report.outcome == 'success' }}
         run: yarn report:quality-gate-preview
 
       - name: Verify demo report notification
-        if: always() && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success'
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success' }}
         run: |
           node --input-type=module <<'NODE'
           import fg from "fast-glob";
@@ -135,7 +136,7 @@ jobs:
 
       - name: Add real report links to notification
         id: notification-reports
-        if: always() && steps.real-report.outcome == 'success' && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success'
+        if: ${{ !cancelled() && steps.check-dist.outcome == 'success' && steps.real-report.outcome == 'success' && steps.report.outcome == 'success' && steps.quality-gate-preview.outcome == 'success' }}
         run: |
           for plugin in awesome1 testops
           do
@@ -164,8 +165,36 @@ jobs:
           }
           NODE
 
-      - name: Run Allure Action against published reports
-        if: always() && steps.notification-reports.outcome == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      - name: Upload report for action e2e
+        if: ${{ !cancelled() && steps.notification-reports.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: ./out/allure-report
+          retention-days: 1
+
+  e2e:
+    name: Action e2e
+    needs: test
+    if: ${{ !cancelled() && needs.test.result == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download published reports
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: ./out/allure-report
+
+      - name: Ensure action runs without workspace node_modules
+        run: |
+          if [ -d node_modules ]; then
+            echo "::error::node_modules must not exist in the e2e job so the bundled action is exercised like a published install"
+            exit 1
+          fi
+
+      - name: Run Allure Action
         uses: ./
         with:
           report-directory: "./out/allure-report"
@@ -173,7 +202,7 @@ jobs:
           debug: "true"
 
       - name: Keep quality gate preview non-blocking
-        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v8
         with:
           script: |
