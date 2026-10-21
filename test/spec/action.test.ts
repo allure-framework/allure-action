@@ -946,6 +946,41 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
 
+    it.each([undefined, "", "https://reports.example.com/published/"])(
+      "should only use the published remoteHref (%s) for report links",
+      async (remoteHref) => {
+        (fg as unknown as Mock).mockResolvedValue(["test/fixtures/action/awesome/summary.json"]);
+        (fs.readFile as unknown as Mock).mockResolvedValueOnce(
+          JSON.stringify({
+            name: "Awesome",
+            pluginId: "awesome",
+            href: "awesome/",
+            remoteHref,
+            stats: { passed: 1, failed: 0, broken: 0, skipped: 0, unknown: 0 },
+            duration: 100,
+            meta: { withTestResultsLinks: true },
+            newTests: [{ id: "test-1", name: "New test", status: "passed", duration: 100 }],
+            flakyTests: [{ id: "test-1", name: "New test", status: "passed", duration: 100 }],
+            retryTests: [{ id: "test-1", name: "New test", status: "passed", duration: 100 }],
+          }),
+        );
+        (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+        await run();
+
+        const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+
+        expect(body).toContain("All tests");
+        expect(body).not.toContain('href="awesome/');
+
+        if (remoteHref) {
+          expect(body).toContain(`<a href="${remoteHref}">Awesome</a>`);
+        } else {
+          expect(body).not.toContain("<a ");
+        }
+      },
+    );
+
     it("should handle test arrays with large number of tests requiring chunking", async () => {
       const manyTests = Array.from({ length: 250 }, (_, i) => ({
         id: `test-${i}`,
@@ -1032,6 +1067,8 @@ describe("action", () => {
             path: "test/fixtures/action/smoke/summary.json",
             content: JSON.stringify({
               name: "Smoke",
+              href: "smoke/",
+              remoteHref: "https://service.example.com/old-smoke/",
               stats: {
                 passed: 4,
                 failed: 0,
@@ -1049,6 +1086,7 @@ describe("action", () => {
             path: "test/fixtures/action/e2e/chrome/summary.json",
             content: JSON.stringify({
               name: "E2E Chrome",
+              href: "e2e/chrome/",
               stats: {
                 passed: 3,
                 failed: 1,
