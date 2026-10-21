@@ -339,6 +339,8 @@ const run = async (): Promise<void> => {
 
       return {
         ...summary,
+        // Local report paths are relative to the generated report, not the GitHub comment.
+        href: undefined,
         name: getSummaryName(summary),
         stats: getSummaryStats(summary),
         status: getSummaryStatus(summary),

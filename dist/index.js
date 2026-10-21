@@ -29687,6 +29687,7 @@ const run = async () => {
 		const summary = JSON.parse(content);
 		return {
 			...summary,
+			href: void 0,
 			name: getSummaryName(summary),
 			stats: getSummaryStats(summary),
 			status: getSummaryStatus(summary),

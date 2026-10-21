@@ -138,6 +138,8 @@ When enabled:
 
 ### Remote reports
 
+Report links use the published `remoteHref` from the report summary, or the explicit `remote-href` input when provided. Without either URL, the action shows statistics without report links; local report paths such as `awesome/` cannot be opened from a GitHub comment.
+
 If you want to be able to open remote reports automatically hosted on Allure Service, provide `allureService` configuration to the `allurerc.js` configuration file:
 
 ```diff
