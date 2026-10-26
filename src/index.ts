@@ -127,7 +127,7 @@ const getFiniteNumber = (value: unknown, fallback = 0): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
 const getSummaryStats = (summary: CompatiblePluginSummary): SummaryStats => {
-  const rawStats = isRecord(summary.stats) ? summary.stats : {};
+  const rawStats: Record<string, unknown> = isRecord(summary.stats) ? summary.stats : {};
   const stats = {
     ...rawStats,
     failed: getFiniteNumber(rawStats.failed),
@@ -221,8 +221,8 @@ const resolvePullRequestContext = (params: {
       sha?: string;
     };
   };
-  sha?: string;
-}): { headSha?: string; issueNumber?: number; isPullRequest: boolean } => {
+  sha: string;
+}): { headSha: string; issueNumber?: number; isPullRequest: boolean } => {
   const { eventName, inputPrNumber, inputHeadSha, payloadPullRequest, sha } = params;
   const isPullRequestEvent = eventName === "pull_request";
   const issueNumber = isPullRequestEvent ? payloadPullRequest?.number : normalizePullRequestNumberInput(inputPrNumber);
@@ -387,7 +387,12 @@ const run = async (): Promise<void> => {
   const reportContext = createReportContextFromData({
     artifacts: reportArtifacts,
     qualityGate: qualityGateResults,
-    reports: summaryFilesContent,
+    reports: summaryFilesContent.map((summary) => ({
+      ...summary,
+      newTests: summary.newTests?.map((test) => (typeof test === "string" ? test : test.id)),
+      flakyTests: summary.flakyTests?.map((test) => (typeof test === "string" ? test : test.id)),
+      retryTests: summary.retryTests?.map((test) => (typeof test === "string" ? test : test.id)),
+    })),
     testResults: testResultRegistry,
   });
 
