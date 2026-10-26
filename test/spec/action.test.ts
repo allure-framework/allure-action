@@ -166,6 +166,114 @@ describe("action", () => {
       expect(octokitMock.rest.issues.createComment.mock.calls[0][0].body).toMatchSnapshot();
     });
 
+    it.each([false, true])(
+      "should preserve generation-time CI context across reports (different runs: %s)",
+      async (differentRuns) => {
+        const summaries = ["Awesome", "Classic"].map((plugin, index) => ({
+          name: plugin,
+          plugin,
+          stats: { passed: 1 },
+          remoteHref: `https://reports.example.com/${plugin}`,
+          commitSha: "1234567890abcdef",
+          commitHref: "https://github.com/source/project/commit/1234567890abcdef",
+          ciRunName: "Generate report",
+          ciRunHref: `https://github.com/source/project/actions/runs/${differentRuns ? index + 1 : 1}`,
+        }));
+
+        (fg as unknown as Mock).mockResolvedValue(summaries.map(({ plugin }) => `${plugin}/summary.json`));
+        summaries.forEach((summary) => (fs.readFile as unknown as Mock).mockResolvedValueOnce(JSON.stringify(summary)));
+        (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+        await run();
+
+        const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+
+        expect(body).toContain('<a href="https://github.com/source/project/commit/1234567890abcdef">12345678</a>');
+        expect(body).toContain('<a href="https://github.com/source/project/actions/runs/1">Generate report</a>');
+        expect(body).not.toContain("abc123");
+        if (differentRuns) {
+          expect(body).toContain('<a href="https://github.com/source/project/actions/runs/2">Generate report</a>');
+          expect(body).not.toContain("**Context:**");
+        } else {
+          expect(body).toContain("**Context:**");
+          expect(body.match(/>12345678<\/a>/g)).toHaveLength(1);
+        }
+      },
+    );
+
+    it.each([false, true, undefined])(
+      "should update publication warnings from summary status %s",
+      async (published) => {
+        (fg as unknown as Mock).mockResolvedValue(["awesome/summary.json"]);
+        (fs.readFile as unknown as Mock).mockResolvedValueOnce(
+          JSON.stringify({
+            name: "Awesome",
+            stats: { passed: 1 },
+            published,
+          }),
+        );
+        (getGithubInput as unknown as Mock).mockImplementation(
+          (input: string) =>
+            ({
+              "report-directory": "test/fixtures/action",
+              "github-token": "token",
+              "remote-href": "https://reports.example.com",
+            })[input] ?? "",
+        );
+        (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({
+          data: [
+            {
+              id: 42,
+              body: "<!-- allure-report-summary -->\nOld publication warning",
+            },
+          ],
+        });
+
+        await run();
+
+        expect(octokitMock.rest.issues.createComment).not.toHaveBeenCalled();
+        const { body, comment_id } = octokitMock.rest.issues.updateComment.mock.calls[0][0];
+
+        expect(comment_id).toBe(42);
+        expect(body).toContain("<!-- allure-report-summary -->");
+        expect(body).toContain("| All tests |");
+        expect(body).toContain('<a href="https://reports.example.com">Awesome</a>');
+        expect(body.includes("Expected reports were not published")).toBe(published === false);
+        if (published === false) {
+          expect(body).toContain("- <code>Awesome</code>");
+        }
+        expect(octokitMock.rest.checks.create).not.toHaveBeenCalled();
+      },
+    );
+
+    it("should aggregate mixed legacy and ID-based flags by test ID across reports and environments", async () => {
+      const test = { id: "test-1", name: "Shared test", status: "passed", duration: 100, environment: "chrome" };
+      const registryFile = "test/fixtures/action/test-results.json";
+      const summaries = [test, test.id].map((reference, index) => ({
+        name: `Report ${index}`,
+        stats: { passed: 1 },
+        newTests: [reference],
+        flakyTests: [reference],
+        retryTests: [reference],
+      }));
+
+      (fg as unknown as Mock).mockResolvedValue(["report1/summary.json", "report2/summary.json"]);
+      (existsSync as unknown as Mock).mockImplementation((file: string) => file === registryFile);
+      (fs.readFile as unknown as Mock)
+        .mockResolvedValueOnce(JSON.stringify(summaries[0]))
+        .mockResolvedValueOnce(JSON.stringify(summaries[1]))
+        .mockResolvedValueOnce(JSON.stringify({ byId: { [test.id]: test } }));
+      (octokitMock.rest.issues.listComments as unknown as Mock).mockResolvedValue({ data: [] });
+
+      await run();
+
+      const { body } = octokitMock.rest.issues.createComment.mock.calls[0][0];
+      const rows = body.split("\n");
+
+      expect(rows.find((row: string) => row.includes("| All tests |"))).toMatch(/\| 1 \| 1 \| 1 \|$/);
+      expect(rows.find((row: string) => row.includes("| chrome |"))).toMatch(/\| 1 \| 1 \| 1 \|$/);
+    });
+
     it("should tolerate report summary files without a name", async () => {
       const fixtures = {
         summaryFiles: [

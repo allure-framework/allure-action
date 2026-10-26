@@ -218,7 +218,7 @@ const resolveQualityGateTestResults = async (
     }),
   );
 
-  return resolved.filter((testResult): testResult is ResolvedQualityGateTestResult => Boolean(testResult));
+  return resolved.filter((testResult) => testResult !== undefined);
 };
 
 const formatQualityGateTestResult = (test: ResolvedQualityGateTestResult): string => {
@@ -319,7 +319,7 @@ export const generateQualityGateComment = async (
     return fullBody;
   }
 
-  const truncatedEntries = entries.map((entry) => ({ ...entry, tests: [] }));
+  const truncatedEntries: QualityGateCommentEntry[] = entries.map((entry) => ({ ...entry, tests: [] }));
 
   entries.forEach((entry, entryIndex) => {
     entry.tests.forEach((test) => {

@@ -19853,6 +19853,117 @@ const createReportContextFromData = (data) => {
 	};
 };
 //#endregion
+//#region node_modules/@allurereport/core-api/dist/constants.js
+const unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
+const successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
+const includedInSuccessRate = /* @__PURE__ */ new Set([...unsuccessfulStatuses, ...successfulStatuses]);
+const filterByStatus = (statuses) => {
+	const set = new Set(statuses);
+	return (t) => set.has(t.status);
+};
+filterByStatus(successfulStatuses);
+filterByStatus(unsuccessfulStatuses);
+filterByStatus(includedInSuccessRate);
+//#endregion
+//#region node_modules/@allurereport/core-api/dist/ci.js
+var CiType;
+(function(CiType) {
+	CiType["Amazon"] = "amazon";
+	CiType["Azure"] = "azure";
+	CiType["Bitbucket"] = "bitbucket";
+	CiType["Circle"] = "circle";
+	CiType["Drone"] = "drone";
+	CiType["Github"] = "github";
+	CiType["Gitlab"] = "gitlab";
+	CiType["Jenkins"] = "jenkins";
+	CiType["Local"] = "local";
+})(CiType || (CiType = {}));
+//#endregion
+//#region node_modules/@allurereport/core-api/dist/gitFlow.js
+var GitProvider;
+(function(GitProvider) {
+	GitProvider["Github"] = "github";
+	GitProvider["Gitlab"] = "gitlab";
+	GitProvider["Bitbucket"] = "bitbucket";
+	GitProvider["Other"] = "other";
+})(GitProvider || (GitProvider = {}));
+//#endregion
+//#region node_modules/@allurereport/core-api/dist/categories.js
+const DEFAULT_ERROR_CATEGORY_IDS = {
+	productErrors: "_product_errors_default_category",
+	testErrors: "_test_errors_default_category"
+};
+DEFAULT_ERROR_CATEGORY_IDS.productErrors, DEFAULT_ERROR_CATEGORY_IDS.testErrors;
+//#endregion
+//#region node_modules/@allurereport/core-api/dist/utils/time.js
+const times = [
+	{
+		suffix: "d",
+		accessor: (duration) => Math.floor(duration / 864e5)
+	},
+	{
+		suffix: "h",
+		accessor: (duration) => Math.floor(duration / 36e5) % 24
+	},
+	{
+		suffix: "m",
+		accessor: (duration) => Math.floor(duration / 6e4) % 60
+	},
+	{
+		suffix: "s",
+		accessor: (duration) => Math.floor(duration / 1e3) % 60
+	},
+	{
+		suffix: "ms",
+		accessor: (duration) => Math.round(duration) % 1e3
+	}
+];
+const formatDuration$1 = (duration) => {
+	if (duration === void 0) return "unknown";
+	if (duration < .5) return "0s";
+	const res = [];
+	for (const { accessor, suffix } of times) {
+		const value = accessor(duration);
+		if (res.length === 0 && !value) continue;
+		res.push(value + suffix);
+		if (res.length > 1) break;
+	}
+	return res.join(" ");
+};
+new TextEncoder();
+//#endregion
+//#region node_modules/@allurereport/ci/dist/helpers/reportCiContext.js
+const browserUrl = (value) => {
+	if (!value) return;
+	try {
+		const url = new URL(value);
+		if (url.protocol !== "https:" && url.protocol !== "http:") return;
+		if (url.username || url.password) {
+			url.username = "";
+			url.password = "";
+			return url.toString();
+		}
+		return value;
+	} catch {
+		return;
+	}
+};
+const reportCiContextLinks = (report) => {
+	const links = [];
+	const sha = report.commitSha;
+	const shaUrl = browserUrl(report.commitHref);
+	const runUrl = browserUrl(report.ciRunHref);
+	if (sha && shaUrl) links.push({
+		label: sha.slice(0, 8),
+		href: shaUrl
+	});
+	if (runUrl) links.push({
+		label: report.ciRunName || "CI run",
+		href: runUrl
+	});
+	return links;
+};
+//#endregion
 //#region node_modules/@allurereport/ci/dist/reportMarkdown.js
 const STATUS_ORDER = [
 	"passed",
@@ -19895,7 +20006,7 @@ const statusPie = (stats) => {
 	});
 	return `<img src="${STATUS_PIE_BASE_URL}?${params.toString()}" width="28px" height="28px" />&nbsp;&nbsp;&nbsp;&nbsp;`;
 };
-const formatDuration$1 = (duration) => {
+const formatDuration = (duration) => {
 	if (!Number.isFinite(duration) || duration <= 0) return "0ms";
 	if (duration < 1e3) return `${Math.round(duration)}ms`;
 	const totalSeconds = Math.round(duration / 1e3);
@@ -19948,7 +20059,7 @@ const renderTable = (rows, includeResolutions, options) => {
 	const body = rows.map((row) => [
 		statusPie(row.stats),
 		tableCell(row.name),
-		tableCell(formatDuration$1(row.duration)),
+		tableCell(formatDuration(row.duration)),
 		formatStats(row.stats),
 		...includeResolutions ? [formatResolutions(row.resolutions)] : [],
 		formatFlag("new", row, options),
@@ -19985,7 +20096,8 @@ const toReportLink = (report) => {
 	return href ? {
 		label: reportLabel(report),
 		href,
-		kind: reportLinkKind(report)
+		kind: reportLinkKind(report),
+		context: reportCiContextLinks(report)
 	} : void 0;
 };
 const sortLinks = (links) => links.toSorted((left, right) => left.kind.localeCompare(right.kind) || left.label.localeCompare(right.label));
@@ -19997,7 +20109,19 @@ const renderReportLinks = (reports) => {
 	const links = sortLinks(reports.map(toReportLink).filter((item) => item !== void 0));
 	const reportLinks = links.filter(({ kind }) => kind === "report");
 	const testOpsLinks = links.filter(({ kind }) => kind === "testops");
-	return [renderLinks("Reports", reportLinks), renderLinks("Allure TestOps", testOpsLinks)].filter((line) => line !== void 0);
+	const context = reportLinks[0]?.context ?? [];
+	if (reportLinks.every(({ context: current }) => current.length === context.length && current.every((item, index) => item.label === context[index].label && item.href === context[index].href))) return [
+		renderLinks("Reports", reportLinks),
+		renderLinks("Context", context),
+		renderLinks("Allure TestOps", testOpsLinks)
+	].filter((line) => line !== void 0);
+	return [["**Reports:**", ...reportLinks.map(({ label, href, context }) => {
+		const links = [{
+			label: "Report",
+			href
+		}, ...context];
+		return `* ${escapeHtml$1(label)} - ${links.map((item) => link(item.label, item.href)).join(", ")}`;
+	})].join("\n"), renderLinks("Allure TestOps", testOpsLinks)].filter((line) => line !== void 0);
 };
 const pluginSummaryToStatusStats = (report) => ({
 	failed: report.stats.failed ?? 0,
@@ -20051,6 +20175,10 @@ const renderArtifacts = (artifacts) => {
 		"</details>"
 	].join("\n");
 };
+const renderPublicationWarnings = (reports) => {
+	const missing = reports.filter((report) => report.published === false);
+	return missing.length ? ["**⚠ Expected reports were not published**", ...missing.map(({ name }) => `- ${inlineCode(name)}`)].join("\n\n") : void 0;
+};
 const renderReportSummaryMarkdown = (context, options = {}) => {
 	const { title = "Allure Report Summary", includeArtifacts = true } = options;
 	const regularReports = context.reports.filter((report) => report.filtered !== true);
@@ -20077,6 +20205,7 @@ const renderReportSummaryMarkdown = (context, options = {}) => {
 	return `${[
 		`# ${escapeHtml$1(title)}`,
 		renderTable(aggregateRows, includeResolutions, renderOptions),
+		renderPublicationWarnings(context.reports),
 		...renderReportLinks(regularReports),
 		renderFilteredReports(filteredReports, renderOptions),
 		includeArtifacts ? renderArtifacts(context.artifacts) : void 0
@@ -29047,85 +29176,6 @@ const deleteCommentsByMarkerPrefix = async (params) => {
 //#region src/path.ts
 const normalizePathForUrl = (value) => value.split(node_path.sep).join("/");
 //#endregion
-//#region node_modules/@allurereport/core-api/dist/constants.js
-const unsuccessfulStatuses = /* @__PURE__ */ new Set(["failed", "broken"]);
-const successfulStatuses = /* @__PURE__ */ new Set(["passed"]);
-const includedInSuccessRate = /* @__PURE__ */ new Set([...unsuccessfulStatuses, ...successfulStatuses]);
-const filterByStatus = (statuses) => {
-	const set = new Set(statuses);
-	return (t) => set.has(t.status);
-};
-filterByStatus(successfulStatuses);
-filterByStatus(unsuccessfulStatuses);
-filterByStatus(includedInSuccessRate);
-//#endregion
-//#region node_modules/@allurereport/core-api/dist/ci.js
-var CiType;
-(function(CiType) {
-	CiType["Amazon"] = "amazon";
-	CiType["Azure"] = "azure";
-	CiType["Bitbucket"] = "bitbucket";
-	CiType["Circle"] = "circle";
-	CiType["Drone"] = "drone";
-	CiType["Github"] = "github";
-	CiType["Gitlab"] = "gitlab";
-	CiType["Jenkins"] = "jenkins";
-	CiType["Local"] = "local";
-})(CiType || (CiType = {}));
-//#endregion
-//#region node_modules/@allurereport/core-api/dist/gitFlow.js
-var GitProvider;
-(function(GitProvider) {
-	GitProvider["Github"] = "github";
-	GitProvider["Gitlab"] = "gitlab";
-	GitProvider["Bitbucket"] = "bitbucket";
-	GitProvider["Other"] = "other";
-})(GitProvider || (GitProvider = {}));
-//#endregion
-//#region node_modules/@allurereport/core-api/dist/categories.js
-const DEFAULT_ERROR_CATEGORY_IDS = {
-	productErrors: "_product_errors_default_category",
-	testErrors: "_test_errors_default_category"
-};
-DEFAULT_ERROR_CATEGORY_IDS.productErrors, DEFAULT_ERROR_CATEGORY_IDS.testErrors;
-//#endregion
-//#region node_modules/@allurereport/core-api/dist/utils/time.js
-const times = [
-	{
-		suffix: "d",
-		accessor: (duration) => Math.floor(duration / 864e5)
-	},
-	{
-		suffix: "h",
-		accessor: (duration) => Math.floor(duration / 36e5) % 24
-	},
-	{
-		suffix: "m",
-		accessor: (duration) => Math.floor(duration / 6e4) % 60
-	},
-	{
-		suffix: "s",
-		accessor: (duration) => Math.floor(duration / 1e3) % 60
-	},
-	{
-		suffix: "ms",
-		accessor: (duration) => Math.round(duration) % 1e3
-	}
-];
-const formatDuration = (duration) => {
-	if (duration === void 0) return "unknown";
-	if (duration < .5) return "0s";
-	const res = [];
-	for (const { accessor, suffix } of times) {
-		const value = accessor(duration);
-		if (res.length === 0 && !value) continue;
-		res.push(value + suffix);
-		if (res.length > 1) break;
-	}
-	return res.join(" ");
-};
-new TextEncoder();
-//#endregion
 //#region src/utils/markdown/table.ts
 const escapeHtml = (value) => {
 	return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
@@ -29145,7 +29195,7 @@ const createReportFilterHref = (href, section) => {
 	return `${baseHref}${baseHref.includes("?") ? "&" : "?"}${REPORT_FILTERS[section]}${hash}`;
 };
 const formatSummaryTest = (test) => {
-	return `- ${`${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`} ${test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name} (${formatDuration(test.duration)})`;
+	return `- ${`${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`} ${test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name} (${formatDuration$1(test.duration)})`;
 };
 //#endregion
 //#region src/quality-gate.ts
@@ -29252,12 +29302,12 @@ const resolveQualityGateTestResults = async (testResultIds, options) => {
 			...merged,
 			remoteHref: createTestRemoteHref(merged.id, options)
 		};
-	}))).filter((testResult) => Boolean(testResult));
+	}))).filter((testResult) => testResult !== void 0);
 };
 const formatQualityGateTestResult = (test) => {
 	const statusText = `${`<img src="https://allurecharts.qameta.workers.dev/dot?type=${test.status}&size=8" />`} ${test.status}`;
 	const testName = test.remoteHref ? createExternalLink(test.remoteHref, test.name) : test.name;
-	const details = [`(${formatDuration(test.duration)})`];
+	const details = [`(${formatDuration$1(test.duration)})`];
 	if (test.environment) details.push(`environment: ${test.environment}`);
 	return `- ${statusText} ${testName} ${details.join(" - ")}`;
 };
@@ -29724,7 +29774,12 @@ const run = async () => {
 	const reportContext = createReportContextFromData({
 		artifacts: reportArtifacts,
 		qualityGate: qualityGateResults,
-		reports: summaryFilesContent,
+		reports: summaryFilesContent.map((summary) => ({
+			...summary,
+			newTests: summary.newTests?.map((test) => typeof test === "string" ? test : test.id),
+			flakyTests: summary.flakyTests?.map((test) => typeof test === "string" ? test : test.id),
+			retryTests: summary.retryTests?.map((test) => typeof test === "string" ? test : test.id)
+		})),
 		testResults: testResultRegistry
 	});
 	if (debug) printDebugInfo({

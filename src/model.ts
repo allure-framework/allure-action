@@ -1,13 +1,13 @@
-import type { PluginSummary, QualityGateValidationResult, SummaryTestResult } from "@allurereport/plugin-api";
+import type { PluginSummary, QualityGateValidationResult, TestResultSummary } from "@allurereport/plugin-api";
 
-export type RemoteSummaryTestResult = SummaryTestResult & {
+export type RemoteSummaryTestResult = TestResultSummary & {
   remoteHref?: string;
 };
 
-export type SummaryTestReference = string | SummaryTestResult;
+export type SummaryTestReference = string | TestResultSummary;
 
 export type TestResultRegistry = {
-  byId: Record<string, SummaryTestResult>;
+  byId: Record<string, TestResultSummary>;
 };
 
 export type ReportArtifact = {
@@ -19,7 +19,7 @@ export type ReportArtifact = {
  * Supports both Allure summary formats during migration to the shared test-result registry.
  * Older reports embed test metadata in each summary collection, while newer reports store IDs
  * that reference entries in the root `test-results.json` file. The installed plugin API types
- * still describe only the embedded-object format.
+ * describe the current ID-based format; embedded objects remain supported for older reports.
  */
 export type CompatiblePluginSummary = Omit<PluginSummary, "newTests" | "flakyTests" | "retryTests"> & {
   newTests?: SummaryTestReference[];
@@ -29,7 +29,7 @@ export type CompatiblePluginSummary = Omit<PluginSummary, "newTests" | "flakyTes
 
 export type QualityGateResultsContent = QualityGateValidationResult[] | Record<string, QualityGateValidationResult[]>;
 
-export type ResolvedQualityGateTestResult = SummaryTestResult & {
+export type ResolvedQualityGateTestResult = TestResultSummary & {
   environment?: string;
   remoteHref?: string;
 };

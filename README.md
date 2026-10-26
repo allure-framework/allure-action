@@ -72,7 +72,16 @@ If everything is set up correctly and required reports data is present, the Acti
 
 ## Configuration
 
-The action utilizes Allure 3 Runtime configuration file (`allurerc.js` or `allurerc.mjs`) and use `output` field as a path, where it should search for the generated reports.
+The action reads generated Allure Report artifacts from `report-directory`. Set this input to the `output` directory configured in your Allure 3 configuration (`allurerc.js` or `allurerc.mjs`).
+
+### Allure 3.22.1 integration
+
+The action uses Allure 3.22.1 summary rendering. Generate reports with Allure 3.22.1 or newer to include both of these features:
+
+- Commit and CI run links captured when the report was generated. Reports from different runs retain their own context, including when a separate workflow posts the comment.
+- An **Expected reports were not published** warning when a summary has `published: false`. This means publication was requested but did not complete. The warning does not change test statistics or GitHub check conclusions, and still appears when `remote-href` supplies a link to a separately hosted report.
+
+Older reports remain supported; context and publication warnings appear only when the generated summaries contain the corresponding metadata. Successful publication and reports without a publication request do not produce a warning.
 
 ### Non-pull request workflows
 
