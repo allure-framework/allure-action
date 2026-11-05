@@ -1687,10 +1687,67 @@ var require_request$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				return false;
 			}
 		}
-		onUpgrade(statusCode, headers, socket) {
+		/**
+		* @param {number|null} statusCode
+		* @param {Buffer[]|null} headers
+		* @param {import('node:stream').Duplex} socket
+		* @param {string} [statusText]
+		*/
+		onUpgrade(statusCode, headers, socket, statusText = "") {
+			this.onFinally();
 			assert$26(!this.aborted);
 			assert$26(!this.completed);
-			return this[kHandler].onUpgrade(statusCode, headers, socket);
+			if (statusCode !== null) this.#publishUpgradeHeaders(statusCode, headers, statusText);
+			const result = this[kHandler].onUpgrade(statusCode, headers, socket);
+			if (!this.aborted) {
+				this.completed = true;
+				if (statusCode !== null) this.#publishUpgradeTrailers();
+			}
+			return result;
+		}
+		/**
+		* @param {number} statusCode
+		* @param {import('node:http2').IncomingHttpHeaders} headers
+		* @param {(headers: import('node:http2').IncomingHttpHeaders) => Buffer[]} parseHeaders
+		* @param {string} [statusText]
+		*/
+		onUpgradeResponse(statusCode, headers, parseHeaders, statusText = "") {
+			assert$26(!this.aborted);
+			assert$26(this.completed);
+			if (channels.headers.hasSubscribers) this.#publishUpgradeHeaders(statusCode, parseHeaders(headers), statusText);
+			this.#publishUpgradeTrailers();
+		}
+		/**
+		* @param {Error} error
+		*/
+		onUpgradeError(error) {
+			assert$26(!this.aborted);
+			assert$26(this.completed);
+			if (channels.error.hasSubscribers) channels.error.publish({
+				request: this,
+				error
+			});
+		}
+		/**
+		* @param {number} statusCode
+		* @param {Buffer[]} headers
+		* @param {string} statusText
+		*/
+		#publishUpgradeHeaders(statusCode, headers, statusText) {
+			if (channels.headers.hasSubscribers) channels.headers.publish({
+				request: this,
+				response: {
+					statusCode,
+					headers,
+					statusText
+				}
+			});
+		}
+		#publishUpgradeTrailers() {
+			if (channels.trailers.hasSubscribers) channels.trailers.publish({
+				request: this,
+				trailers: []
+			});
 		}
 		onComplete(trailers) {
 			this.onFinally();
@@ -1829,6 +1886,7 @@ var require_dispatcher = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 //#endregion
 //#region node_modules/undici/lib/dispatcher/dispatcher-base.js
 var require_dispatcher_base = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const buffer$1 = require("node:buffer");
 	const Dispatcher = require_dispatcher();
 	const { ClientDestroyedError, ClientClosedError, InvalidArgumentError } = require_errors();
 	const { kDestroy, kClose, kClosed, kDestroyed, kDispatch, kInterceptors } = require_symbols$4();
@@ -1836,6 +1894,7 @@ var require_dispatcher_base = /* @__PURE__ */ __commonJSMin(((exports, module) =
 	const kOnClosed = Symbol("onClosed");
 	const kInterceptedDispatch = Symbol("Intercepted Dispatch");
 	const kWebSocketOptions = Symbol("webSocketOptions");
+	const kEventSourceOptions = Symbol("eventSourceOptions");
 	var DispatcherBase = class extends Dispatcher {
 		constructor(opts) {
 			super();
@@ -1844,12 +1903,16 @@ var require_dispatcher_base = /* @__PURE__ */ __commonJSMin(((exports, module) =
 			this[kClosed] = false;
 			this[kOnClosed] = [];
 			this[kWebSocketOptions] = opts?.webSocket ?? {};
+			this[kEventSourceOptions] = opts?.eventSource ?? {};
 		}
 		get webSocketOptions() {
 			return {
 				maxFragments: this[kWebSocketOptions].maxFragments ?? 131072,
 				maxPayloadSize: this[kWebSocketOptions].maxPayloadSize ?? 134217728
 			};
+		}
+		get eventSourceOptions() {
+			return { maxEventSize: this[kEventSourceOptions].maxEventSize ?? buffer$1.kStringMaxLength };
 		}
 		get destroyed() {
 			return this[kDestroyed];
@@ -5455,7 +5518,7 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			if (this.headersSize >= this.headersMaxSize) util.destroy(this.socket, new HeadersOverflowError());
 		}
 		onUpgrade(head) {
-			const { upgrade, client, socket, headers, statusCode } = this;
+			const { upgrade, client, socket, headers, statusCode, statusText } = this;
 			assert$20(upgrade);
 			assert$20(client[kSocket] === socket);
 			assert$20(!socket.destroyed);
@@ -5480,9 +5543,10 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			client[kQueue][client[kRunningIdx]++] = null;
 			client.emit("disconnect", client[kUrl], [client], new InformationalError("upgrade"));
 			try {
-				request.onUpgrade(statusCode, headers, socket);
-			} catch (err) {
-				util.destroy(socket, err);
+				request.onUpgrade(statusCode, headers, socket, statusText);
+			} catch (error) {
+				util.errorRequest(client, request, error);
+				util.destroy(socket, error);
 			}
 			client[kResume]();
 		}
@@ -5635,7 +5699,6 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		socket[kSocketUsed] = false;
 		socket[kParser] = new Parser(client, socket, llhttpInstance);
 		addListener(socket, "error", function(err) {
-			assert$20(err.code !== "ERR_TLS_CERT_ALTNAME_INVALID");
 			const parser = this[kParser];
 			if (err.code === "ECONNRESET" && parser.statusCode && !parser.shouldKeepAlive) {
 				const parserErr = parser.finish();
@@ -5817,9 +5880,16 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 		const socket = client[kSocket];
 		clearIdleSocketValidation(socket);
-		const abort = (err) => {
-			if (request.aborted || request.completed) return;
-			util.errorRequest(client, request, err || new RequestAbortedError());
+		/**
+		* @param {Error} [error]
+		*/
+		const abort = (error) => {
+			if (request.aborted) return;
+			if (request.completed) {
+				if (request.upgrade || request.method === "CONNECT") util.destroy(socket, new InformationalError("aborted"));
+				return;
+			}
+			util.errorRequest(client, request, error || new RequestAbortedError());
 			util.destroy(body);
 			util.destroy(socket, new InformationalError("aborted"));
 		};
@@ -6070,6 +6140,7 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 //#region node_modules/undici/lib/dispatcher/client-h2.js
 var require_client_h2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const assert$19 = require("node:assert");
+	const { errorMonitor } = require("node:events");
 	const { pipeline: pipeline$2 } = require("node:stream");
 	const util = require_util$7();
 	const { RequestContentLengthMismatchError, RequestAbortedError, SocketError, InformationalError } = require_errors();
@@ -6090,6 +6161,14 @@ var require_client_h2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		for (const [name, value] of Object.entries(headers)) if (Array.isArray(value)) for (const subvalue of value) result.push(Buffer.from(name), Buffer.from(subvalue));
 		else result.push(Buffer.from(name), Buffer.from(value));
 		return result;
+	}
+	/**
+	* @param {import('node:http2').IncomingHttpHeaders} headers
+	* @returns {Buffer[]}
+	*/
+	function parseH2ResponseHeaders(headers) {
+		const { [HTTP2_HEADER_STATUS]: _statusCode, ...realHeaders } = headers;
+		return parseH2Headers(realHeaders);
 	}
 	async function connectH2(client, socket) {
 		client[kSocket] = socket;
@@ -6126,7 +6205,6 @@ var require_client_h2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		client[kHTTP2Session] = session;
 		socket[kHTTP2Session] = session;
 		util.addListener(socket, "error", function(err) {
-			assert$19(err.code !== "ERR_TLS_CERT_ALTNAME_INVALID");
 			this[kError] = err;
 			this[kClient][kOnError](err);
 		});
@@ -6180,7 +6258,6 @@ var require_client_h2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 	}
 	function onHttp2SessionError(err) {
-		assert$19(err.code !== "ERR_TLS_CERT_ALTNAME_INVALID");
 		this[kSocket][kError] = err;
 		this[kClient][kOnError](err);
 	}
@@ -6245,12 +6322,19 @@ var require_client_h2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		const { hostname, port } = client[kUrl];
 		headers[HTTP2_HEADER_AUTHORITY] = host || `${hostname}${port ? `:${port}` : ""}`;
 		headers[HTTP2_HEADER_METHOD] = method;
-		const abort = (err) => {
-			if (request.aborted || request.completed) return;
-			err = err || new RequestAbortedError();
-			util.errorRequest(client, request, err);
-			if (stream != null) util.destroy(stream, err);
-			util.destroy(body, err);
+		/**
+		* @param {Error} [error]
+		*/
+		const abort = (error) => {
+			if (request.aborted) return;
+			if (request.completed) {
+				if (method === "CONNECT" && stream != null) util.destroy(stream, error || new RequestAbortedError());
+				return;
+			}
+			error = error || new RequestAbortedError();
+			util.errorRequest(client, request, error);
+			if (stream != null) util.destroy(stream, error);
+			util.destroy(body, error);
 			client[kQueue][client[kRunningIdx]++] = null;
 			client[kResume]();
 		};
@@ -6266,16 +6350,46 @@ var require_client_h2 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				endStream: false,
 				signal
 			});
-			if (stream.id && !stream.pending) {
-				request.onUpgrade(null, null, stream);
-				++session[kOpenStreams];
+			let upgradeResponseFinished = false;
+			/**
+			* @param {import('node:http2').IncomingHttpHeaders} headers
+			*/
+			const onResponse = (headers) => {
+				upgradeResponseFinished = true;
+				stream.off(errorMonitor, onUpgradeError);
+				request.onUpgradeResponse(Number(headers[HTTP2_HEADER_STATUS]), headers, parseH2ResponseHeaders);
+			};
+			/**
+			* @param {Error} error
+			*/
+			const onUpgradeError = (error) => {
+				upgradeResponseFinished = true;
+				stream.off("response", onResponse);
+				request.onUpgradeError(error);
+			};
+			const onReady = () => {
+				try {
+					request.onUpgrade(null, null, stream);
+				} catch (error) {
+					stream.off("response", onResponse);
+					abort(error);
+					return;
+				}
+				if (request.aborted) return;
+				stream.off("error", abort);
+				stream.once(errorMonitor, onUpgradeError);
 				client[kQueue][client[kRunningIdx]++] = null;
-			} else stream.once("ready", () => {
-				request.onUpgrade(null, null, stream);
-				++session[kOpenStreams];
-				client[kQueue][client[kRunningIdx]++] = null;
-			});
+			};
+			stream.once("response", onResponse);
+			stream.once("error", abort);
+			++session[kOpenStreams];
+			onReady();
 			stream.once("close", () => {
+				if (!upgradeResponseFinished && request.completed) {
+					stream.off("response", onResponse);
+					stream.off(errorMonitor, onUpgradeError);
+					request.onUpgradeError(new InformationalError(`HTTP/2: "stream error" received - code ${stream.rstCode}`));
+				}
 				session[kOpenStreams] -= 1;
 				if (session[kOpenStreams] === 0) session.unref();
 			});
@@ -6631,8 +6745,11 @@ var require_client = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		* @param {string|URL} url
 		* @param {import('../../types/client.js').Client.Options} options
 		*/
-		constructor(url, { interceptors, maxHeaderSize, headersTimeout, socketTimeout, requestTimeout, connectTimeout, bodyTimeout, idleTimeout, keepAlive, keepAliveTimeout, maxKeepAliveTimeout, keepAliveMaxTimeout, keepAliveTimeoutThreshold, socketPath, pipelining, tls, strictContentLength, maxCachedSessions, maxRedirections, connect, maxRequestsPerClient, localAddress, maxResponseSize, autoSelectFamily, autoSelectFamilyAttemptTimeout, maxConcurrentStreams, allowH2, webSocket } = {}) {
-			super({ webSocket });
+		constructor(url, { interceptors, maxHeaderSize, headersTimeout, socketTimeout, requestTimeout, connectTimeout, bodyTimeout, idleTimeout, keepAlive, keepAliveTimeout, maxKeepAliveTimeout, keepAliveMaxTimeout, keepAliveTimeoutThreshold, socketPath, pipelining, tls, strictContentLength, maxCachedSessions, maxRedirections, connect, maxRequestsPerClient, localAddress, maxResponseSize, autoSelectFamily, autoSelectFamilyAttemptTimeout, maxConcurrentStreams, allowH2, webSocket, eventSource } = {}) {
+			super({
+				webSocket,
+				eventSource
+			});
 			if (keepAlive !== void 0) throw new InvalidArgumentError("unsupported keepAlive, use pipelining=0 instead");
 			if (socketTimeout !== void 0) throw new InvalidArgumentError("unsupported socketTimeout, use headersTimeout & bodyTimeout instead");
 			if (requestTimeout !== void 0) throw new InvalidArgumentError("unsupported requestTimeout, use headersTimeout & bodyTimeout instead");
@@ -7343,16 +7460,18 @@ var require_agent = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
 	}
 	var Agent = class extends DispatcherBase {
-		constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
+		constructor({ factory = defaultFactory, maxRedirections = 0, connect, tls, ...options } = {}) {
 			if (typeof factory !== "function") throw new InvalidArgumentError("factory must be a function.");
 			if (connect != null && typeof connect !== "function" && typeof connect !== "object") throw new InvalidArgumentError("connect must be a function or an object");
 			if (!Number.isInteger(maxRedirections) || maxRedirections < 0) throw new InvalidArgumentError("maxRedirections must be a positive number");
 			super(options);
 			if (connect && typeof connect !== "function") connect = { ...connect };
+			if (tls && typeof tls !== "function") tls = { ...tls };
 			this[kInterceptors] = options.interceptors?.Agent && Array.isArray(options.interceptors.Agent) ? options.interceptors.Agent : [createRedirectInterceptor({ maxRedirections })];
 			this[kOptions] = {
 				...util.deepClone(options),
-				connect
+				connect,
+				tls
 			};
 			this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
 			this[kMaxRedirections] = maxRedirections;
@@ -7836,7 +7955,7 @@ var require_retry_handler = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 			const headers = parseHeaders(rawHeaders);
 			this.retryCount += 1;
 			if (statusCode >= 300) {
-				if (this.retryOpts.statusCodes.includes(statusCode) === false) {
+				if (!this.headersSent && this.retryOpts.statusCodes.includes(statusCode) === false) {
 					this.headersSent = true;
 					this.checkpointResponseEnd(headers, resume);
 					return this.handler.onHeaders(statusCode, rawHeaders, resume, statusMessage);
@@ -11781,8 +11900,7 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			source: null,
 			length: null
 		};
-		fetchParams.controller.onAborted = onAborted;
-		fetchParams.controller.on("terminated", onAborted);
+		if (!fetchParams.controller.resume) fetchParams.controller.on("terminated", onAborted);
 		fetchParams.controller.resume = async () => {
 			while (true) {
 				let bytes;
@@ -11859,7 +11977,6 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 					const headersList = new HeadersList();
 					for (let i = 0; i < rawHeaders.length; i += 2) headersList.append(bufferToLowerCasedHeaderName(rawHeaders[i]), rawHeaders[i + 1].toString("latin1"), true);
 					location = headersList.get("location", true);
-					this.body = new Readable({ read: resume });
 					const decoders = [];
 					const willFollow = location && request.redirect === "follow" && redirectStatusSet.has(status);
 					if (request.method !== "HEAD" && request.method !== "CONNECT" && !nullBodyStatus.includes(status) && !willFollow) {
@@ -11868,7 +11985,7 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 						const codings = contentEncoding ? contentEncoding.toLowerCase().split(",") : [];
 						const maxContentEncodings = 5;
 						if (codings.length > maxContentEncodings) {
-							reject(/* @__PURE__ */ new Error(`too many content-encodings in response: ${codings.length}, maximum allowed is ${maxContentEncodings}`));
+							this.abort(/* @__PURE__ */ new Error(`too many content-encodings in response: ${codings.length}, maximum allowed is ${maxContentEncodings}`));
 							return true;
 						}
 						for (let i = codings.length - 1; i >= 0; --i) {
@@ -11891,6 +12008,7 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 							}
 						}
 					}
+					this.body = new Readable({ read: resume });
 					const onError = this.onError.bind(this);
 					resolve({
 						status,
@@ -11910,7 +12028,6 @@ var require_fetch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				},
 				onComplete() {
 					if (this.abort) fetchParams.controller.off("terminated", this.abort);
-					if (fetchParams.controller.onAborted) fetchParams.controller.off("terminated", fetchParams.controller.onAborted);
 					fetchParams.controller.ended = true;
 					this.body.push(null);
 				},
@@ -14710,6 +14827,16 @@ var require_receiver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				if (isControlFrame(this.#info.opcode)) {
 					this.#loop = this.parseControlFrame(body);
 					this.#state = parserStates.INFO;
+					const socket = this.ws[kResponse].socket;
+					if (this.#loop && socket.writableNeedDrain) {
+						this.#loop = false;
+						socket.once("drain", () => {
+							if (this.destroyed) return;
+							this.#loop = true;
+							this.run(callback);
+						});
+						return;
+					}
 				} else if (!this.#info.compressed) {
 					if (!this.writeFragments(body)) return;
 					if (this.#maxPayloadSize > 0 && this.#fragmentsBytes > this.#maxPayloadSize) {
@@ -15291,6 +15418,7 @@ var require_util = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 //#endregion
 //#region node_modules/undici/lib/web/eventsource/eventsource-stream.js
 var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const buffer = require("node:buffer");
 	const { Transform } = require("node:stream");
 	const { isASCIINumber, isValidLastEventId } = require_util();
 	/**
@@ -15317,10 +15445,14 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 	* @type {32} SPACE
 	*/
 	const SPACE = 32;
+	const defaultMaxEventSize = buffer.kStringMaxLength;
 	const DATA = Buffer.from("data");
 	const EVENT = Buffer.from("event");
 	const ID = Buffer.from("id");
 	const RETRY = Buffer.from("retry");
+	const minParserItems = 1024;
+	const maxParserItems = 131072;
+	const bytesPerParserItem = 128;
 	function isASCIINumberBytes(buffer, start) {
 		if (start >= buffer.length) return false;
 		for (let i = start; i < buffer.length; i++) if (buffer[i] < 48 || buffer[i] > 57) return false;
@@ -15334,6 +15466,11 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 		if (length !== field.length) return false;
 		for (let i = 0; i < length; i++) if (line[i] !== field[i]) return false;
 		return true;
+	}
+	function createMaxEventSizeExceededError() {
+		const error = /* @__PURE__ */ new Error("EventSource message size exceeded");
+		error.aborted = false;
+		return error;
 	}
 	/**
 	* @typedef {object} EventSourceStreamEvent
@@ -15376,6 +15513,18 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 		pos = 0;
 		lineChunkIndex = 0;
 		linePos = 0;
+		lineLength = 0;
+		eventSize = 0;
+		eventFieldSizes = {
+			data: 0,
+			event: 0,
+			id: 0,
+			retry: 0
+		};
+		dataLineCount = 0;
+		maxEventSize;
+		maxDataLines;
+		maxBufferedChunks;
 		event = {
 			data: void 0,
 			event: void 0,
@@ -15384,6 +15533,7 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 		};
 		/**
 		* @param {object} options
+		* @param {number} [options.maxEventSize]
 		* @param {eventSourceSettings} options.eventSourceSettings
 		* @param {Function} [options.push]
 		*/
@@ -15391,6 +15541,10 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 			options.readableObjectMode = true;
 			super(options);
 			this.state = options.eventSourceSettings || {};
+			this.maxEventSize = options.maxEventSize ?? defaultMaxEventSize;
+			const parserItemLimit = this.maxEventSize > 0 ? Math.min(maxParserItems, Math.max(minParserItems, Math.floor(this.maxEventSize / bytesPerParserItem))) : 0;
+			this.maxDataLines = parserItemLimit;
+			this.maxBufferedChunks = parserItemLimit;
 			if (options.push) this.push = options.push;
 		}
 		/**
@@ -15402,6 +15556,10 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 		_transform(chunk, _encoding, callback) {
 			if (chunk.length === 0) {
 				callback();
+				return;
+			}
+			if (this.maxEventSize > 0 && this.chunks.length >= this.maxBufferedChunks && chunk[0] !== LF && chunk[0] !== CR) {
+				callback(createMaxEventSizeExceededError());
 				return;
 			}
 			this.chunks.push(chunk);
@@ -15434,18 +15592,32 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 				}
 				if (byte === LF || byte === CR) {
 					if (byte === CR) this.crlfCheck = true;
-					this.parseLine(this.readLine(), this.event);
+					try {
+						this.parseLine(this.readLine(), this.event);
+					} catch (error) {
+						callback(error);
+						return;
+					}
 					this.consumeCurrentByte();
 					this.eventEndCheck = true;
 					continue;
+				}
+				if (this.maxEventSize > 0 && ++this.lineLength > this.maxEventSize + 7) {
+					callback(createMaxEventSizeExceededError());
+					return;
 				}
 				this.advanceCursor();
 			}
 			callback();
 		}
+		_destroy(error, callback) {
+			this.chunks.length = 0;
+			this.clearEvent();
+			super._destroy(error, callback);
+		}
 		/**
 		* @param {Buffer} line
-		* @param {EventStreamEvent} event
+		* @param {EventSourceStreamEvent} event
 		*/
 		parseLine(line, event) {
 			if (line.length === 0) return;
@@ -15459,23 +15631,42 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 				if (line[valueStart] === SPACE) ++valueStart;
 			}
 			if (isFieldName(line, fieldLength, DATA)) {
+				if (this.maxEventSize > 0 && this.dataLineCount >= this.maxDataLines) throw createMaxEventSizeExceededError();
+				const valueBytes = line.length - valueStart;
+				const dataSize = this.eventFieldSizes.data + (event.data === void 0 ? 0 : 1) + valueBytes;
+				this.setEventFieldSize("data", dataSize);
 				const value = line.toString("utf8", valueStart);
 				if (event.data === void 0) event.data = value;
 				else event.data += `\n${value}`;
+				this.dataLineCount++;
 				return;
 			}
 			if (isFieldName(line, fieldLength, RETRY)) {
-				if (isASCIINumberBytes(line, valueStart)) event.retry = line.toString("utf8", valueStart);
+				if (isASCIINumberBytes(line, valueStart)) {
+					this.setEventFieldSize("retry", line.length - valueStart);
+					event.retry = line.toString("utf8", valueStart);
+				}
 				return;
 			}
 			if (isFieldName(line, fieldLength, ID)) {
-				if (isValidLastEventIdBytes(line, valueStart)) event.id = line.toString("utf8", valueStart);
+				if (isValidLastEventIdBytes(line, valueStart)) {
+					this.setEventFieldSize("id", line.length - valueStart);
+					event.id = line.toString("utf8", valueStart);
+				}
 				return;
 			}
 			if (isFieldName(line, fieldLength, EVENT)) {
-				const value = line.toString("utf8", valueStart);
-				if (value.length > 0) event.event = value;
+				if (valueStart < line.length) {
+					this.setEventFieldSize("event", line.length - valueStart);
+					event.event = line.toString("utf8", valueStart);
+				}
 			}
+		}
+		setEventFieldSize(field, size) {
+			const eventSize = this.eventSize - this.eventFieldSizes[field] + size;
+			if (this.maxEventSize > 0 && eventSize > this.maxEventSize) throw createMaxEventSizeExceededError();
+			this.eventSize = eventSize;
+			this.eventFieldSizes[field] = size;
 		}
 		/**
 		* @param {EventSourceStreamEvent} event
@@ -15497,6 +15688,12 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 			this.event.event = void 0;
 			this.event.id = void 0;
 			this.event.retry = void 0;
+			this.eventSize = 0;
+			this.dataLineCount = 0;
+			this.eventFieldSizes.data = 0;
+			this.eventFieldSizes.event = 0;
+			this.eventFieldSizes.id = 0;
+			this.eventFieldSizes.retry = 0;
 		}
 		hasPendingEvent() {
 			return this.event.data !== void 0 || this.event.event !== void 0 || this.event.id !== void 0 || this.event.retry !== void 0;
@@ -15521,13 +15718,15 @@ var require_eventsource_stream = /* @__PURE__ */ __commonJSMin(((exports, module
 		syncLineStartToCursor() {
 			this.lineChunkIndex = this.chunkIndex;
 			this.linePos = this.pos;
+			this.lineLength = 0;
 			this.dropConsumedChunks();
 		}
 		dropConsumedChunks() {
-			while (this.lineChunkIndex > 0) {
-				this.chunks.shift();
-				this.lineChunkIndex--;
-				this.chunkIndex--;
+			if (this.lineChunkIndex > 0) {
+				const consumed = this.lineChunkIndex;
+				this.chunks.splice(0, consumed);
+				this.lineChunkIndex = 0;
+				this.chunkIndex -= consumed;
 			}
 			if (this.chunkIndex === this.chunks.length) {
 				this.chunks.length = 0;
@@ -15614,6 +15813,7 @@ var require_eventsource = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const { delay } = require_util();
 	const { kEnumerableProperty } = require_util$7();
 	const { environmentSettingsObject } = require_util$6();
+	const { getGlobalDispatcher } = require_global();
 	let experimentalWarned = false;
 	/**
 	* A reconnection time, in milliseconds. This must initially be an implementation-defined value,
@@ -15800,6 +16000,7 @@ var require_eventsource = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				this.#state.origin = response.urlList[response.urlList.length - 1].origin;
 				const eventSourceStream = new EventSourceStream({
 					eventSourceSettings: this.#state,
+					maxEventSize: this.#dispatcher.eventSourceOptions?.maxEventSize,
 					push: (event) => {
 						this.dispatchEvent(createFastMessageEvent(event.type, event.options));
 					}
@@ -15908,7 +16109,8 @@ var require_eventsource = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		defaultValue: () => false
 	}, {
 		key: "dispatcher",
-		converter: webidl.converters.any
+		converter: webidl.converters.any,
+		defaultValue: () => getGlobalDispatcher()
 	}]);
 	module.exports = {
 		EventSource,
