@@ -26,6 +26,7 @@ import {
   getOctokit,
   isQualityGateFailed,
   normalizePathForUrl,
+  parseQualityGateResults,
   parseSummarySections,
   readReportArtifacts,
   readTestResultRegistry,
@@ -364,7 +365,7 @@ const run = async (): Promise<void> => {
     const qualityGateContentRaw = await fs.readFile(qualityGateFile, "utf-8");
 
     try {
-      qualityGateResults = JSON.parse(qualityGateContentRaw) as QualityGateResultsContent;
+      qualityGateResults = parseQualityGateResults(qualityGateContentRaw);
     } catch (error) {
       qualityGateParseError = error;
     }
