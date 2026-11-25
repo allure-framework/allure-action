@@ -29410,6 +29410,31 @@ const stripAnsiCodes = (str, replacement) => {
 const isRecord$2 = (value) => {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 };
+const normalizeQualityGateResult = (result) => {
+	if (!isRecord$2(result)) throw new TypeError("Invalid Allure quality gate result");
+	const current = typeof result.key === "string" && (result.status === "passed" || result.status === "failed");
+	const rule = current ? result.key : result.rule;
+	const details = current ? isRecord$2(result.details) ? result.details : {} : result;
+	if (typeof rule !== "string" || !current && typeof details.message !== "string") throw new TypeError("Invalid Allure quality gate result");
+	return {
+		rule,
+		success: current ? result.status === "passed" : result.success === true,
+		environment: typeof result.environment === "string" ? result.environment : void 0,
+		message: typeof details.message === "string" ? details.message : "",
+		expected: details.expected,
+		actual: details.actual,
+		testResults: Array.isArray(details.testResults) ? details.testResults.filter((id) => typeof id === "string") : []
+	};
+};
+const parseQualityGateResults = (content) => {
+	const value = JSON.parse(content);
+	if (Array.isArray(value)) return value.map(normalizeQualityGateResult);
+	if (!isRecord$2(value)) throw new TypeError("Invalid Allure quality gate results");
+	return Object.fromEntries(Object.entries(value).map(([environment, results]) => {
+		if (!Array.isArray(results)) throw new TypeError(`Invalid Allure quality gate results for environment ${environment}`);
+		return [environment, results.map(normalizeQualityGateResult)];
+	}));
+};
 const stringifyValue = (value) => {
 	if (typeof value === "string") return value;
 	try {
@@ -29455,9 +29480,10 @@ const relatedTestsLabel = (count) => {
 const formatRuleSummaryLine = ({ environment, result }) => {
 	const relatedCount = result.testResults?.length ?? 0;
 	const env = environment ? `, environment: ${environment}` : "";
+	const message = result.message ? `: ${stripAnsiCodes(result.message)}` : "";
 	const actual = result.actual === void 0 ? "" : `, actual: ${stringifyValue(result.actual)}`;
 	const expected = result.expected === void 0 ? "" : `, expected: ${stringifyValue(result.expected)}`;
-	return `- **${result.rule}**${env}: ${stripAnsiCodes(result.message)} (${relatedTestsLabel(relatedCount)}${actual}${expected})`;
+	return `- **${result.rule}**${env}${message} (${relatedTestsLabel(relatedCount)}${actual}${expected})`;
 };
 const isQualityGateFailed = (qualityGateResultsContent) => {
 	if (!qualityGateResultsContent) return false;
@@ -29520,12 +29546,9 @@ const renderQualityGateEntry = ({ environment, result, relatedTestCount, tests }
 		""
 	];
 	if (environment) lines.push(`**Environment**: ${environment}`);
-	lines.push(`**Expected**: ${stringifyValue(result.expected)}`);
-	lines.push(`**Actual**: ${stringifyValue(result.actual)}`);
-	lines.push("");
-	lines.push("```text");
-	lines.push(stripAnsiCodes(result.message));
-	lines.push("```");
+	if (result.expected !== void 0) lines.push(`**Expected**: ${stringifyValue(result.expected)}`);
+	if (result.actual !== void 0) lines.push(`**Actual**: ${stringifyValue(result.actual)}`);
+	if (result.message) lines.push("", "```text", stripAnsiCodes(result.message), "```");
 	lines.push("");
 	if (!relatedTestCount) lines.push("_No related test results were reported for this rule._");
 	else {
@@ -29960,7 +29983,7 @@ const run = async () => {
 	if (qualityGateFileExists) {
 		const qualityGateContentRaw = await node_fs_promises.readFile(qualityGateFile, "utf-8");
 		try {
-			qualityGateResults = JSON.parse(qualityGateContentRaw);
+			qualityGateResults = parseQualityGateResults(qualityGateContentRaw);
 		} catch (error) {
 			qualityGateParseError = error;
 		}
