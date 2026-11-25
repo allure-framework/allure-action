@@ -37,6 +37,54 @@ const isRecord = (value: unknown): value is UnknownRecord => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
+const normalizeQualityGateResult = (result: unknown): QualityGateValidationResult => {
+  if (!isRecord(result)) {
+    throw new TypeError("Invalid Allure quality gate result");
+  }
+
+  const current = typeof result.key === "string" && (result.status === "passed" || result.status === "failed");
+  const rule = current ? result.key : result.rule;
+  const details = current ? (isRecord(result.details) ? result.details : {}) : result;
+
+  if (typeof rule !== "string" || (!current && typeof details.message !== "string")) {
+    throw new TypeError("Invalid Allure quality gate result");
+  }
+
+  return {
+    rule,
+    success: current ? result.status === "passed" : result.success === true,
+    environment: typeof result.environment === "string" ? result.environment : undefined,
+    message: typeof details.message === "string" ? details.message : "",
+    expected: details.expected,
+    actual: details.actual,
+    testResults: Array.isArray(details.testResults)
+      ? details.testResults.filter((id): id is string => typeof id === "string")
+      : [],
+  };
+};
+
+export const parseQualityGateResults = (content: string): QualityGateResultsContent => {
+  const value: unknown = JSON.parse(content);
+
+  if (Array.isArray(value)) {
+    return value.map(normalizeQualityGateResult);
+  }
+
+  if (!isRecord(value)) {
+    throw new TypeError("Invalid Allure quality gate results");
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([environment, results]) => {
+      if (!Array.isArray(results)) {
+        throw new TypeError(`Invalid Allure quality gate results for environment ${environment}`);
+      }
+
+      return [environment, results.map(normalizeQualityGateResult)];
+    }),
+  );
+};
+
 const stringifyValue = (value: unknown): string => {
   if (typeof value === "string") {
     return value;
@@ -123,10 +171,11 @@ const relatedTestsLabel = (count: number): string => {
 const formatRuleSummaryLine = ({ environment, result }: QualityGateEntry): string => {
   const relatedCount = result.testResults?.length ?? 0;
   const env = environment ? `, environment: ${environment}` : "";
+  const message = result.message ? `: ${stripAnsiCodes(result.message)}` : "";
   const actual = result.actual === undefined ? "" : `, actual: ${stringifyValue(result.actual)}`;
   const expected = result.expected === undefined ? "" : `, expected: ${stringifyValue(result.expected)}`;
 
-  return `- **${result.rule}**${env}: ${stripAnsiCodes(result.message)} (${relatedTestsLabel(relatedCount)}${actual}${expected})`;
+  return `- **${result.rule}**${env}${message} (${relatedTestsLabel(relatedCount)}${actual}${expected})`;
 };
 
 export const isQualityGateFailed = (qualityGateResultsContent?: QualityGateResultsContent): boolean => {
@@ -250,12 +299,15 @@ const renderQualityGateEntry = ({
     lines.push(`**Environment**: ${environment}`);
   }
 
-  lines.push(`**Expected**: ${stringifyValue(result.expected)}`);
-  lines.push(`**Actual**: ${stringifyValue(result.actual)}`);
-  lines.push("");
-  lines.push("```text");
-  lines.push(stripAnsiCodes(result.message));
-  lines.push("```");
+  if (result.expected !== undefined) {
+    lines.push(`**Expected**: ${stringifyValue(result.expected)}`);
+  }
+  if (result.actual !== undefined) {
+    lines.push(`**Actual**: ${stringifyValue(result.actual)}`);
+  }
+  if (result.message) {
+    lines.push("", "```text", stripAnsiCodes(result.message), "```");
+  }
   lines.push("");
 
   if (!relatedTestCount) {
