@@ -1321,12 +1321,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/pretty-format@npm:5.0.3":
-  version: 5.0.3
-  resolution: "@vitest/pretty-format@npm:5.0.3"
+"@vitest/pretty-format@npm:5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/pretty-format@npm:5.1.1"
   dependencies:
-    tinyrainbow: "npm:^3.1.1"
-  checksum: 10/61f8d6ca556f61e7a9616c08b8571a8c81dad05f726babd57f79f3bb21b9b8348bacf2995f3ddf640def0519726e6a8b3f7d53ab91b159be99bb38eea012fa24
+    tinyrainbow: "npm:^3.2.0"
+  checksum: 10/58b7e0803c3549b8132956b2c8a700febe3f61a2bf84d5c4da29537a23df33c5b3005f9d93e55f063f00a63b6ee799740ae23685594fd667e16d6abf6c323ca9
   languageName: node
   linkType: hard
 
@@ -1340,15 +1340,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/snapshot@npm:^5.0.3":
-  version: 5.0.3
-  resolution: "@vitest/snapshot@npm:5.0.3"
+"@vitest/snapshot@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/snapshot@npm:5.1.1"
   dependencies:
-    "@vitest/pretty-format": "npm:5.0.3"
-    "@vitest/utils": "npm:5.0.3"
-    magic-string: "npm:^1.2.3"
+    "@vitest/pretty-format": "npm:5.1.1"
+    "@vitest/utils": "npm:5.1.1"
+    magic-string: "npm:^1.4.5"
     pathe: "npm:^2.0.3"
-  checksum: 10/d99629441df0e01ca062edb3089bb4eb1f34084f416dc12b988904eba1e30fac26d2fde2e18e8190f95e8d7eb211587f67c43e6609821d71917600c21a6e00a4
+  checksum: 10/fc49eef5625d8a38efc8f3399dd5896b61ccd6f558d9e8d69dc377c81e3676fd28663c13de4d8ed6824e730885fc462aabcf7053442411f8043db9202db81f27
   languageName: node
   linkType: hard
 
@@ -1370,14 +1370,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/utils@npm:5.0.3":
-  version: 5.0.3
-  resolution: "@vitest/utils@npm:5.0.3"
+"@vitest/utils@npm:5.1.1":
+  version: 5.1.1
+  resolution: "@vitest/utils@npm:5.1.1"
   dependencies:
-    "@vitest/pretty-format": "npm:5.0.3"
+    "@vitest/pretty-format": "npm:5.1.1"
     convert-source-map: "npm:^2.0.0"
-    tinyrainbow: "npm:^3.1.1"
-  checksum: 10/897654af10a4511921f843968a5510224af865cda943183defeab9e1bee11e5ef532aa617bc559cfceebb08a1cfb9a3145efaace0686861e621b14d0238dd8e7
+    tinyrainbow: "npm:^3.2.0"
+  checksum: 10/26f06c1221a9d6dc31620f5c1caa1de4a2fc3c031a8e14e6ca116603fd21634a996abd1f9e20d02f94b92ada2cf94e68fd3a16aed44ae15d8f143b6e10e94171
   languageName: node
   linkType: hard
 
@@ -1605,7 +1605,7 @@ __metadata:
     "@types/lodash.chunk": "npm:^4"
     "@types/node": "npm:^26.6.6"
     "@vitest/runner": "npm:^4.1.11"
-    "@vitest/snapshot": "npm:^5.0.3"
+    "@vitest/snapshot": "npm:^5.1.1"
     allure: "npm:^3.22.1"
     allure-vitest: "npm:^3.14.0"
     d3-shape: "npm:^3.2.0"
@@ -2973,21 +2973,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"magic-string@npm:^1.2.3":
-  version: 1.4.1
-  resolution: "magic-string@npm:1.4.1"
-  dependencies:
-    "@jridgewell/sourcemap-codec": "npm:^1.6.0"
-  checksum: 10/e24599bdd37e2bd4d3bed3e52739791d47652ce16a13f31c2fc7cc760912549a3af4db2625c4a26d4d7cd9ef573fea96c9470fea5b9deddd296ada896b6c44a3
-  languageName: node
-  linkType: hard
-
 "magic-string@npm:^1.4.3":
   version: 1.4.3
   resolution: "magic-string@npm:1.4.3"
   dependencies:
     "@jridgewell/sourcemap-codec": "npm:^1.6.0"
   checksum: 10/8942d4afec7855661d697e48f6f48f0113770878f29e25cdc558ecfd2493ebe5620e18ebee5770e8e5b0afdf72f60330166d1bb59e70eecced712fcf29860ea4
+  languageName: node
+  linkType: hard
+
+"magic-string@npm:^1.4.5":
+  version: 1.4.5
+  resolution: "magic-string@npm:1.4.5"
+  dependencies:
+    "@jridgewell/sourcemap-codec": "npm:^1.6.0"
+  checksum: 10/b5639b23f91f3c683e8cfeedee9933538c19ef63ecd2818285fe47524f831e2643fce5cd6ef0b4093e33505026e671daec14040dafba7d0b781c0b69abb277ac
   languageName: node
   linkType: hard
 
@@ -4048,10 +4048,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyrainbow@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "tinyrainbow@npm:3.1.1"
-  checksum: 10/6aa4aadf89cc8ecf8c227ef189616911292c4f0d2d5708b669b00375c5a8b43058115685f043034ffb11a8744c24650a30493525ff62134b436d94c84fa33ed5
+"tinyrainbow@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "tinyrainbow@npm:3.2.0"
+  checksum: 10/27089c12ad4b18439fbdd651bf9d076584aad9b2a36da36ba841d6bd31156f5489e15497b2377162478277cb89cf6ea6a323be401fd9d55794a6963b65fe55d4
   languageName: node
   linkType: hard
 
