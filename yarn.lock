@@ -126,12 +126,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@allurereport/core-api@npm:3.22.1, @allurereport/core-api@npm:^3.22.1":
+"@allurereport/core-api@npm:3.22.1":
   version: 3.22.1
   resolution: "@allurereport/core-api@npm:3.22.1"
   dependencies:
     d3-shape: "npm:^3.2.0"
   checksum: 10/c89b591d509a0bc788bbf07a1ffc646d1cea616d2d3c9a6251b800fc746c4fc3c7e3492837c38c05cebf948ac56155ee810542c671641c1efed7c8c56ae6d4ec
+  languageName: node
+  linkType: hard
+
+"@allurereport/core-api@npm:^3.33.0":
+  version: 3.33.0
+  resolution: "@allurereport/core-api@npm:3.33.0"
+  dependencies:
+    "@marcbachmann/cel-js": "npm:^8.0.0"
+    d3-shape: "npm:^3.2.0"
+  checksum: 10/4cc3e7ff4b89bcbc7b2119f15fa41bc66d77872ecf1bc923a1329a4b9ea1de5846f94412c5dbdff8beaed4e221b9bfa4e7e19b6c573e1b3f647e561b5c49e06b
   languageName: node
   linkType: hard
 
@@ -530,6 +540,15 @@ __metadata:
     "@jridgewell/resolve-uri": "npm:^3.1.0"
     "@jridgewell/sourcemap-codec": "npm:^1.4.14"
   checksum: 10/da0283270e691bdb5543806077548532791608e52386cfbbf3b9e8fb00457859d1bd01d512851161c886eb3a2f3ce6fd9bcf25db8edf3bddedd275bd4a88d606
+  languageName: node
+  linkType: hard
+
+"@marcbachmann/cel-js@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@marcbachmann/cel-js@npm:8.0.0"
+  bin:
+    cel-evaluate: bin/cel-evaluate.js
+  checksum: 10/99cbff3ff069eb68e99a5b464770b299893f8aa088fd989e0999492eef262778e5243ceeade1e506973c3354af18ac90a54c072829f0e846131b6042e0ff973b
   languageName: node
   linkType: hard
 
@@ -1597,7 +1616,7 @@ __metadata:
     "@actions/glob": "npm:^0.7.0"
     "@actions/io": "npm:^3.0.2"
     "@allurereport/ci": "npm:^3.22.1"
-    "@allurereport/core-api": "npm:^3.22.1"
+    "@allurereport/core-api": "npm:^3.33.0"
     "@allurereport/plugin-api": "npm:^3.22.1"
     "@allurereport/plugin-awesome": "npm:^3.22.1"
     "@allurereport/plugin-testops": "npm:^3.22.1"

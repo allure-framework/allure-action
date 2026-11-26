@@ -49,7 +49,7 @@
     "@actions/glob": "^0.7.0",
     "@actions/io": "^3.0.2",
     "@allurereport/ci": "^3.22.1",
-    "@allurereport/core-api": "^3.22.1",
+    "@allurereport/core-api": "^3.33.0",
     "d3-shape": "^3.2.0",
     "fast-glob": "^3.3.3",
     "lodash.chunk": "^4.2.0"
